@@ -182,6 +182,7 @@ const TenantDashboard = () => {
       />
       <div>
         <h1 className="text-xl sm:text-2xl font-bold">{tenantData.tenant.name}</h1>
+        <p className="font-semibold">123 Urban Loft, Downtown</p>
         <p className="text-gray-600">{tenantData.tenant.unit}</p>
       </div>
     </div>
