@@ -11,7 +11,7 @@ import {
   Search,
   Plus,X
 } from 'lucide-react';
-import NewLeaseModal from '../components/NewLeaseModal.jsx';
+import NewLeaseModal from '../components/modals/NewLeaseModal.jsx';
 
 const initialLeases = [
   {

@@ -11,6 +11,10 @@ import MaintenanceManagement from "./pages/MaintenanceMgt";
 import FinancialReports from "./pages/FinancialReports";
 import DocumentManagement from "./pages/DocumentMgt";
 import TenantDashboard from "./pages/TenantDash";
+import LoginPage from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import AdminSettings from "./pages/AdminSettings";
+
 
 
 
@@ -18,9 +22,10 @@ import TenantDashboard from "./pages/TenantDash";
 
 
 const router = createBrowserRouter([
-  {path:"/",element: <Dashboard />,
-    errorElement: <NotFound />,
-  }, {path:"/comms", element: <CommunicationTools/>, errorElement: <NotFound />},
+  {path:"/",element: <Dashboard />,errorElement: <NotFound />,},
+  {path:"/login",element: <LoginPage />,errorElement: <NotFound />,}, 
+  {path:"/forgot",element: <ForgotPassword />,errorElement: <NotFound />,}, 
+  {path:"/comms", element: <CommunicationTools/>, errorElement: <NotFound />},
   {path:"/property", element: <PropertyManagement/>, errorElement: <NotFound />},
   {path:"/tenant", element: <TenantManagement/>, errorElement: <NotFound />},
   {path:"/lease", element: <LeaseManagement/>, errorElement: <NotFound />},
@@ -29,7 +34,8 @@ const router = createBrowserRouter([
   {path:"/finance", element: <FinancialReports/>, errorElement: <NotFound />}, 
   {path:"/documents", element: <DocumentManagement/>, errorElement: <NotFound />},
   {path:"/communications", element: <CommunicationTools/>, errorElement: <NotFound />},
-  {path:"/tenant_dash", element: <TenantDashboard/>, errorElement: <NotFound />} ])
+  {path:"/tenant_dash", element: <TenantDashboard/>, errorElement: <NotFound />},
+  {path:"/admin_settings", element: <AdminSettings/>, errorElement: <NotFound />} ])
 
 
 

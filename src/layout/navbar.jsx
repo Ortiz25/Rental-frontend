@@ -15,7 +15,8 @@ import {
   Menu,
   HousePlus,
   UserCircle,
-  IdCard
+  IdCard,
+  Settings
 } from 'lucide-react';
 import { useStore } from '../store/store';
 import { useEffect } from 'react';
@@ -95,6 +96,11 @@ const Navbar = ({module, children}) => {
       icon: <MailIcon />,
       component: () => <CommunicationTools />,
       route:"/communications"
+    },
+    { 
+      name: 'Admin Settings', 
+      icon: <Settings />,
+      route:"/admin_settings"
     }
   ];
 
