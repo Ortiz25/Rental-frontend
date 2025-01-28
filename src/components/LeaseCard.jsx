@@ -16,7 +16,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-import LeaseDetailsModal from './leaseDetailModal';
+import LeaseDetailsModal from './LeaseDetailModal';
 
 
 
