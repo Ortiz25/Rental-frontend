@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import OverviewTab from "../components/overviewTab.jsx";
-import AnalyticsTab from "../components/AnalyticsTab.jsx";
+import AnalyticsTab from "../components/analyticsTab.jsx";
 import ExpenseManagementTab from "../components/expenseMgtTab.jsx";
 
 import GenerateReportModal from "../components/modals/GenerateReportModal.jsx";
