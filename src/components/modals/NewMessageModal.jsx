@@ -69,7 +69,7 @@ const NewMessageModal = ({ isOpen, onClose, onMessageSent }) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/backend/communications/recipients', {
+      const response = await fetch('/backend/api/communications/recipients', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

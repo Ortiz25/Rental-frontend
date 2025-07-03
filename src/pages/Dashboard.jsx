@@ -42,7 +42,7 @@ const Dashboard = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('/backend/dashboard/summary', {
+      const response = await fetch('/backend/api/dashboard/summary', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -215,7 +215,7 @@ export async function loader() {
   }
 
   try {
-    const url = "/backend/auth/verifyToken";
+    const url = "/backend/api/auth/verifyToken";
     const data = { token: token };
 
     const response = await fetch(url, {

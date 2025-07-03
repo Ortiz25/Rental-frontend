@@ -47,7 +47,7 @@ const DeletePropertyModal = ({ isOpen, onClose, onDelete, property }) => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`/backend/properties/${property.id}`, {
+      const response = await fetch(`/backend/api/properties/${property.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

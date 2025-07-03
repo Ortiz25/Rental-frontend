@@ -157,7 +157,7 @@ const UpdatePropertyModal = ({
         if (!token) return;
 
         const response = await fetch(
-          "/backend/properties/amenities",
+          "/backend/api/properties/amenities",
           {
             method: "GET",
             headers: {
@@ -279,7 +279,7 @@ const UpdatePropertyModal = ({
       };
 
       const response = await fetch(
-        `/backend/properties/${property.id}`,
+        `/backend/api/properties/${property.id}`,
         {
           method: "PUT",
           headers: {
@@ -354,7 +354,7 @@ const UpdatePropertyModal = ({
       };
 
       const response = await fetch(
-        `/backend/properties/${property.id}/units/${unitData.id}`,
+        `/backend/api/properties/${property.id}/units/${unitData.id}`,
         {
           method: "PUT",
           headers: {

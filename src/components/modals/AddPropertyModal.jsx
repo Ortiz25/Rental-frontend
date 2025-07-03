@@ -84,7 +84,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch('/backend/amenities', {
+        const response = await fetch('/backend/api/amenities', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -338,7 +338,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
 
       console.log('Sending property data:', requestData);
 
-      const response = await fetch('/backend/properties', {
+      const response = await fetch('/backend/api/properties', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

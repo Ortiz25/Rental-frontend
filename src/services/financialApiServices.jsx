@@ -1,6 +1,6 @@
 // services/FinancialApiService.js
 
-const API_BASE_URL = '/backend';
+const API_BASE_URL = '/backend/api';
 
 class FinancialApiService {
   constructor() {

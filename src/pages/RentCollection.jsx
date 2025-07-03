@@ -19,7 +19,7 @@ import {
 import Navbar from '../layout/navbar.jsx';
 
 // API service functions
-const API_BASE_URL = '/backend';
+const API_BASE_URL = '/backend/api';
 
 const rentCollectionAPI = {
   // Get all rent payments with filters

@@ -21,7 +21,7 @@ import {
 
 import Navbar from "../layout/navbar";
 
-const API_BASE_URL = '/backend/tenant-dash';
+const API_BASE_URL = '/backend/api/tenant-dash';
 
 const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
   const [messageData, setMessageData] = useState({

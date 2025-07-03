@@ -24,7 +24,7 @@ import { redirect } from "react-router";
 
 // Updated API service for lease operations with authentication
 const leaseAPI = {
-  baseURL: "/backend",
+  baseURL: "/backend/api",
 
   // Helper method to get auth headers
   getAuthHeaders() {
@@ -686,7 +686,7 @@ export async function loader() {
   }
  
   try {
-    const response = await fetch("/backend/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
