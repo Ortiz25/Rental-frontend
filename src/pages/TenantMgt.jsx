@@ -69,7 +69,7 @@ const TenantManagement = () => {
       }
 
       console.log("Fetching tenants...");
-      const response = await fetch("http://localhost:5020/api/tenants", {
+      const response = await fetch("/backend/tenants", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -192,7 +192,7 @@ const TenantManagement = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5020/api/tenants/${selectedTenant.id}/offboard`,
+        `/backend/tenants/${selectedTenant.id}/offboard`,
         {
           method: "POST",
           headers: {
@@ -236,7 +236,7 @@ const TenantManagement = () => {
 
       // Use the enhanced onboarding endpoint with unit allocation
       const response = await fetch(
-        "http://localhost:5020/api/tenants/onboard-with-unit",
+        "/backend/tenants/onboard-with-unit",
         {
           method: "POST",
           headers: {
@@ -883,7 +883,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

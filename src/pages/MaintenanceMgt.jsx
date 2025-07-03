@@ -22,7 +22,7 @@ import {
 // API service functions
 const maintenanceAPI = {
   // Fixed Base API URL - removed trailing slash and changed to HTTP
-  baseURL: "http://localhost:5020/api",
+  baseURL: "/backend",
 
   // Helper method to get auth headers
   getAuthHeaders: () => {
@@ -214,7 +214,7 @@ const NewRequestModal = ({ isOpen, onClose, onRequestCreated, availableUnits, me
     if (!unitId || userRole === 'Tenant') return;
     
     try {
-      const response = await fetch(`http://localhost:5020/api/maintenance/units/${unitId}/tenants`);
+      const response = await fetch(`/backend/maintenance/units/${unitId}/tenants`);
       if (response.ok) {
         const data = await response.json();
         setUnitTenants(data.data || []);

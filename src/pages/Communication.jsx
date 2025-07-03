@@ -96,7 +96,7 @@ const CommunicationTools = () => {
         ...filters
       });
 
-      const response = await fetch(`http://localhost:5020/api/communications/messages?${queryParams}`, {
+      const response = await fetch(`/backend/communications/messages?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -132,7 +132,7 @@ const CommunicationTools = () => {
         priority: filters.priority
       });
 
-      const response = await fetch(`http://localhost:5020/api/communications/announcements?${queryParams}`, {
+      const response = await fetch(`/backend/communications/announcements?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -159,7 +159,7 @@ const CommunicationTools = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5020/api/communications/stats', {
+      const response = await fetch('/backend/communications/stats', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -200,7 +200,7 @@ const CommunicationTools = () => {
   const markNotificationAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5020/api/communications/notifications/${notificationId}/read`, {
+      await fetch(`/backend/communications/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
