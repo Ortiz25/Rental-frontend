@@ -17,7 +17,10 @@ import {
   UserCircle,
   IdCard,
   Settings,
-  LogOut
+  LogOut,
+  X,
+  PanelLeftOpen,
+  PanelLeftClose
 } from 'lucide-react';
 import { useStore } from '../store/store';
 
@@ -25,9 +28,10 @@ const Navbar = ({module, children}) => {
   const {isSidebarCollapsed, setIsSidebarCollapsed} = useStore();
   const [activeModule, setActiveModule] = useState(module);
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [screenSize, setScreenSize] = useState({
     width: window.innerWidth,
-    isMediumOrLarger: window.innerWidth >= 768
+    isMediumOrLarger: window.innerWidth >= 1024
   });
   const navigate = useNavigate();
 
@@ -55,15 +59,19 @@ const Navbar = ({module, children}) => {
       const newWidth = window.innerWidth;
       setScreenSize({
         width: newWidth,
-        isMediumOrLarger: newWidth >= 768
+        isMediumOrLarger: newWidth >= 1024
       });
       
-      if (newWidth < 768) {
-        setIsSidebarCollapsed(true);
+      // Reset collapse state on mobile screens
+      if (newWidth < 1024) {
+        setIsSidebarCollapsed(false);
+        setSidebarOpen(false);
       }
     };
 
     window.addEventListener('resize', handleResize);
+    handleResize();
+
     return () => window.removeEventListener('resize', handleResize);
   }, [setIsSidebarCollapsed]);
 
@@ -178,150 +186,201 @@ const Navbar = ({module, children}) => {
   });
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div 
-        className={`bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'w-16' : 'w-64'
-        } ${screenSize.isMediumOrLarger ? 'relative' : 'absolute z-20 h-full'}`}
+      <div
+        className={`fixed left-0 top-0 z-40 h-screen transition-transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
       >
-        {/* Logo Section */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <div className="flex items-center">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <HousePlus className="text-white" size={24} />
-            </div>
-            {!isSidebarCollapsed && (
-              <div className="ml-3">
-                <h1 className="text-lg font-bold text-gray-800">Rental Manager</h1>
-                <p className="text-xs text-gray-500">Property Management</p>
+        <div
+          className={`h-full ${
+            isSidebarCollapsed && screenSize.isMediumOrLarger ? "w-16" : "w-64"
+          } bg-white shadow-xl px-3 py-4 transition-all duration-300 overflow-y-auto border-r border-gray-200`}
+        >
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between mb-6 px-2">
+            <div
+              className={`flex items-center space-x-3 ${
+                isSidebarCollapsed && screenSize.isMediumOrLarger
+                  ? "justify-center"
+                  : ""
+              }`}
+            >
+              <div className="bg-blue-600 p-2 rounded-lg">
+                <HousePlus className="text-white" size={24} />
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="mt-6 px-3">
-          <div className="space-y-1">
-            {modules.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.route}
-                className={({ isActive }) => `
-                  group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200
-                  ${activeModule === item.name 
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }
-                  ${isSidebarCollapsed ? 'justify-center' : ''}
-                `}
-                onClick={() => setActiveModule(item.name)}
-                title={isSidebarCollapsed ? item.name : ''}
-              >
-                <span className={`flex-shrink-0 ${isSidebarCollapsed ? '' : 'mr-3'}`}>
-                  {item.icon}
-                </span>
-                {!isSidebarCollapsed && (
-                  <span className="truncate">{item.name}</span>
-                )}
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-
-        {/* User Profile Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-          {isSidebarCollapsed ? (
-            /* Collapsed state - Stack user avatar and logout button vertically */
-            <div className="flex flex-col items-center space-y-2">
-              <div 
-                className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors"
-                title={user ? `${user.username} (${user.role || user.userRole})` : 'User Profile'}
-              >
-                <span className="text-white text-sm font-medium">
-                  {getUserInitials()}
-                </span>
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                title="Logout"
-              >
-                <LogOut size={16} />
-              </button>
+              {!(isSidebarCollapsed && screenSize.isMediumOrLarger) && (
+                <div>
+                  <h1 className="text-lg font-bold text-gray-800">Rental Manager</h1>
+                  <p className="text-xs text-gray-500">Property Management</p>
+                </div>
+              )}
             </div>
-          ) : (
-            /* Expanded state - Show full user info with logout button */
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+            <div className="space-y-1">
+              {modules.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.route}
+                  className={({ isActive }) => `
+                    group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200
+                    ${activeModule === item.name || isActive
+                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }
+                    ${isSidebarCollapsed && screenSize.isMediumOrLarger ? 'justify-center' : ''}
+                  `}
+                  onClick={() => {
+                    setActiveModule(item.name);
+                    // Close sidebar on mobile after navigation
+                    if (!screenSize.isMediumOrLarger) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  title={isSidebarCollapsed && screenSize.isMediumOrLarger ? item.name : ''}
+                >
+                  <span className={`flex-shrink-0 ${isSidebarCollapsed && screenSize.isMediumOrLarger ? '' : 'mr-3'}`}>
+                    {item.icon}
+                  </span>
+                  {!(isSidebarCollapsed && screenSize.isMediumOrLarger) && (
+                    <span className="truncate">{item.name}</span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </nav>
+
+          {/* User Profile Section */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            {isSidebarCollapsed && screenSize.isMediumOrLarger ? (
+              /* Collapsed state - Stack user avatar and logout button vertically */
+              <div className="flex flex-col items-center space-y-2">
+                <div 
+                  className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors"
+                  title={user ? `${user.username} (${user.role || user.userRole})` : 'User Profile'}
+                >
                   <span className="text-white text-sm font-medium">
                     {getUserInitials()}
                   </span>
                 </div>
+                <button 
+                  onClick={handleLogout}
+                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Logout"
+                >
+                  <LogOut size={16} />
+                </button>
               </div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.username || 'User'}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user?.role || user?.userRole || 'Role'}
-                </p>
+            ) : (
+              /* Expanded state - Show full user info with logout button */
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
+                      {getUserInitials()}
+                    </span>
+                  </div>
+                </div>
+                <div className="ml-3 flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user?.username || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user?.role || user?.userRole || 'Role'}
+                  </p>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="ml-2 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Logout"
+                >
+                  <LogOut size={16} />
+                </button>
               </div>
-              <button 
-                onClick={handleLogout}
-                className="ml-2 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                title="Logout"
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Mobile Overlay */}
-      {!screenSize.isMediumOrLarger && !isSidebarCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-10"
-          onClick={() => setIsSidebarCollapsed(true)}
+      {/* Main Content Area */}
+      <div
+        className={`${
+          isSidebarCollapsed && screenSize.isMediumOrLarger
+            ? "lg:pl-16"
+            : "lg:pl-64"
+        } transition-all duration-300`}
+      >
+        <div className="min-h-screen">
+          {/* Header */}
+          <header className="bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-30">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex items-center">
+                {/* Mobile menu button */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 mr-4"
+                >
+                  <Menu size={20} />
+                </button>
+                
+                {/* Desktop collapse toggle */}
+                {isSidebarCollapsed ? (
+                  <button
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    className="hidden lg:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200 mr-4"
+                  >
+                    <PanelLeftOpen className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    className="hidden lg:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200 mr-4"
+                  >
+                    <PanelLeftClose className="h-5 w-5" />
+                  </button>
+                )}
+                
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">{activeModule}</h1>
+                  <p className="text-sm text-gray-500 hidden sm:block">Manage your rental properties efficiently</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                {/* You can add notification bell, search, etc. here */}
+                <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
+                  <span>Welcome back{user?.username ? `, ${user.username}` : ''}!</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="bg-gray-50 min-h-[calc(100vh-80px)]">
+            <div className="p-6">
+              {children}
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black opacity-50 lg:hidden transition-opacity"
+          onClick={() => setSidebarOpen(false)}
         />
       )}
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <Menu size={20} />
-              </button>
-              <div className="ml-4">
-                <h1 className="text-xl font-semibold text-gray-900">{activeModule}</h1>
-                <p className="text-sm text-gray-500">Manage your rental properties efficiently</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* You can add notification bell, search, etc. here */}
-              <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-                <span>Welcome back{user?.username ? `, ${user.username}` : ''}!</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-gray-50">
-          <div className="p-6">
-            {children}
-          </div>
-        </main>
-      </div>
     </div>
   );
 };

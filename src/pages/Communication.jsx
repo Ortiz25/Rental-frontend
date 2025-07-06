@@ -20,10 +20,11 @@ import {
   Loader,
   RefreshCw,
   Eye,
-  MoreHorizontal
+  MoreHorizontal,
 } from "lucide-react";
 import NewMessageModal from "../components/modals/NewMessageModal";
 import AnnouncementModal from "../components/modals/AnnouncementModal";
+import { redirect } from "react-router";
 
 const CommunicationTools = () => {
   const [activeModule, setActiveModule] = useState("Communication");
@@ -33,7 +34,7 @@ const CommunicationTools = () => {
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [activeTab, setActiveTab] = useState("messages");
-  
+
   // Loading and pagination states
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,20 +42,20 @@ const CommunicationTools = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
     type: "all",
     status: "all",
-    priority: "all"
+    priority: "all",
   });
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Stats
   const [stats, setStats] = useState({
     messages: { total: 0, unread: 0 },
-    notifications: { total: 0, unread: 0 }
+    notifications: { total: 0, unread: 0 },
   });
 
   // Load data on component mount and tab change
@@ -87,34 +88,39 @@ const CommunicationTools = () => {
   const fetchMessages = async () => {
     setIsLoading(true);
     setError("");
-    
+
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
         limit: "10",
-        ...filters
+        ...filters,
       });
 
-      const response = await fetch(`/backend/api/communications/messages?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `/backend/api/communications/messages?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      console.log(data);
+
+      if (response.status === 200) {
         setMessages(data.data.messages || []);
         setTotalPages(data.data.pagination.totalPages);
         setHasNextPage(data.data.pagination.hasNextPage);
         setHasPreviousPage(data.data.pagination.hasPreviousPage);
       } else {
-        throw new Error('Failed to fetch messages');
+        throw new Error("Failed to fetch messages");
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      setError('Failed to load messages');
+      console.error("Error fetching messages:", error);
+      setError("Failed to load messages");
     } finally {
       setIsLoading(false);
     }
@@ -123,34 +129,39 @@ const CommunicationTools = () => {
   const fetchAnnouncements = async () => {
     setIsLoading(true);
     setError("");
-    
+
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
         limit: "10",
-        priority: filters.priority
+        priority: filters.priority,
       });
 
-      const response = await fetch(`/backend/api/communications/announcements?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `/backend/api/communications/announcements?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
+
+      const data = await response.json();
+      console.log(data);
 
       if (response.ok) {
-        const data = await response.json();
         setAnnouncements(data.data.announcements || []);
         setTotalPages(data.data.pagination.totalPages);
         setHasNextPage(data.data.pagination.hasNextPage);
         setHasPreviousPage(data.data.pagination.hasPreviousPage);
       } else {
-        throw new Error('Failed to fetch announcements');
+        throw new Error("Failed to fetch announcements");
       }
     } catch (error) {
-      console.error('Error fetching announcements:', error);
-      setError('Failed to load announcements');
+      console.error("Error fetching announcements:", error);
+      setError("Failed to load announcements");
     } finally {
       setIsLoading(false);
     }
@@ -158,27 +169,30 @@ const CommunicationTools = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/backend/api/communications/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "/backend/api/communications/stats",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-
+      );
+      const data = await response.json();
+      console.log(data);
       if (response.ok) {
-        const data = await response.json();
         setStats(data.data);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
     }
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
     setCurrentPage(1);
   };
@@ -199,20 +213,23 @@ const CommunicationTools = () => {
 
   const markNotificationAsRead = async (notificationId) => {
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`/backend/api/communications/notifications/${notificationId}/read`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const token = localStorage.getItem("token");
+      await fetch(
+        `/backend/api/communications/notifications/${notificationId}/read`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       // Refresh announcements to show updated read status
       fetchAnnouncements();
       fetchStats();
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -242,11 +259,14 @@ const CommunicationTools = () => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } else if (diffInHours < 48) {
-      return 'Yesterday';
+      return "Yesterday";
     } else {
       return date.toLocaleDateString();
     }
@@ -270,7 +290,9 @@ const CommunicationTools = () => {
             key={message.id}
             className={`bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow
               ${message.status === "unread" ? "border-l-4 border-blue-500" : ""}
-              ${message.priority === "high" ? "border-t-2 border-red-500" : ""}`}
+              ${
+                message.priority === "high" ? "border-t-2 border-red-500" : ""
+              }`}
             onClick={() => setSelectedMessage(message)}
           >
             <div className="flex justify-between items-start mb-2">
@@ -281,11 +303,17 @@ const CommunicationTools = () => {
                 </div>
                 <p className="text-sm text-gray-600">{message.property}</p>
                 {message.subject && (
-                  <p className="text-sm font-medium text-gray-800 mt-1">{message.subject}</p>
+                  <p className="text-sm font-medium text-gray-800 mt-1">
+                    {message.subject}
+                  </p>
                 )}
               </div>
               <div className="flex items-center space-x-2 text-right">
-                <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(message.priority)}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(
+                    message.priority
+                  )}`}
+                >
                   {message.priority}
                 </span>
                 <span className="text-sm text-gray-500">
@@ -297,7 +325,10 @@ const CommunicationTools = () => {
             {message.followUp?.required && (
               <div className="mt-2 flex items-center space-x-1 text-xs text-orange-600">
                 <Clock className="w-3 h-3" />
-                <span>Follow-up: {new Date(message.followUp.date).toLocaleDateString()}</span>
+                <span>
+                  Follow-up:{" "}
+                  {new Date(message.followUp.date).toLocaleDateString()}
+                </span>
               </div>
             )}
           </div>
@@ -389,7 +420,7 @@ const CommunicationTools = () => {
   return (
     <Navbar module={activeModule}>
       <div className="space-y-6">
-        {/* Stats Bar */}
+        {/* Stats Bar - Updated */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="flex items-center justify-between">
@@ -404,7 +435,9 @@ const CommunicationTools = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Unread Messages</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.messages.unread || 0}</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {stats.messages.unread || 0}
+                </p>
               </div>
               <AlertCircle className="w-8 h-8 text-orange-500" />
             </div>
@@ -413,7 +446,9 @@ const CommunicationTools = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Announcements</p>
-                <p className="text-2xl font-bold">{stats.notifications.announcements || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats.notifications.announcements || 0}
+                </p>
               </div>
               <Bell className="w-8 h-8 text-green-500" />
             </div>
@@ -421,8 +456,10 @@ const CommunicationTools = () => {
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Unread Notifications</p>
-                <p className="text-2xl font-bold text-red-600">{stats.notifications.unread || 0}</p>
+                <p className="text-sm text-gray-600">Unread Announcements</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {stats.notifications.unreadAnnouncements || 0}
+                </p>
               </div>
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
@@ -436,7 +473,11 @@ const CommunicationTools = () => {
               <AlertCircle className="w-5 h-5 text-red-500" />
               <span className="text-red-700">{error}</span>
               <button
-                onClick={() => activeTab === "messages" ? fetchMessages() : fetchAnnouncements()}
+                onClick={() =>
+                  activeTab === "messages"
+                    ? fetchMessages()
+                    : fetchAnnouncements()
+                }
                 className="text-red-600 hover:text-red-800 underline"
               >
                 Retry
@@ -464,7 +505,11 @@ const CommunicationTools = () => {
               <span>New Announcement</span>
             </button>
             <button
-              onClick={() => activeTab === "messages" ? fetchMessages() : fetchAnnouncements()}
+              onClick={() =>
+                activeTab === "messages"
+                  ? fetchMessages()
+                  : fetchAnnouncements()
+              }
               className="bg-gray-100 hover:bg-gray-200 p-2 rounded transition-colors"
               title="Refresh"
             >
@@ -480,14 +525,16 @@ const CommunicationTools = () => {
                 placeholder="Search..."
                 className="w-full sm:w-[200px] pl-9 pr-4 py-2 border rounded text-sm"
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
               />
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 rounded transition-colors ${
-                showFilters ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 hover:bg-gray-200'
+                showFilters
+                  ? "bg-blue-100 text-blue-600"
+                  : "bg-gray-100 hover:bg-gray-200"
               }`}
             >
               <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -502,11 +549,15 @@ const CommunicationTools = () => {
               {activeTab === "messages" && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Type</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Type
+                    </label>
                     <select
                       className="w-full p-2 border rounded text-sm"
                       value={filters.type}
-                      onChange={(e) => handleFilterChange('type', e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("type", e.target.value)
+                      }
                     >
                       <option value="all">All Types</option>
                       <option value="Email">Email</option>
@@ -515,11 +566,15 @@ const CommunicationTools = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Status</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Status
+                    </label>
                     <select
                       className="w-full p-2 border rounded text-sm"
                       value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
                     >
                       <option value="all">All Status</option>
                       <option value="unread">Unread</option>
@@ -530,11 +585,15 @@ const CommunicationTools = () => {
                 </>
               )}
               <div>
-                <label className="block text-sm font-medium mb-1">Priority</label>
+                <label className="block text-sm font-medium mb-1">
+                  Priority
+                </label>
                 <select
                   className="w-full p-2 border rounded text-sm"
                   value={filters.priority}
-                  onChange={(e) => handleFilterChange('priority', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("priority", e.target.value)
+                  }
                 >
                   <option value="all">All Priorities</option>
                   <option value="high">High</option>
@@ -572,9 +631,9 @@ const CommunicationTools = () => {
             onClick={() => setActiveTab("announcements")}
           >
             Announcements
-            {stats.notifications.unread > 0 && (
+            {(stats.notifications.unreadAnnouncements || 0) > 0 && (
               <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {stats.notifications.unread}
+                {stats.notifications.unreadAnnouncements}
               </span>
             )}
           </button>
@@ -603,3 +662,46 @@ const CommunicationTools = () => {
 };
 
 export default CommunicationTools;
+
+export async function loader() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return redirect("/");
+  }
+  try {
+    const response = await fetch("/backend/api/auth/verifyToken", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    const userData = await response.json();
+
+    if (userData.status !== 200) {
+      const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+      return redirect("/");
+    }
+
+    // Check role permissions
+    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const userRole = userData.user?.role || localStorage.getItem("userRole");
+
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return redirect("/");
+    }
+
+    return {
+      user: userData.user,
+      isAuthenticated: true,
+    };
+  } catch (error) {
+    console.error("Auth check error:", error);
+    const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    return redirect("/");
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Users, Shield, Lock, Bell, Settings, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router";
+import { redirect, useNavigate } from "react-router";
 import Navbar from "../layout/navbar.jsx";
 import UserManagement from "../components/UserManagement.jsx";
 import RolesManagement from "../components/EditUserRole.jsx";
@@ -147,3 +147,47 @@ const AdminSettings = () => {
 };
 
 export default AdminSettings;
+
+export async function loader() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return redirect("/");
+  }
+  
+  try {
+    const response = await fetch("/backend/api/auth/verifyToken", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    const userData = await response.json();
+     
+    if (userData.status !== 200) {
+      const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+      return redirect("/");
+    }
+
+    // Check role permissions
+    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const userRole = userData.user?.role || localStorage.getItem("userRole");
+
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return redirect("/");
+    }
+
+    return {
+      user: userData.user,
+      isAuthenticated: true,
+    };
+  } catch (error) {
+    console.error("Auth check error:", error);
+    const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    return redirect("/");
+  }
+}

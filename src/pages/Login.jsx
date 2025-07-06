@@ -203,7 +203,7 @@ export async function action({ request, params }) {
     email: data.get("email"),
     password: data.get("password").trim(),
   };
-
+ console.log(loginData)
   // Validate input before sending to API
   if (!loginData.email || !loginData.password) {
     errors.email = "Email and password are required";
@@ -234,7 +234,7 @@ export async function action({ request, params }) {
     });
 
     const resData = await response.json();
-    console.log('Login response:', resData);
+  console.log('Login response:', resData);
 
     // Handle different response statuses
     switch (resData.status) {
@@ -272,7 +272,7 @@ export async function action({ request, params }) {
           errors.email = "Please reset your Registration Password, Redirecting...";
           return errors;
         }
-         console.log(resData.user.role)
+        console.log(resData.user.role)
 
          if(resData.user.role === "Tenant"){
 
@@ -283,7 +283,7 @@ export async function action({ request, params }) {
           // Optional: Store additional user data
           localStorage.setItem("userRole", resData.user.role);
           localStorage.setItem("userId", resData.user.id.toString());
-
+          console.log("Redirecting to tenants dash")
           return redirect("/tenant_dash");
 
          }

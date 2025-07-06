@@ -17,12 +17,15 @@ import {
   X,
   Loader2,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from "lucide-react";
-
 import Navbar from "../layout/navbar";
+import NotificationsModal from "../components/modals/NotificationModal.jsx"; // Import the notifications modal
 
 const API_BASE_URL = '/backend/api/tenant-dash';
 
+// Contact Manager Modal Component
 const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
   const [messageData, setMessageData] = useState({
     subject: "",
@@ -248,92 +251,315 @@ const UploadDocumentModal = ({ isOpen, onClose, onSubmit }) => {
 };
 
 const PaymentModal = ({ isOpen, onClose, tenantData, onPaymentSubmit, loading }) => {
+  const [step, setStep] = useState(1); // 1: Payment Details, 2: Submit Payment Proof
+  const [selectedMethod, setSelectedMethod] = useState("");
   const [paymentData, setPaymentData] = useState({
     amount: tenantData?.tenant?.rentAmount || 0,
-    paymentMethod: "Credit Card",
-    reference: ""
+    paymentMethod: "",
+    reference: "",
+    transactionDate: new Date().toISOString().split('T')[0],
+    notes: ""
   });
+
+  // Payment methods with their details
+  const paymentMethods = {
+    "bank_transfer": {
+      name: "Bank Transfer",
+      icon: "🏦",
+      details: {
+        bankName: "ABC Bank Ltd",
+        accountName: "Urban Properties Management",
+        accountNumber: "1234567890",
+        branchCode: "001",
+        swiftCode: "ABCBKENX"
+      },
+      instructions: [
+        "Transfer the exact amount to the account above",
+        "Use your lease number as the payment reference",
+        "Keep your transaction receipt",
+        "Submit payment details below after transfer"
+      ]
+    },
+    "mpesa": {
+      name: "M-Pesa",
+      icon: "📱",
+      details: {
+        paybillNumber: "400200",
+        businessName: "Urban Properties",
+        accountNumber: tenantData?.tenant?.leaseNumber || "Your Lease Number"
+      },
+      instructions: [
+        "Go to M-Pesa menu on your phone",
+        "Select 'Lipa na M-Pesa' then 'Pay Bill'",
+        `Enter Business Number: 400200`,
+        `Enter Account Number: ${tenantData?.tenant?.leaseNumber || "Your Lease Number"}`,
+        "Enter the amount and complete payment",
+        "You'll receive an SMS confirmation",
+        "Submit the M-Pesa code below"
+      ]
+    },
+    "airtel_money": {
+      name: "Airtel Money",
+      icon: "📲",
+      details: {
+        merchantCode: "500300",
+        businessName: "Urban Properties",
+        accountNumber: tenantData?.tenant?.leaseNumber || "Your Lease Number"
+      },
+      instructions: [
+        "Dial *334# on your Airtel line",
+        "Select 'Pay Bills'",
+        "Enter Merchant Code: 500300",
+        `Enter Reference: ${tenantData?.tenant?.leaseNumber || "Your Lease Number"}`,
+        "Enter amount and confirm payment",
+        "Save the transaction ID from SMS",
+        "Submit transaction details below"
+      ]
+    }
+  };
+
+  const handleMethodSelect = (method) => {
+    setSelectedMethod(method);
+    setPaymentData({ ...paymentData, paymentMethod: method });
+    setStep(2);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onPaymentSubmit(paymentData);
+    onPaymentSubmit({
+      ...paymentData,
+      paymentMethod: selectedMethod,
+      status: 'pending_verification' // This will be pending until admin confirms
+    });
+  };
+
+  const resetModal = () => {
+    setStep(1);
+    setSelectedMethod("");
+    setPaymentData({
+      amount: tenantData?.tenant?.rentAmount || 0,
+      paymentMethod: "",
+      reference: "",
+      transactionDate: new Date().toISOString().split('T')[0],
+      notes: ""
+    });
+  };
+
+  const handleClose = () => {
+    resetModal();
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-96">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={handleClose} />
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold">Make Payment</h2>
-          <button onClick={onClose} disabled={loading}>
+          <div>
+            <h2 className="text-xl font-bold">
+              {step === 1 ? "Choose Payment Method" : "Submit Payment Details"}
+            </h2>
+            <div className="flex items-center mt-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                step >= 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+              }`}>
+                1
+              </div>
+              <div className={`w-16 h-1 ${step >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                step >= 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+              }`}>
+                2
+              </div>
+            </div>
+          </div>
+          <button onClick={handleClose} disabled={loading}>
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Payment Amount</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              className="w-full p-2 border rounded"
-              value={paymentData.amount}
-              onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) })}
-              disabled={loading}
-              required
-            />
-          </div>
+        {step === 1 && (
+          <div className="p-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Payment Amount</h3>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Amount Due:</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    {new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD'
+                    }).format(tenantData?.tenant?.balance || tenantData?.tenant?.rentAmount || 0)}
+                  </span>
+                </div>
+                {tenantData?.tenant?.balance > 0 && (
+                  <p className="text-sm text-orange-600 mt-2">
+                    Outstanding balance including any late fees
+                  </p>
+                )}
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Payment Method</label>
-            <select 
-              className="w-full p-2 border rounded"
-              value={paymentData.paymentMethod}
-              onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value })}
-              disabled={loading}
-            >
-              <option value="Credit Card">Credit Card</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-              <option value="M-Pesa">M-Pesa</option>
-              <option value="Airtel Money">Airtel Money</option>
-              <option value="Cash">Cash</option>
-            </select>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Select Payment Method</h3>
+              
+              {Object.entries(paymentMethods).map(([key, method]) => (
+                <div
+                  key={key}
+                  className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-colors"
+                  onClick={() => handleMethodSelect(key)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{method.icon}</span>
+                    <div>
+                      <h4 className="font-medium">{method.name}</h4>
+                      <p className="text-sm text-gray-600">
+                        {key === 'bank_transfer' && 'Direct bank transfer'}
+                        {key === 'mpesa' && 'Pay via M-Pesa paybill'}
+                        {key === 'airtel_money' && 'Pay via Airtel Money'}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Reference Number (Optional)</label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
-              value={paymentData.reference}
-              onChange={(e) => setPaymentData({ ...paymentData, reference: e.target.value })}
-              placeholder="Transaction reference"
-              disabled={loading}
-            />
-          </div>
+        {step === 2 && selectedMethod && (
+          <div className="p-6">
+            <div className="mb-6">
+              <button
+                onClick={() => setStep(1)}
+                className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
+              >
+                ← Back to payment methods
+              </button>
+              
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <span className="text-2xl mr-2">{paymentMethods[selectedMethod].icon}</span>
+                  {paymentMethods[selectedMethod].name} Details
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {Object.entries(paymentMethods[selectedMethod].details).map(([key, value]) => (
+                    <div key={key} className="bg-white p-3 rounded border">
+                      <p className="text-sm font-medium text-gray-600 capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </p>
+                      <p className="font-semibold text-lg">{value}</p>
+                    </div>
+                  ))}
+                </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded hover:bg-gray-50"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
-              disabled={loading}
-            >
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Process Payment
-            </button>
+                <div className="bg-blue-50 p-4 rounded">
+                  <h4 className="font-medium mb-2">Payment Instructions:</h4>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    {paymentMethods[selectedMethod].instructions.map((instruction, index) => (
+                      <li key={index}>{instruction}</li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div className="flex">
+                  <AlertTriangle className="w-5 h-5 text-yellow-400 mr-2" />
+                  <div>
+                    <h4 className="font-medium text-yellow-800">Important Notice</h4>
+                    <p className="text-sm text-yellow-700">
+                      After making the payment, submit the details below. Your payment will be verified by our admin team within 24 hours.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Payment Amount *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={paymentData.amount}
+                  onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) })}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Transaction Date *</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={paymentData.transactionDate}
+                  onChange={(e) => setPaymentData({ ...paymentData, transactionDate: e.target.value })}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {selectedMethod === 'mpesa' ? 'M-Pesa Transaction Code *' :
+                   selectedMethod === 'airtel_money' ? 'Airtel Money Transaction ID *' :
+                   'Transaction Reference Number *'}
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={paymentData.reference}
+                  onChange={(e) => setPaymentData({ ...paymentData, reference: e.target.value })}
+                  placeholder={
+                    selectedMethod === 'mpesa' ? 'e.g., QH7X8K9L2M' :
+                    selectedMethod === 'airtel_money' ? 'e.g., AM123456789' :
+                    'Bank reference or receipt number'
+                  }
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Additional Notes (Optional)</label>
+                <textarea
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  value={paymentData.notes}
+                  onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
+                  placeholder="Any additional information about this payment..."
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                  disabled={loading}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
+                  disabled={loading}
+                >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Submit for Verification
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );
@@ -462,6 +688,7 @@ const TenantDashboard = () => {
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   
   const [activeModule, setActiveModule] = useState("Tenant Dashboard");
 
@@ -471,7 +698,7 @@ const TenantDashboard = () => {
       setLoading(true);
       setError(null);
       
-      const token = localStorage.getItem('token'); // Adjust based on your auth implementation
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/tenant/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -493,6 +720,38 @@ const TenantDashboard = () => {
     }
   };
 
+  // Mark notification as read
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/backend/api/communications/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Update local state to reflect the change
+        setTenantData(prevData => ({
+          ...prevData,
+          notifications: prevData.notifications.map(notification =>
+            notification.id === notificationId
+              ? { ...notification, isRead: true }
+              : notification
+          ),
+          stats: {
+            ...prevData.stats,
+            unreadNotifications: Math.max(0, prevData.stats.unreadNotifications - 1)
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchTenantData();
@@ -504,7 +763,7 @@ const TenantDashboard = () => {
       setActionLoading(true);
       
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/tenant/payment`, {
+      const response = await fetch(`${API_BASE_URL}/tenant/payment/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -513,22 +772,23 @@ const TenantDashboard = () => {
         body: JSON.stringify({
           amount: paymentData.amount,
           paymentMethod: paymentData.paymentMethod,
-          paymentReference: paymentData.reference
+          reference: paymentData.reference,
+          transactionDate: paymentData.transactionDate,
+          notes: paymentData.notes
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Payment failed: ${response.status}`);
+        throw new Error(`Payment submission failed: ${response.status}`);
       }
 
       const result = await response.json();
-      alert('Payment processed successfully!');
+      alert('Payment submitted successfully! You will be notified once it\'s verified by our admin team.');
       setShowPaymentModal(false);
       
-      // Refresh dashboard data
       await fetchTenantData();
     } catch (err) {
-      alert(`Payment failed: ${err.message}`);
+      alert(`Payment submission failed: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -557,7 +817,6 @@ const TenantDashboard = () => {
       alert('Maintenance request submitted successfully!');
       setShowMaintenanceModal(false);
       
-      // Refresh dashboard data
       await fetchTenantData();
     } catch (err) {
       alert(`Request failed: ${err.message}`);
@@ -569,7 +828,6 @@ const TenantDashboard = () => {
   // Handle contact manager submission
   const handleContactSubmit = async (messageData) => {
     try {
-      // In a real app, you'd send this to your backend
       console.log('Contact message:', messageData);
       alert('Message sent to property manager!');
     } catch (err) {
@@ -580,7 +838,6 @@ const TenantDashboard = () => {
   // Handle document upload
   const handleDocumentUpload = async (uploadData) => {
     try {
-      // In a real app, you'd upload the file to your backend
       console.log('Document upload:', uploadData);
       alert('Document uploaded successfully!');
     } catch (err) {
@@ -826,30 +1083,65 @@ const TenantDashboard = () => {
             </div>
           </div>
 
-          {/* Important Notifications */}
+          {/* Updated Notifications Card */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">Notifications</h2>
-              <Bell className="w-5 h-5 text-purple-500" />
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Bell className="w-5 h-5 text-purple-500" />
+                  {tenantData.stats.unreadNotifications > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {tenantData.stats.unreadNotifications}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
+            
             <div className="space-y-4">
               {tenantData.notifications && tenantData.notifications.length > 0 ? (
-                tenantData.notifications.slice(0, 3).map((notification) => (
-                  <div key={notification.id} className="border-b pb-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-medium">{notification.title}</h3>
-                        <p className="text-sm text-gray-600">{notification.content}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(notification.date)}
-                        </p>
+                <>
+                  {/* Show only the first notification */}
+                  {tenantData.notifications.slice(0, 1).map((notification) => (
+                    <div key={notification.id} className={`border-b pb-4 ${
+                      !notification.isRead ? "border-l-4 border-l-blue-500 pl-3" : ""
+                    }`}>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h3 className="font-medium">{notification.title}</h3>
+                            {notification.isUrgent && (
+                              <AlertTriangle className="w-4 h-4 text-red-500" />
+                            )}
+                            {!notification.isRead && (
+                              <button
+                                onClick={() => markNotificationAsRead(notification.id)}
+                                className="text-blue-500 hover:text-blue-700 transition-colors"
+                                title="Mark as read"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 line-clamp-2">{notification.content}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatDate(notification.date)}
+                          </p>
+                        </div>
                       </div>
-                      {notification.isUrgent && (
-                        <AlertTriangle className="w-4 h-4 text-red-500 ml-2" />
-                      )}
                     </div>
-                  </div>
-                ))
+                  ))}
+                  
+                  {/* View All button */}
+                  <button
+                    onClick={() => setShowNotificationsModal(true)}
+                    className="w-full text-blue-500 hover:text-blue-700 py-2 text-sm font-medium transition-colors flex items-center justify-center space-x-1"
+                  >
+                    <span>View All ({tenantData.notifications.length})</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </>
               ) : (
                 <p className="text-gray-500 text-center py-4">No notifications</p>
               )}
@@ -891,6 +1183,62 @@ const TenantDashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Payment Submissions Section */}
+        {tenantData.paymentSubmissions && tenantData.paymentSubmissions.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Recent Payment Submissions</h2>
+              <Clock className="w-5 h-5 text-blue-500" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Submission Date</th>
+                    <th className="text-left py-2">Amount</th>
+                    <th className="text-left py-2">Method</th>
+                    <th className="text-left py-2">Reference</th>
+                    <th className="text-left py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tenantData.paymentSubmissions.slice(0, 5).map((submission) => (
+                    <tr key={submission.id} className="border-b">
+                      <td className="py-2">{formatDate(submission.submissionDate)}</td>
+                      <td className="py-2">{formatCurrency(submission.amount)}</td>
+                      <td className="py-2 capitalize">{submission.paymentMethod.replace('_', ' ')}</td>
+                      <td className="py-2 font-mono text-xs">{submission.transactionReference}</td>
+                      <td className="py-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          submission.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
+                          submission.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {submission.verificationStatus === 'verified' ? 'Verified' :
+                           submission.verificationStatus === 'rejected' ? 'Rejected' : 'Pending Verification'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="mt-4 text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                <div className="flex items-start">
+                  <Clock className="w-4 h-4 text-blue-500 mr-2 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Payment Verification Process:</p>
+                    <ul className="mt-1 space-y-1 text-xs">
+                      <li>• Payments are verified by our admin team within 24 hours</li>
+                      <li>• You'll receive a notification once verification is complete</li>
+                      <li>• Verified payments are automatically applied to your account</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Payment History Section */}
         {tenantData.rentHistory && tenantData.rentHistory.length > 0 && (
@@ -959,9 +1307,61 @@ const TenantDashboard = () => {
           onClose={() => setShowUploadModal(false)}
           onSubmit={handleDocumentUpload}
         />
+
+        <NotificationsModal
+          isOpen={showNotificationsModal}
+          onClose={() => setShowNotificationsModal(false)}
+          notifications={tenantData.notifications || []}
+          onMarkAsRead={markNotificationAsRead}
+          loading={false}
+        />
       </div>
     </Navbar>
   );
 };
 
 export default TenantDashboard;
+
+export async function loader() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return redirect("/");
+  }
+
+  try {
+    const response = await fetch("/backend/api/auth/verifyToken", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    const userData = await response.json();
+     
+    if (userData.status !== 200) {
+      const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+      return redirect("/");
+    }
+
+    // Check role permissions
+    const allowedRoles = ["Tenant"];
+    const userRole = userData.user?.role || localStorage.getItem("userRole");
+
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return redirect("/");
+    }
+
+    return {
+      user: userData.user,
+      isAuthenticated: true,
+    };
+  } catch (error) {
+    console.error("Auth check error:", error);
+    const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    return redirect("/");
+  }
+}

@@ -42,6 +42,8 @@ const PropertyManagement = () => {
     occupancyState: "",
     minVacancies: "",
     propertyType: "",
+    blacklistStatus: "", // New filter
+    tenantStatus: "",
   });
 
   const loaderData = useLoaderData();
@@ -84,7 +86,7 @@ const PropertyManagement = () => {
         setFilteredProperties(result.data.properties);
         setPortfolioStats(result.data.portfolioStats);
         setLastUpdated(new Date());
-        console.log("Properties updated successfully");
+        console.log(portfolioStats);
       } else {
         throw new Error(result.message || "Failed to fetch properties");
       }
@@ -122,7 +124,13 @@ const PropertyManagement = () => {
           property.occupancyState === filters.occupancyState) &&
         (filters.minVacancies === "" ||
           property.vacantUnits >= parseInt(filters.minVacancies)) &&
-        (filters.propertyType === "" || property.type === filters.propertyType);
+        (filters.propertyType === "" ||
+          property.type === filters.propertyType) &&
+        (filters.blacklistStatus === "" ||
+          (filters.blacklistStatus === "blacklisted" && tenant.isBlacklisted) ||
+          (filters.blacklistStatus === "not_blacklisted" &&
+            !tenant.isBlacklisted)) &&
+        (filters.tenantStatus === "" || tenant.status === filters.tenantStatus);
 
       return matchesSearch && matchesFilters;
     });
@@ -352,6 +360,33 @@ const PropertyManagement = () => {
               <option value="4">4+ Bedrooms</option>
             </select>
 
+            <select
+              className="p-2 border rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filters.blacklistStatus}
+              onChange={(e) =>
+                setFilters({ ...filters, blacklistStatus: e.target.value })
+              }
+            >
+              <option value="">All Tenants</option>
+              <option value="not_blacklisted">Active Tenants</option>
+              <option value="blacklisted">Blacklisted Only</option>
+            </select>
+
+            <select
+              className="p-2 border rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filters.tenantStatus}
+              onChange={(e) =>
+                setFilters({ ...filters, tenantStatus: e.target.value })
+              }
+            >
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Warning">Warning</option>
+              <option value="Expired">Expired</option>
+              <option value="Blacklisted">Blacklisted</option>
+              <option value="No Active Lease">No Active Lease</option>
+            </select>
+
             {/* Occupancy State Filter */}
             <select
               className="p-2 border rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -472,7 +507,6 @@ const PropertyManagement = () => {
           </div>
         )}
 
-
         {/* Add Property Modal */}
         <AddPropertyModal
           isOpen={showAddPropertyModal}
@@ -504,7 +538,7 @@ export default PropertyManagement;
 // Loader function for the property management route
 export async function loader() {
   const token = localStorage.getItem("token");
-  console.log(token)
+
   if (!token) {
     return redirect("/");
   }
@@ -519,7 +553,7 @@ export async function loader() {
     });
 
     const userData = await response.json();
-     console.log(userData)
+
     if (userData.status !== 200) {
       const keysToRemove = ["token", "user", "name", "userRole", "userId"];
       keysToRemove.forEach((key) => localStorage.removeItem(key));

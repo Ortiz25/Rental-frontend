@@ -25,6 +25,7 @@ import TenantDetailsModal from "../components/modals/TenantsDetailsModal.jsx";
 import OffboardTenantModal from "../components/modals/offboardModal.jsx";
 import EnhancedOnboardingForm from "../components/onboardingForm.jsx";
 import EnhancedStats from "../components/EnhancedStats.jsx";
+import TenantCard from "../components/tenentsCard.jsx";
 
 const TenantManagement = () => {
   const [activeModule, setActiveModule] = useState("Tenant Management");
@@ -44,6 +45,16 @@ const TenantManagement = () => {
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showOffboardModal, setShowOffboardModal] = useState(false);
+  const [filters, setFilters] = useState({
+    minRent: "",
+    maxRent: "",
+    bedrooms: "",
+    occupancyState: "",
+    minVacancies: "",
+    propertyType: "",
+    blacklistStatus: "", // New filter
+    tenantStatus: "" // New filter
+  });
 
   // UI states
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,69 +68,97 @@ const TenantManagement = () => {
 
   const loaderData = useLoaderData();
 
+  
   // Fetch tenants from API
-  const fetchTenants = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+const fetchTenants = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      console.log("Fetching tenants...");
-      const response = await fetch("/backend/api/tenants", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          const keysToRemove = ["token", "user", "name", "userRole", "userId"];
-          keysToRemove.forEach((key) => localStorage.removeItem(key));
-          window.location.href = "/";
-          return;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Tenants data received:", result);
-
-      if (result.status === 200) {
-        setTenants(result.data.tenants);
-        setTenantStats(result.data.stats);
-        setLastUpdated(new Date());
-        console.log("Tenants updated successfully");
-      } else {
-        throw new Error(result.message || "Failed to fetch tenants");
-      }
-    } catch (error) {
-      console.error("Tenants fetch error:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
     }
-  };
+
+    console.log("Fetching tenants...");
+    const response = await fetch("/backend/api/tenants", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+        window.location.href = "/";
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Tenants data received:", result);
+
+    if (result.status === 200) {
+      const allTenants = result.data.tenants;
+      
+      // Separate blacklisted and active tenants
+      const activeTenants = allTenants.filter(tenant => !tenant.isBlacklisted);
+      const blacklistedTenantsList = allTenants.filter(tenant => tenant.isBlacklisted);
+      
+      setTenants(activeTenants); // Only show non-blacklisted in main list
+      setBlacklistedTenants(blacklistedTenantsList); // Show blacklisted in separate section
+      setTenantStats(result.data.stats);
+      setLastUpdated(new Date());
+      console.log("Tenants updated successfully");
+      console.log("Blacklisted tenants:", blacklistedTenantsList);
+    } else {
+      throw new Error(result.message || "Failed to fetch tenants");
+    }
+  } catch (error) {
+    console.error("Tenants fetch error:", error);
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Fetch tenants on component mount
   useEffect(() => {
     fetchTenants();
   }, []);
 
-  // Filter tenants based on search term
-  const filteredTenants = useMemo(() => {
-    return tenants.filter(
-      (tenant) =>
-        tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tenant.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tenant.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [tenants, searchTerm]);
+  // Filter tenants based on search term and filters
+const filteredTenants = useMemo(() => {
+  // Combine both arrays based on the blacklist filter
+  let tenantsToFilter = [];
+  
+  if (filters.blacklistStatus === "blacklisted") {
+    // Show only blacklisted tenants
+    tenantsToFilter = blacklistedTenants;
+  } else if (filters.blacklistStatus === "not_blacklisted") {
+    // Show only non-blacklisted tenants
+    tenantsToFilter = tenants;
+  } else {
+    // Show all tenants (combine both arrays)
+    tenantsToFilter = [...tenants, ...blacklistedTenants];
+  }
+  
+  return tenantsToFilter.filter((tenant) => {
+    const matchesSearch =
+      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatusFilter = 
+      filters.tenantStatus === "" || tenant.status === filters.tenantStatus;
+
+    return matchesSearch && matchesStatusFilter;
+  });
+}, [tenants, blacklistedTenants, searchTerm, filters]);
 
   // Pagination calculations
   const paginationData = useMemo(() => {
@@ -278,175 +317,6 @@ const TenantManagement = () => {
     }
   };
 
-  const handleBlacklist = (tenant, reason) => {
-    const blacklistedTenant = {
-      ...tenant,
-      blacklistDate: new Date().toISOString(),
-      blacklistReason: reason,
-      status: "Blacklisted",
-    };
-
-    setBlacklistedTenants([...blacklistedTenants, blacklistedTenant]);
-    setTenants(tenants.filter((t) => t.id !== tenant.id));
-    setShowBlacklistModal(false);
-    setBlacklistReason("");
-  };
-
-  // Tenant Card Component
-  const TenantCard = ({ tenant }) => {
-    console.log("Tenant data:", tenant);
-    // Parse property name to extract unit information if available
-    const parsePropertyInfo = (propertyName) => {
-      if (!propertyName || propertyName === "No Active Lease") {
-        return { property: "No Active Lease", unit: null };
-      }
-
-      const parts = propertyName.split(", Unit ");
-      return {
-        property: parts[0],
-        unit: parts[1] || null,
-      };
-    };
-
-    const { property: propertyName, unit: unitNumber } = parsePropertyInfo(
-      tenant.propertyName
-    );
-
-    const handleOffboardClick = () => {
-      console.log('Offboard button clicked for tenant:', tenant);
-      console.log('Tenant status:', tenant.status);
-      console.log('Should be disabled?', tenant.status === 'No Active Lease');
-      
-      setSelectedTenant(tenant);
-      setShowOffboardModal(true);
-    };
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-bold">{tenant.name}</h3>
-            <div className="space-y-1">
-              <p className="text-gray-600 text-sm">{propertyName}</p>
-              {unitNumber && (
-                <div className="flex items-center text-sm">
-                  <Home className="w-3 h-3 mr-1 text-gray-400" />
-                  <span className="text-gray-500">Unit {unitNumber}</span>
-                </div>
-              )}
-              <p className="text-xs text-gray-500">{tenant.email}</p>
-            </div>
-          </div>
-          <div className="flex flex-col items-end space-y-2">
-            <span
-              className={`px-3 py-1 rounded-full text-sm ${
-                tenant.status === "Active"
-                  ? "bg-green-100 text-green-800"
-                  : tenant.status === "Warning"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : tenant.status === "Expired"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {tenant.status}
-            </span>
-            {tenant.isPrimaryTenant && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                Primary
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-gray-600">Lease Period</p>
-            <p className="font-semibold text-sm">
-              {tenant.leaseStart ? (
-                <>
-                  {new Date(tenant.leaseStart).toLocaleDateString()} -{" "}
-                  {tenant.leaseEnd
-                    ? new Date(tenant.leaseEnd).toLocaleDateString()
-                    : "Ongoing"}
-                </>
-              ) : (
-                "No Active Lease"
-              )}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Monthly Rent</p>
-            <p className="font-semibold">
-              {tenant.rentAmount
-                ? `KSh ${tenant.rentAmount.toLocaleString()}`
-                : "N/A"}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-gray-600">Payment Status</p>
-            <span
-              className={`px-2 py-1 rounded text-xs ${
-                tenant.paymentStatus === "Paid"
-                  ? "bg-green-100 text-green-800"
-                  : tenant.paymentStatus === "Late"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}
-            >
-              {tenant.paymentStatus}
-            </span>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Last Payment</p>
-            <p className="text-sm">
-              {tenant.lastPaymentDate
-                ? new Date(tenant.lastPaymentDate).toLocaleDateString()
-                : "No payments"}
-            </p>
-          </div>
-        </div>
-
-        {/* Additional tenant info */}
-        {tenant.tenantType && tenant.tenantType !== "Tenant" && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">Role</p>
-            <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
-              {tenant.tenantType}
-            </span>
-          </div>
-        )}
-
-        <div className="flex justify-between border-t pt-4">
-          <button
-            onClick={() => {
-              setSelectedTenant(tenant);
-              setShowDetailsModal(true);
-            }}
-            className="text-blue-600 hover:underline text-sm flex items-center"
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            View Details
-          </button>
-          <button
-            onClick={handleOffboardClick}
-            className={`text-red-600 hover:underline text-sm flex items-center ${
-              tenant.status === "No Active Lease"
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-            // disabled={tenant.status === "No Active Lease"}
-          >
-            <UserMinus className="w-4 h-4 mr-1" />
-            Offboard
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   // Pagination Component
   const PaginationControls = () => {
@@ -567,89 +437,177 @@ const TenantManagement = () => {
     );
   };
 
-  const BlacklistModal = ({ tenant }) => (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div
-        className="absolute inset-0 bg-black opacity-50"
-        onClick={() => setShowBlacklistModal(false)}
-      />
-      <div className="relative bg-white p-6 rounded-lg shadow-xl w-96">
-        <h2 className="text-xl font-bold mb-4 text-red-600">
-          Blacklist Tenant
-        </h2>
-        <div className="space-y-4">
-          <div>
-            <p className="font-semibold">Tenant: {tenant?.name}</p>
-            <p className="text-sm text-gray-600">
-              Property: {tenant?.propertyName}
-            </p>
-          </div>
-          <textarea
-            placeholder="Reason for blacklisting..."
-            className="w-full p-2 border rounded"
-            rows={4}
-            value={blacklistReason}
-            onChange={(e) => setBlacklistReason(e.target.value)}
-          />
-          <div className="flex justify-end space-x-2">
-            <button
-              onClick={() => setShowBlacklistModal(false)}
-              className="bg-gray-200 px-4 py-2 rounded"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => handleBlacklist(tenant, blacklistReason)}
-              className="bg-red-500 text-white px-4 py-2 rounded"
-              disabled={!blacklistReason.trim()}
-            >
-              Confirm Blacklist
-            </button>
+  const BlacklistModal = ({ tenant }) => {
+    const [submitting, setSubmitting] = useState(false);
+  
+    const handleSubmit = async () => {
+      if (!blacklistReason.trim()) return;
+      
+      setSubmitting(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`/backend/api/tenants/${tenant.id}/blacklist`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reason: blacklistReason,
+            severity: 'medium',
+            notes: '',
+          }),
+        });
+  
+        const result = await response.json();
+        if (result.status === 200) {
+          // Refresh tenants to update both lists
+          await fetchTenants();
+          setShowBlacklistModal(false);
+          setBlacklistReason("");
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        console.error("Error blacklisting tenant:", error);
+        setError(`Failed to blacklist tenant: ${error.message}`);
+      } finally {
+        setSubmitting(false);
+      }
+    };
+  
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div
+          className="absolute inset-0 bg-black opacity-50"
+          onClick={() => setShowBlacklistModal(false)}
+        />
+        <div className="relative bg-white p-6 rounded-lg shadow-xl w-96">
+          <h2 className="text-xl font-bold mb-4 text-red-600">
+            Blacklist Tenant
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <p className="font-semibold">Tenant: {tenant?.name}</p>
+              <p className="text-sm text-gray-600">
+                Property: {tenant?.propertyName}
+              </p>
+            </div>
+            <textarea
+              placeholder="Reason for blacklisting..."
+              className="w-full p-2 border rounded"
+              rows={4}
+              value={blacklistReason}
+              onChange={(e) => setBlacklistReason(e.target.value)}
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowBlacklistModal(false)}
+                className="bg-gray-200 px-4 py-2 rounded"
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                disabled={!blacklistReason.trim() || submitting}
+              >
+                {submitting ? 'Processing...' : 'Confirm Blacklist'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const BlacklistedTenantsSection = () => (
     <div className="mt-8">
-      <h2 className="text-xl font-bold mb-4">Blacklisted Tenants</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Blacklisted Tenants</h2>
+        <span className="text-sm text-gray-600">
+          {blacklistedTenants.length} blacklisted tenant{blacklistedTenants.length !== 1 ? 's' : ''}
+        </span>
+      </div>
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {blacklistedTenants.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            <p>No blacklisted tenants</p>
+            <div className="text-gray-400 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-lg font-medium">No blacklisted tenants</p>
+            <p className="text-sm text-gray-400 mt-1">All tenants are in good standing</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Previous Property
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Blacklist Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Reason
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {blacklistedTenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{tenant.name}</td>
-                  <td className="px-4 py-3">{tenant.propertyName}</td>
-                  <td className="px-4 py-3">
-                    {new Date(tenant.blacklistDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">{tenant.blacklistReason}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Previous Property
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Blacklist Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Severity
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Reason
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {blacklistedTenants.map((tenant) => (
+                  <tr key={tenant.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium">{tenant.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{tenant.email}</td>
+                    <td className="px-4 py-3 text-sm">{tenant.propertyName || 'N/A'}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {tenant.blacklistedDate ? new Date(tenant.blacklistedDate).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        tenant.blacklistSeverity === 'severe' ? 'bg-red-100 text-red-800' :
+                        tenant.blacklistSeverity === 'high' ? 'bg-red-50 text-red-700' :
+                        tenant.blacklistSeverity === 'medium' ? 'bg-orange-50 text-orange-700' :
+                        'bg-yellow-50 text-yellow-700'
+                      }`}>
+                        {tenant.blacklistSeverity?.toUpperCase() || 'UNKNOWN'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm max-w-xs truncate" title={tenant.blacklistReason}>
+                      {tenant.blacklistReason || 'No reason provided'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          setShowDetailsModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
@@ -745,22 +703,81 @@ const TenantManagement = () => {
           </div>
         </div>
 
+        {/* Filter Section - Add blacklist filters */}
+        <div className="bg-white p-4 rounded-lg shadow mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* Blacklist Status Filter */}
+            <select
+              className="p-2 border rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filters.blacklistStatus}
+              onChange={(e) => setFilters({ ...filters, blacklistStatus: e.target.value })}
+            >
+              <option value="">All Tenants</option>
+              <option value="not_blacklisted">Active Tenants</option>
+              <option value="blacklisted">Blacklisted Only</option>
+            </select>
+
+            {/* Tenant Status Filter */}
+            <select
+              className="p-2 border rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filters.tenantStatus}
+              onChange={(e) => setFilters({ ...filters, tenantStatus: e.target.value })}
+            >
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Warning">Warning</option>
+              <option value="Expired">Expired</option>
+              <option value="Blacklisted">Blacklisted</option>
+              <option value="No Active Lease">No Active Lease</option>
+            </select>
+
+            {/* Clear Filters Button */}
+            <button
+              onClick={() => setFilters({
+                minRent: "",
+                maxRent: "",
+                bedrooms: "",
+                occupancyState: "",
+                minVacancies: "",
+                propertyType: "",
+                blacklistStatus: "",
+                tenantStatus: ""
+              })}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
         {/* Results Summary */}
         <div className="flex justify-between items-center mb-4">
           <p className="text-gray-600">
             Showing {paginationData.showingStart} to {paginationData.showingEnd} of {paginationData.totalItems} tenants
           </p>
-          {searchTerm && (
+          {(searchTerm || Object.values(filters).some(filter => filter !== "")) && (
             <button
-              onClick={() => setSearchTerm("")}
+              onClick={() => {
+                setSearchTerm("");
+                setFilters({
+                  minRent: "",
+                  maxRent: "",
+                  bedrooms: "",
+                  occupancyState: "",
+                  minVacancies: "",
+                  propertyType: "",
+                  blacklistStatus: "",
+                  tenantStatus: ""
+                });
+              }}
               className="text-blue-600 hover:text-blue-800 text-sm"
             >
-              Clear search
+              Clear all filters
             </button>
           )}
         </div>
 
-        {/* Tenant Grid */}
+        {/* Tenant Grid - FIXED: Added missing props */}
         <div id="tenant-grid">
           {paginationData.currentItems.length === 0 ? (
             <div className="text-center py-12">
@@ -800,7 +817,14 @@ const TenantManagement = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {paginationData.currentItems.map((tenant) => (
-                  <TenantCard key={tenant.id} tenant={tenant} />
+                  <TenantCard 
+                    key={tenant.id} 
+                    tenant={tenant}
+                    onUpdate={fetchTenants}
+                    setSelectedTenant={setSelectedTenant}
+                    setShowDetailsModal={setShowDetailsModal}
+                    setShowOffboardModal={setShowOffboardModal}
+                  />
                 ))}
               </div>
               

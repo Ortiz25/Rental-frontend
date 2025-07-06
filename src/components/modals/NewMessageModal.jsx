@@ -140,7 +140,7 @@ const NewMessageModal = ({ isOpen, onClose, onMessageSent }) => {
         payload.tenant_id = selectedRecipient.id;
       }
 
-      const response = await fetch('/api/communications/messages', {
+      const response = await fetch('/backend/api/communications/messages', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
