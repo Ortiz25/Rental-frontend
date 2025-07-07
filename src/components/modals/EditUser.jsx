@@ -76,7 +76,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSubmit, roles = [] }) => {
   const fetchAvailableTenants = async () => {
     try {
       setLoadingTenants(true);
-      const response = await fetch('/backend/api/usermgt/tenants', {
+      const response = await fetch('http://localhost:5020/api/usermgt/tenants', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -194,7 +194,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSubmit, roles = [] }) => {
   // Handler for manual email verification
   const handleEmailVerification = async (verify = true) => {
     try {
-      const response = await fetch(`/backend/api/usermgt/users/${user.id}/verify-email`, {
+      const response = await fetch(`http://localhost:5020/api/usermgt/users/${user.id}/verify-email`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

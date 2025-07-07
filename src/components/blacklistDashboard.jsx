@@ -18,7 +18,7 @@ const BlacklistDashboard = () => {
   const fetchBlacklistStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/backend/api/tenants/blacklist-analytics', {
+      const response = await fetch('http://localhost:5020/api/tenants/blacklist-analytics', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const result = await response.json();

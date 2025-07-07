@@ -32,28 +32,7 @@ const API_BASE_URL = '/backend/api';
 
 const rentCollectionAPI = {
   // Existing API functions...
-  getPayments: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/rent-collection?${queryString}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    return response.json();
-  },
-
-  getSummary: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/rent-collection/summary?${queryString}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    return response.json();
-  },
-
+  
   processPayment: async (id, paymentData) => {
     const response = await fetch(`${API_BASE_URL}/rent-collection/${id}/process`, {
       method: 'PUT',
@@ -119,6 +98,28 @@ const rentCollectionAPI = {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(paymentData)
+    });
+    return response.json();
+  },
+
+  getPayments: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/rent/rent-collection?${queryString}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.json();
+  },
+
+  getSummary: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/rent/rent-collection/summary?${queryString}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
     });
     return response.json();
   },

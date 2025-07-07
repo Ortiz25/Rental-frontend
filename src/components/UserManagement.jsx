@@ -20,7 +20,7 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [roles, setRoles] = useState([]);
-  const url = "/backend/api/usermgt/"
+  const url = "http://localhost:5020/api/usermgt/"
 
   // Fetch users from API
   const fetchUsers = async () => {

@@ -23,7 +23,7 @@ import {
 import Navbar from "../layout/navbar";
 import NotificationsModal from "../components/modals/NotificationModal.jsx"; // Import the notifications modal
 
-const API_BASE_URL = '/backend/api/tenant-dash';
+const API_BASE_URL = 'http://localhost:5020/api/tenant-dash';
 
 // Contact Manager Modal Component
 const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
@@ -724,7 +724,7 @@ const TenantDashboard = () => {
   const markNotificationAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/backend/api/communications/notifications/${notificationId}/read`, {
+      const response = await fetch(`http://localhost:5020/api/communications/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1330,7 +1330,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -70,7 +70,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit, roles = [] }) => {
   const fetchAvailableTenants = async () => {
     try {
       setLoadingTenants(true);
-      const response = await fetch('/backend/api/tenants?has_active_lease=false&has_user_account=false', {
+      const response = await fetch('http://localhost:5020/api/tenants?has_active_lease=false&has_user_account=false', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'

@@ -32,7 +32,7 @@ const TenantCard = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/api/tenants/${tenantId}/blacklist`,
+        `http://localhost:5020/api/tenants/${tenantId}/blacklist`,
         {
           method: "POST",
           headers: {
@@ -62,7 +62,7 @@ const TenantCard = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/api/tenants/${tenantId}/remove-blacklist`,
+        `http://localhost:5020/api/tenants/${tenantId}/remove-blacklist`,
         {
           method: "POST",
           headers: {

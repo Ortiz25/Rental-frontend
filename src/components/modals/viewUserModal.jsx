@@ -7,7 +7,7 @@ const ViewUserModal = ({ isOpen, onClose, user }) => {
   const [loadingActivity, setLoadingActivity] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
-  const url = "/backend/api/usermgt"
+  const url = "http://localhost:5020/api/usermgt"
   useEffect(() => {
     if (isOpen && user) {
       if (activeTab === 'activity') {
