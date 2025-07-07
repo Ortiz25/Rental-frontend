@@ -123,17 +123,6 @@ const rentCollectionAPI = {
     return response.json();
   },
 
-  getSummary: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/rent/rent-collection/summary?${queryString}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    return response.json();
-  },
-
   // Verification API functions
   getPendingSubmissions: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
