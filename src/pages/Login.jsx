@@ -223,7 +223,7 @@ export async function action({ request, params }) {
   }
 
   try {
-    const url = "http://localhost:5020/api/login";
+    const url = "/backend/api/login";
 
     const response = await fetch(url, {
       method: "POST",
@@ -333,7 +333,7 @@ export async function loader() {
   }
 
   try {
-    const url = "http://localhost:5020/api/auth/verifyToken";
+    const url = "/backend/api/auth/verifyToken";
     const data = { token: token };
 
     const response = await fetch(url, {

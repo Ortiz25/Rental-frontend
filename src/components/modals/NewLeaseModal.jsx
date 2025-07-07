@@ -3,7 +3,7 @@ import { X, Plus, Minus, Loader2, AlertCircle } from 'lucide-react';
 
 // API service for fetching supporting data
 const supportAPI = {
-  baseURL:'http://localhost:5020/api/support-lease',
+  baseURL:'/backend/api/support-lease',
   
   // Add auth headers
   getAuthHeaders() {

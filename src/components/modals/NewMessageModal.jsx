@@ -69,7 +69,7 @@ const NewMessageModal = ({ isOpen, onClose, onMessageSent }) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5020/api/communications/recipients', {
+      const response = await fetch('/backend/api/communications/recipients', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -140,7 +140,7 @@ const NewMessageModal = ({ isOpen, onClose, onMessageSent }) => {
         payload.tenant_id = selectedRecipient.id;
       }
 
-      const response = await fetch('http://localhost:5020/api/communications/messages', {
+      const response = await fetch('/backend/api/communications/messages', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -95,7 +95,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5020/api/tenants/${tenant.id}`, {
+      const response = await fetch(`/backend/api/tenants/${tenant.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

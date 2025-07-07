@@ -54,7 +54,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5020/api/communications/properties', {
+      const response = await fetch('/backend/api/communications/properties', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -124,7 +124,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
         payload.property_id = parseInt(announcementData.propertyId);
       }
 
-      const response = await fetch('http://localhost:5020/api/communications/announcements', {
+      const response = await fetch('/backend/api/communications/announcements', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

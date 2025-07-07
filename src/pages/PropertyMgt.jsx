@@ -60,7 +60,7 @@ const PropertyManagement = () => {
       }
 
       console.log("Fetching properties...");
-      const response = await fetch("http://localhost:5020/api/properties", {
+      const response = await fetch("/backend/api/properties", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -155,7 +155,7 @@ const PropertyManagement = () => {
       const token = localStorage.getItem("token");
 
       console.log("Creating new property:", newPropertyData);
-      const response = await fetch("http://localhost:5020/api/properties", {
+      const response = await fetch("/backend/api/properties", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -544,7 +544,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

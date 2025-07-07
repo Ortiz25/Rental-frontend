@@ -23,7 +23,7 @@ import { redirect } from 'react-router';
 // API service functions
 const maintenanceAPI = {
   // Fixed Base API URL - removed trailing slash and changed to HTTP
-  baseURL: "http://localhost:5020/api",
+  baseURL: "/backend/api",
 
   // Helper method to get auth headers
   getAuthHeaders: () => {
@@ -215,7 +215,7 @@ const NewRequestModal = ({ isOpen, onClose, onRequestCreated, availableUnits, me
     if (!unitId || userRole === 'Tenant') return;
     
     try {
-      const response = await fetch(`http://localhost:5020/api/maintenance/units/${unitId}/tenants`);
+      const response = await fetch(`/backend/api/maintenance/units/${unitId}/tenants`);
       if (response.ok) {
         const data = await response.json();
         setUnitTenants(data.data || []);
@@ -1194,7 +1194,7 @@ export async function loader() {
   }
   
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

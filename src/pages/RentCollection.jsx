@@ -28,7 +28,7 @@ import SubmissionDetailsModal from '../components/modals/submissionDetailsModal.
 import VerificationFilters from '../components/verificationFilters.jsx';
 
 // API service functions
-const API_BASE_URL = 'http://localhost:5020/api';
+const API_BASE_URL = '/backend/api';
 
 const rentCollectionAPI = {
   // Existing API functions...
@@ -1209,7 +1209,7 @@ export async function loader() {
   }
    
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
