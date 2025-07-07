@@ -20,7 +20,6 @@ import {
   Loader
 } from 'lucide-react';
 import Navbar from '../layout/navbar.jsx';
-import { redirect } from 'react-router';
 
 // API Configuration
 const API_BASE_URL = '/backend/api';
@@ -98,19 +97,44 @@ const documentAPI = {
 
   // Download document
   downloadDocument: async (documentId) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     
-    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/download`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/documents/${documentId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error('Download failed');
+      // Check if response is ok
+      if (!response.ok) {
+        // Try to get error message from JSON response
+        let errorMessage = 'Download failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // If not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
+      }
+
+      // Check if response is actually a file (blob)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // This is an error response in JSON format
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Download failed');
+      }
+
+      // Get the blob
+      return response.blob();
+      
+    } catch (error) {
+      console.error('Download error details:', error);
+      throw error;
     }
-
-    return response.blob();
   },
 
   // View document
@@ -211,22 +235,40 @@ const useDocuments = () => {
 
   const downloadDocument = async (documentId, fileName) => {
     try {
+      console.log('🔽 Starting download for document ID:', documentId);
       const blob = await documentAPI.downloadDocument(documentId);
+      
+      console.log('📦 Blob received, size:', blob.size, 'type:', blob.type);
+      
+      // Check if blob is valid
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty');
+      }
       
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = fileName;
+      link.download = fileName || `document_${documentId}`;
+      
+      // Add link to body, click it, then remove it
       document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       
       // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      console.log('✅ Download completed successfully');
+      
     } catch (err) {
-      setError(err.message);
-      console.error('Error downloading document:', err);
+      console.error('❌ Download error:', err);
+      setError(`Download failed: ${err.message}`);
+      
+      // Show user-friendly error message
+      alert(`Download failed: ${err.message}`);
     }
   };
 
@@ -340,10 +382,10 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
     try {
       // Fetch all association data in parallel
       const [propertiesRes, unitsRes, tenantsRes, leasesRes] = await Promise.allSettled([
-        apiCall('/documents/properties'),
-        apiCall('/documents/units'),
-        apiCall('/documents/tenants'),
-        apiCall('/documents/leases')
+        apiCall('/properties'),
+        apiCall('/units'),
+        apiCall('/tenants'),
+        apiCall('/leases')
       ]);
 
       // Handle properties
@@ -1127,45 +1169,3 @@ const DocumentManagement = () => {
 };
 
 export default DocumentManagement;
-
-
-export async function loader() {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    return redirect("/");
-  }
- 
-  try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token }),
-    });
-    
-    const userData = await response.json();
-    if (userData.status !== 200) {
-      const keysToRemove = ["token", "user", "name", "userRole", "userId"];
-      keysToRemove.forEach((key) => localStorage.removeItem(key));
-      return redirect("/");
-    }
-
-    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
-    const userRole = userData.user?.role || localStorage.getItem("userRole");
-
-    if (!userRole || !allowedRoles.includes(userRole)) {
-      return redirect("/");
-    }
-
-    return {
-      user: userData.user,
-      isAuthenticated: true,
-    };
-  } catch (error) {
-    console.error("Auth check error:", error);
-    const keysToRemove = ["token", "user", "name", "userRole", "userId"];
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
-    return redirect("/");
-  }
-}

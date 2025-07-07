@@ -1,7 +1,19 @@
 // Enhanced Multi-Step Onboarding Form
-import React, { useState } from 'react';
-import { Check, ChevronRight, ChevronLeft, User, Home, FileText, CreditCard } from 'lucide-react';
-import { PropertyUnitSelector, CoTenantManager, LeaseTermsManager } from './propertyUnitSelection.jsx';
+import React, { useState } from "react";
+import {
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  User,
+  Home,
+  FileText,
+  CreditCard,
+} from "lucide-react";
+import {
+  PropertyUnitSelector,
+  CoTenantManager,
+  LeaseTermsManager,
+} from "./propertyUnitSelection.jsx";
 
 const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -12,25 +24,25 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
   // Form data state
   const [formData, setFormData] = useState({
     // Personal Information
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    alternatePhone: '',
-    dateOfBirth: '',
-    identificationType: '',
-    identificationNumber: '',
-    
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    alternatePhone: "",
+    dateOfBirth: "",
+    identificationType: "",
+    identificationNumber: "",
+
     // Emergency Contact
-    emergencyContactName: '',
-    emergencyContactPhone: '',
-    emergencyContactRelationship: '',
-    
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactRelationship: "",
+
     // Employment Information
-    employmentStatus: '',
-    employerName: '',
-    monthlyIncome: '',
-    previousAddress: '',
+    employmentStatus: "",
+    employerName: "",
+    monthlyIncome: "",
+    previousAddress: "",
   });
 
   // Co-tenants state
@@ -38,55 +50,64 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
 
   // Lease data state
   const [leaseData, setLeaseData] = useState({
-    leaseStart: '',
-    leaseEnd: '',
-    leaseType: 'Fixed Term',
-    monthlyRent: '',
-    securityDeposit: '',
+    leaseStart: "",
+    leaseEnd: "",
+    leaseType: "Fixed Term",
+    monthlyRent: "",
+    securityDeposit: "",
     petDeposit: 0,
     lateFee: 0,
     gracePeriodDays: 5,
     rentDueDay: 1,
-    moveInDate: '',
-    leaseTerms: '',
-    specialConditions: ''
+    moveInDate: "",
+    leaseTerms: "",
+    specialConditions: "",
   });
 
   const steps = [
-    { 
-      id: 1, 
-      title: 'Personal Info', 
+    {
+      id: 1,
+      title: "Personal Info",
       icon: User,
-      description: 'Basic tenant information'
+      description: "Basic tenant information",
     },
-    { 
-      id: 2, 
-      title: 'Property & Unit', 
+    {
+      id: 2,
+      title: "Property & Unit",
       icon: Home,
-      description: 'Select property and unit'
+      description: "Select property and unit",
     },
-    { 
-      id: 3, 
-      title: 'Lease Terms', 
+    {
+      id: 3,
+      title: "Lease Terms",
       icon: FileText,
-      description: 'Configure lease details'
+      description: "Configure lease details",
     },
-    { 
-      id: 4, 
-      title: 'Review & Submit', 
+    {
+      id: 4,
+      title: "Review & Submit",
       icon: CreditCard,
-      description: 'Final review and submission'
-    }
+      description: "Final review and submission",
+    },
   ];
 
   const validateStep = (step) => {
     switch (step) {
       case 1:
-        return formData.firstName && formData.lastName && formData.email && formData.phone;
+        return (
+          formData.firstName &&
+          formData.lastName &&
+          formData.email &&
+          formData.phone
+        );
       case 2:
         return selectedUnit !== null;
       case 3:
-        return leaseData.leaseStart && leaseData.monthlyRent && leaseData.securityDeposit;
+        return (
+          leaseData.leaseStart &&
+          leaseData.monthlyRent &&
+          leaseData.securityDeposit
+        );
       default:
         return true;
     }
@@ -94,12 +115,12 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length));
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length));
     }
   };
 
   const handlePrevious = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async () => {
@@ -110,11 +131,19 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
       const submitData = {
         ...formData,
         selectedUnitId: selectedUnit.id,
-        customMonthlyRent: leaseData.monthlyRent !== selectedUnit.monthlyRent ? leaseData.monthlyRent : null,
-        customSecurityDeposit: leaseData.securityDeposit !== selectedUnit.securityDeposit ? leaseData.securityDeposit : null,
+        customMonthlyRent:
+          leaseData.monthlyRent !== selectedUnit.monthlyRent
+            ? leaseData.monthlyRent
+            : null,
+        customSecurityDeposit:
+          leaseData.securityDeposit !== selectedUnit.securityDeposit
+            ? leaseData.securityDeposit
+            : null,
         ...leaseData,
-        coTenants: coTenants.filter(ct => ct.firstName && ct.lastName && ct.email),
-        reservationId
+        coTenants: coTenants.filter(
+          (ct) => ct.firstName && ct.lastName && ct.email
+        ),
+        reservationId,
       };
 
       const success = await onSubmit(submitData);
@@ -122,7 +151,7 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
         onClose();
       }
     } catch (error) {
-      console.error('Onboarding submission error:', error);
+      console.error("Onboarding submission error:", error);
     } finally {
       setSubmitting(false);
     }
@@ -136,58 +165,79 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
             <div>
               <h3 className="text-lg font-medium mb-4">Personal Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input 
-                  placeholder="First Name *" 
+                <input
+                  placeholder="First Name *"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, firstName: e.target.value })
+                  }
                   required
-                />
-                <input 
-                  placeholder="Last Name *" 
-                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  required
-                />
-                <input 
-                  type="email"
-                  placeholder="Email *" 
-                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  required
-                />
-                <input 
-                  placeholder="Phone *" 
-                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  required
-                />
-                <input 
-                  placeholder="Alternate Phone" 
-                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.alternatePhone}
-                  onChange={(e) => setFormData({...formData, alternatePhone: e.target.value})}
                 />
                 <input
-                  type="date"
-                  placeholder="Date of Birth"
+                  placeholder="Last Name *"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                  value={formData.lastName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, lastName: e.target.value })
+                  }
+                  required
                 />
+                <input
+                  type="email"
+                  placeholder="Email *"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  placeholder="Phone *"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  placeholder="Alternate Phone"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  value={formData.alternatePhone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, alternatePhone: e.target.value })
+                  }
+                />
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full"
+                    value={formData.dateOfBirth}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dateOfBirth: e.target.value })
+                    }
+                  />
+                </div>
               </div>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-4">Identification</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select 
+                <select
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.identificationType}
-                  onChange={(e) => setFormData({...formData, identificationType: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      identificationType: e.target.value,
+                    })
+                  }
                 >
                   <option value="">Select ID Type</option>
                   <option value="National ID">National ID</option>
@@ -195,11 +245,16 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
                   <option value="Driver License">Driver License</option>
                   <option value="Other">Other</option>
                 </select>
-                <input 
-                  placeholder="ID Number" 
+                <input
+                  placeholder="ID Number"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.identificationNumber}
-                  onChange={(e) => setFormData({...formData, identificationNumber: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      identificationNumber: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -207,34 +262,56 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
             <div>
               <h3 className="text-lg font-medium mb-4">Emergency Contact</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input 
-                  placeholder="Emergency Contact Name" 
+                <input
+                  placeholder="Emergency Contact Name"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.emergencyContactName}
-                  onChange={(e) => setFormData({...formData, emergencyContactName: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      emergencyContactName: e.target.value,
+                    })
+                  }
                 />
-                <input 
-                  placeholder="Emergency Contact Phone" 
+                <input
+                  placeholder="Emergency Contact Phone"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.emergencyContactPhone}
-                  onChange={(e) => setFormData({...formData, emergencyContactPhone: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      emergencyContactPhone: e.target.value,
+                    })
+                  }
                 />
-                <input 
-                  placeholder="Relationship" 
+                <input
+                  placeholder="Relationship"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.emergencyContactRelationship}
-                  onChange={(e) => setFormData({...formData, emergencyContactRelationship: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      emergencyContactRelationship: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-4">Employment Information</h3>
+              <h3 className="text-lg font-medium mb-4">
+                Employment Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <select 
+                <select
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.employmentStatus}
-                  onChange={(e) => setFormData({...formData, employmentStatus: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      employmentStatus: e.target.value,
+                    })
+                  }
                 >
                   <option value="">Employment Status</option>
                   <option value="Employed">Employed</option>
@@ -243,18 +320,22 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
                   <option value="Student">Student</option>
                   <option value="Retired">Retired</option>
                 </select>
-                <input 
-                  placeholder="Employer Name" 
+                <input
+                  placeholder="Employer Name"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.employerName}
-                  onChange={(e) => setFormData({...formData, employerName: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, employerName: e.target.value })
+                  }
                 />
-                <input 
+                <input
                   type="number"
-                  placeholder="Monthly Income (KSh)" 
+                  placeholder="Monthly Income (KSh)"
                   className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   value={formData.monthlyIncome}
-                  onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, monthlyIncome: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -266,7 +347,9 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 value={formData.previousAddress}
-                onChange={(e) => setFormData({...formData, previousAddress: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, previousAddress: e.target.value })
+                }
               />
             </div>
           </div>
@@ -300,25 +383,38 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium mb-4">Review & Confirm</h3>
-            
+
             {/* Tenant Information Summary */}
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-medium mb-2">Primary Tenant</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-gray-600">Name:</span> {formData.firstName} {formData.lastName}</div>
-                <div><span className="text-gray-600">Email:</span> {formData.email}</div>
-                <div><span className="text-gray-600">Phone:</span> {formData.phone}</div>
-                <div><span className="text-gray-600">Employment:</span> {formData.employmentStatus}</div>
+                <div>
+                  <span className="text-gray-600">Name:</span>{" "}
+                  {formData.firstName} {formData.lastName}
+                </div>
+                <div>
+                  <span className="text-gray-600">Email:</span> {formData.email}
+                </div>
+                <div>
+                  <span className="text-gray-600">Phone:</span> {formData.phone}
+                </div>
+                <div>
+                  <span className="text-gray-600">Employment:</span>{" "}
+                  {formData.employmentStatus}
+                </div>
               </div>
             </div>
 
             {/* Co-tenants Summary */}
             {coTenants.length > 0 && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Co-Tenants ({coTenants.length})</h4>
+                <h4 className="font-medium mb-2">
+                  Co-Tenants ({coTenants.length})
+                </h4>
                 {coTenants.map((coTenant, index) => (
                   <div key={coTenant.id} className="text-sm mb-1">
-                    {index + 1}. {coTenant.firstName} {coTenant.lastName} ({coTenant.tenantType})
+                    {index + 1}. {coTenant.firstName} {coTenant.lastName} (
+                    {coTenant.tenantType})
                   </div>
                 ))}
               </div>
@@ -329,12 +425,30 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
               <div className="bg-blue-50 rounded-lg p-4">
                 <h4 className="font-medium mb-2">Selected Property & Unit</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-gray-600">Property:</span> {selectedUnit.property.propertyName}</div>
-                  <div><span className="text-gray-600">Unit:</span> {selectedUnit.unitNumber}</div>
-                  <div><span className="text-gray-600">Address:</span> {selectedUnit.property.address}</div>
-                  <div><span className="text-gray-600">Type:</span> {selectedUnit.property.propertyType}</div>
-                  <div><span className="text-gray-600">Bedrooms:</span> {selectedUnit.bedrooms}</div>
-                  <div><span className="text-gray-600">Bathrooms:</span> {selectedUnit.bathrooms}</div>
+                  <div>
+                    <span className="text-gray-600">Property:</span>{" "}
+                    {selectedUnit.property.propertyName}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Unit:</span>{" "}
+                    {selectedUnit.unitNumber}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Address:</span>{" "}
+                    {selectedUnit.property.address}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Type:</span>{" "}
+                    {selectedUnit.property.propertyType}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Bedrooms:</span>{" "}
+                    {selectedUnit.bedrooms}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Bathrooms:</span>{" "}
+                    {selectedUnit.bathrooms}
+                  </div>
                 </div>
               </div>
             )}
@@ -343,17 +457,41 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
             <div className="bg-green-50 rounded-lg p-4">
               <h4 className="font-medium mb-2">Lease Terms</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-gray-600">Start Date:</span> {leaseData.leaseStart}</div>
-                <div><span className="text-gray-600">End Date:</span> {leaseData.leaseEnd || 'Not specified'}</div>
-                <div><span className="text-gray-600">Type:</span> {leaseData.leaseType}</div>
-                <div><span className="text-gray-600">Move-in Date:</span> {leaseData.moveInDate || 'Same as start date'}</div>
-                <div><span className="text-gray-600">Monthly Rent:</span> KSh {parseInt(leaseData.monthlyRent || 0).toLocaleString()}</div>
-                <div><span className="text-gray-600">Security Deposit:</span> KSh {parseInt(leaseData.securityDeposit || 0).toLocaleString()}</div>
+                <div>
+                  <span className="text-gray-600">Start Date:</span>{" "}
+                  {leaseData.leaseStart}
+                </div>
+                <div>
+                  <span className="text-gray-600">End Date:</span>{" "}
+                  {leaseData.leaseEnd || "Not specified"}
+                </div>
+                <div>
+                  <span className="text-gray-600">Type:</span>{" "}
+                  {leaseData.leaseType}
+                </div>
+                <div>
+                  <span className="text-gray-600">Move-in Date:</span>{" "}
+                  {leaseData.moveInDate || "Same as start date"}
+                </div>
+                <div>
+                  <span className="text-gray-600">Monthly Rent:</span> KSh{" "}
+                  {parseInt(leaseData.monthlyRent || 0).toLocaleString()}
+                </div>
+                <div>
+                  <span className="text-gray-600">Security Deposit:</span> KSh{" "}
+                  {parseInt(leaseData.securityDeposit || 0).toLocaleString()}
+                </div>
                 {parseFloat(leaseData.petDeposit) > 0 && (
-                  <div><span className="text-gray-600">Pet Deposit:</span> KSh {parseInt(leaseData.petDeposit).toLocaleString()}</div>
+                  <div>
+                    <span className="text-gray-600">Pet Deposit:</span> KSh{" "}
+                    {parseInt(leaseData.petDeposit).toLocaleString()}
+                  </div>
                 )}
                 {parseFloat(leaseData.lateFee) > 0 && (
-                  <div><span className="text-gray-600">Late Fee:</span> KSh {parseInt(leaseData.lateFee).toLocaleString()}</div>
+                  <div>
+                    <span className="text-gray-600">Late Fee:</span> KSh{" "}
+                    {parseInt(leaseData.lateFee).toLocaleString()}
+                  </div>
                 )}
               </div>
             </div>
@@ -364,36 +502,49 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>Monthly Rent:</span>
-                  <span>KSh {parseInt(leaseData.monthlyRent || 0).toLocaleString()}</span>
+                  <span>
+                    KSh {parseInt(leaseData.monthlyRent || 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Security Deposit:</span>
-                  <span>KSh {parseInt(leaseData.securityDeposit || 0).toLocaleString()}</span>
+                  <span>
+                    KSh{" "}
+                    {parseInt(leaseData.securityDeposit || 0).toLocaleString()}
+                  </span>
                 </div>
                 {parseFloat(leaseData.petDeposit) > 0 && (
                   <div className="flex justify-between">
                     <span>Pet Deposit:</span>
-                    <span>KSh {parseInt(leaseData.petDeposit).toLocaleString()}</span>
+                    <span>
+                      KSh {parseInt(leaseData.petDeposit).toLocaleString()}
+                    </span>
                   </div>
                 )}
                 <hr className="border-yellow-300" />
                 <div className="flex justify-between font-medium">
                   <span>Total Move-in Cost:</span>
-                  <span>KSh {(
-                    parseInt(leaseData.monthlyRent || 0) + 
-                    parseInt(leaseData.securityDeposit || 0) + 
-                    parseInt(leaseData.petDeposit || 0)
-                  ).toLocaleString()}</span>
+                  <span>
+                    KSh{" "}
+                    {(
+                      parseInt(leaseData.monthlyRent || 0) +
+                      parseInt(leaseData.securityDeposit || 0) +
+                      parseInt(leaseData.petDeposit || 0)
+                    ).toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Confirmation */}
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h4 className="font-medium text-red-800 mb-2">Important Notice</h4>
+              <h4 className="font-medium text-red-800 mb-2">
+                Important Notice
+              </h4>
               <p className="text-sm text-red-700">
-                By submitting this form, you confirm that all information provided is accurate and complete. 
-                This will create an active lease agreement and mark the selected unit as occupied.
+                By submitting this form, you confirm that all information
+                provided is accurate and complete. This will create an active
+                lease agreement and mark the selected unit as occupied.
               </p>
             </div>
           </div>
@@ -409,7 +560,9 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
       {/* Header */}
       <div className="px-6 py-4 border-b">
         <h2 className="text-xl font-bold">New Tenant Onboarding</h2>
-        <p className="text-sm text-gray-600">Complete tenant registration with unit allocation</p>
+        <p className="text-sm text-gray-600">
+          Complete tenant registration with unit allocation
+        </p>
       </div>
 
       {/* Progress Steps */}
@@ -420,19 +573,21 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
             const isActive = currentStep === step.id;
             const isCompleted = currentStep > step.id;
             const isValid = validateStep(step.id);
-            
+
             return (
               <div key={step.id} className="flex items-center">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    isCompleted 
-                      ? 'bg-green-500 border-green-500 text-white' 
-                      : isActive 
-                      ? isValid 
-                        ? 'border-blue-500 bg-blue-500 text-white' 
-                        : 'border-blue-500 bg-white text-blue-500'
-                      : 'border-gray-300 bg-white text-gray-400'
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      isCompleted
+                        ? "bg-green-500 border-green-500 text-white"
+                        : isActive
+                        ? isValid
+                          ? "border-blue-500 bg-blue-500 text-white"
+                          : "border-blue-500 bg-white text-blue-500"
+                        : "border-gray-300 bg-white text-gray-400"
+                    }`}
+                  >
                     {isCompleted ? (
                       <Check className="w-5 h-5" />
                     ) : (
@@ -440,9 +595,15 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
                     )}
                   </div>
                   <div className="mt-2 text-center">
-                    <div className={`text-xs font-medium ${
-                      isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                    }`}>
+                    <div
+                      className={`text-xs font-medium ${
+                        isActive
+                          ? "text-blue-600"
+                          : isCompleted
+                          ? "text-green-600"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {step.title}
                     </div>
                     <div className="text-xs text-gray-400 hidden sm:block">
@@ -461,9 +622,7 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-6 py-6">
-          {renderStepContent()}
-        </div>
+        <div className="px-6 py-6">{renderStepContent()}</div>
       </div>
 
       {/* Footer */}
@@ -472,7 +631,7 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
           <div className="text-sm text-gray-500">
             Step {currentStep} of {steps.length}
           </div>
-          
+
           <div className="flex space-x-3">
             <button
               type="button"
@@ -482,7 +641,7 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
             >
               Cancel
             </button>
-            
+
             {currentStep > 1 && (
               <button
                 type="button"
@@ -494,7 +653,7 @@ const EnhancedOnboardingForm = ({ onSubmit, onClose }) => {
                 Previous
               </button>
             )}
-            
+
             {currentStep < steps.length ? (
               <button
                 type="button"

@@ -8,22 +8,25 @@ import {
   X,
   Eye,
   Home,
+  Edit,
 } from "lucide-react";
 import BlacklistBadge from "./blacklistBadge.jsx";
 import BlacklistTenantModal from "./modals/BlacklistTenantModal.jsx";
 import BlacklistHistory from "./blacklistHistory.jsx";
 import { Shield, History, AlertTriangle } from "lucide-react";
+import EditTenantModal from "./modals/EditTenantModal.jsx";
 
-const TenantCard = ({ 
-  tenant, 
+const TenantCard = ({
+  tenant,
   onUpdate, // Add this prop
   setSelectedTenant, // Add this prop
   setShowDetailsModal, // Add this prop
-  setShowOffboardModal // Add this prop
+  setShowOffboardModal, // Add this prop
 }) => {
   const [showBlacklistModal, setShowBlacklistModal] = useState(false);
   const [showBlacklistHistory, setShowBlacklistHistory] = useState(false);
   const [isRemovingBlacklist, setIsRemovingBlacklist] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleBlacklistTenant = async (tenantId, blacklistData) => {
     try {
@@ -195,7 +198,16 @@ const TenantCard = ({
                 >
                   <AlertTriangle className="h-4 w-4" />
                 </button>
-                
+
+                {/* Edit Tenant Button */}
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="p-1.5 text-green-500 hover:text-green-700 hover:bg-green-100 rounded transition-colors"
+                  title="Edit tenant information"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+
                 {/* View Details Button */}
                 <button
                   onClick={() => {
@@ -279,19 +291,29 @@ const TenantCard = ({
       )}
 
       {/* Action Footer */}
+      {/* Action Footer */}
       <div className="flex justify-between border-t pt-4">
-        <button
-          onClick={() => {
-            if (setSelectedTenant && setShowDetailsModal) {
-              setSelectedTenant(tenant);
-              setShowDetailsModal(true);
-            }
-          }}
-          className="text-blue-600 hover:underline text-sm flex items-center"
-        >
-          <Eye className="w-4 h-4 mr-1" />
-          View Details
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => {
+              if (setSelectedTenant && setShowDetailsModal) {
+                setSelectedTenant(tenant);
+                setShowDetailsModal(true);
+              }
+            }}
+            className="text-blue-600 hover:underline text-sm flex items-center"
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            View Details
+          </button>
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="text-green-600 hover:underline text-sm flex items-center"
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit
+          </button>
+        </div>
         <button
           onClick={handleOffboardClick}
           className={`text-red-600 hover:underline text-sm flex items-center ${
@@ -324,6 +346,12 @@ const TenantCard = ({
         tenantId={tenant.id}
         isOpen={showBlacklistHistory}
         onClose={() => setShowBlacklistHistory(false)}
+      />
+      <EditTenantModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        tenant={tenant}
+        onUpdate={onUpdate}
       />
     </div>
   );
