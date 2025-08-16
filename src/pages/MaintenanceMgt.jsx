@@ -543,7 +543,7 @@ const StatusUpdateModal = ({ request, isOpen, onClose, onUpdate }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Estimated Cost ($)</label>
+            <label className="block text-sm font-medium mb-2">Estimated Cost (kes)</label>
             <input
               type="number"
               className="w-full p-2 border rounded"

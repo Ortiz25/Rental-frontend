@@ -23,13 +23,22 @@ import {
   Clock,
 } from "lucide-react";
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'KES'
+  }).format(amount || 0);
+};
 
-
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString();
+};
 
 
 
 // Payment History Tab Component
 const PaymentsTab = ({ tenant }) => {
+  console.log(tenant)
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -54,9 +63,9 @@ const PaymentsTab = ({ tenant }) => {
             <tbody className="divide-y divide-gray-200">
               {tenant.paymentHistory?.map((payment, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">{payment.date}</td>
+                  <td className="px-4 py-2">{formatDate(payment.date)}</td>
                   <td className="px-4 py-2">{payment.type}</td>
-                  <td className="px-4 py-2">${payment.amount.toLocaleString()}</td>
+                  <td className="px-4 py-2">{formatCurrency(payment.amount)}</td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       payment.status === 'Paid' 
@@ -82,22 +91,22 @@ const PaymentsTab = ({ tenant }) => {
             <div>
               <p className="text-sm text-gray-500">Total Paid</p>
               <p className="text-lg font-semibold text-green-600">
-                ${tenant.paymentHistory?.reduce((sum, payment) => 
+                {formatCurrency(tenant.paymentHistory?.reduce((sum, payment) => 
                   payment.status === 'Paid' ? sum + payment.amount : sum, 0
-                ).toLocaleString()}
+                ))}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Pending</p>
               <p className="text-lg font-semibold text-yellow-600">
-                ${tenant.paymentHistory?.reduce((sum, payment) => 
+                {formatCurrency(tenant.paymentHistory?.reduce((sum, payment) => 
                   payment.status === 'Pending' ? sum + payment.amount : sum, 0
-                ).toLocaleString()}
+                ))}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Next Payment</p>
-              <p className="text-lg font-semibold">${tenant.rentAmount}</p>
+              <p className="text-lg font-semibold">{formatCurrency(tenant.rentAmount)}</p>
             </div>
           </div>
         </div>
@@ -185,7 +194,7 @@ const PaymentsTab = ({ tenant }) => {
 
 const TenantDetailsModal = ({ tenant, isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('info');
-  
+    console.log(tenant)
     const renderInfoTab = () => (
       <div className="space-y-4">
         <div className="flex items-center space-x-4">
@@ -228,11 +237,11 @@ const TenantDetailsModal = ({ tenant, isOpen, onClose }) => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Monthly Rent</p>
-              <p>${tenant.rentAmount}</p>
+              <p>{formatCurrency(tenant.rentAmount)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Security Deposit</p>
-              <p>${tenant.securityDeposit}</p>
+              <p>{formatCurrency(tenant.securityDeposit)}</p>
             </div>
           </div>
         </div>

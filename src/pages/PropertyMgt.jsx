@@ -360,7 +360,7 @@ const PropertyManagement = () => {
               <option value="4">4+ Bedrooms</option>
             </select>
 
-            <select
+            {/* <select
               className="p-2 border rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={filters.blacklistStatus}
               onChange={(e) =>
@@ -385,7 +385,7 @@ const PropertyManagement = () => {
               <option value="Expired">Expired</option>
               <option value="Blacklisted">Blacklisted</option>
               <option value="No Active Lease">No Active Lease</option>
-            </select>
+            </select> */}
 
             {/* Occupancy State Filter */}
             <select
@@ -424,7 +424,7 @@ const PropertyManagement = () => {
             />
 
             {/* Filter Actions */}
-            <div className="flex space-x-2">
+            {/* <div className="flex space-x-2">
               <button
                 onClick={applyFilters}
                 className="bg-blue-500 text-white px-3 py-2 rounded flex items-center justify-center flex-1 hover:bg-blue-600 transition-colors"
@@ -438,7 +438,7 @@ const PropertyManagement = () => {
               >
                 Clear
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 

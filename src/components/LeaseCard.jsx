@@ -51,20 +51,28 @@ const LeaseCard = ({ lease, onRenewal, onCancel, onActivate, onUpdate }) => {
     }
     return lease.status || 'Unknown';
   };
-
-  // Format currency - handle both KES and USD
+  
   const formatCurrency = (amount) => {
-    if (!amount) return 'KES 0';
-    
-    // If amount is already a string with currency, return as is
-    if (typeof amount === 'string' && (amount.includes('KES') || amount.includes('$'))) {
-      return amount;
-    }
-    
-    // Otherwise format as number
-    const numAmount = parseFloat(amount);
-    return `KES ${numAmount.toLocaleString()}`;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'KES'
+    }).format(amount || 0);
   };
+
+
+  // // Format currency - handle both KES and USD
+  // const formatCurrency = (amount) => {
+  //   if (!amount) return 'KES 0';
+    
+  //   // If amount is already a string with currency, return as is
+  //   if (typeof amount === 'string' && (amount.includes('KES') || amount.includes('$'))) {
+  //     return amount;
+  //   }
+    
+  //   // Otherwise format as number
+  //   const numAmount = parseFloat(amount);
+  //   return `KES ${numAmount.toLocaleString()}`;
+  // };
 
   // Format date
   const formatDate = (dateString) => {

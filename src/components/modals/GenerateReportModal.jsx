@@ -142,8 +142,9 @@ Report ID: ${reportData.report.reportId}
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="relative bg-white rounded-lg shadow-xl w-96 max-w-[90vw]">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="absolute inset-0 bg-black opacity-70" onClick={onClose} />
+      <div className="relative bg-white rounded-lg shadow-xl w-96 max-w-[90vw] z-60">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Generate Financial Report</h2>
           <button 

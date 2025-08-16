@@ -412,7 +412,6 @@ const RentCollection = () => {
     try {
       setProcessing(true);
       const result = await rentCollectionAPI.processPayment(paymentId, paymentData);
-      
       if (result.success) {
         setPayments(prev => prev.map(p => 
           p.id === paymentId ? { ...p, ...result.data } : p
@@ -475,7 +474,7 @@ const RentCollection = () => {
     try {
       setProcessing(true);
       const result = await rentCollectionAPI.generatePayments(month, year);
-      if (result.success) {
+      if (result.success || result.status === 200) {
         alert(result.message);
         loadPayments();
         loadSummary();
@@ -495,8 +494,8 @@ const RentCollection = () => {
     try {
       setProcessing(true);
       const result = await rentCollectionAPI.verifyPaymentSubmission(submissionId, verificationData);
-      
-      if (result.success) {
+
+      if (result.status === 200) {
         setPendingSubmissions(prev => prev.filter(sub => sub.id !== submissionId));
         loadVerificationStats();
         loadSubmissionHistory();
@@ -670,7 +669,7 @@ const RentCollection = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'KES'
     }).format(amount || 0);
   };
 
@@ -921,9 +920,9 @@ const RentCollection = () => {
                 >
                   <Calendar className="mr-2 w-4 h-4" /> Generate Monthly
                 </button>
-                <button className="bg-gray-500 text-white px-4 py-2 rounded flex items-center hover:bg-gray-600">
+                {/* <button className="bg-gray-500 text-white px-4 py-2 rounded flex items-center hover:bg-gray-600">
                   <Download className="mr-2 w-4 h-4" /> Export Report
-                </button>
+                </button> */}
               </div>
               
               <div className="text-sm text-gray-600">

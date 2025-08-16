@@ -28,13 +28,14 @@ class FinancialApiService {
       // console.log(`🔗 API Call: ${options.method || 'GET'} ${url}`);
       
       const response = await fetch(url, config);
-      
+      console.log(response)
       if (!response.ok) {
         const errorData = await response.text();
         throw new Error(`HTTP ${response.status}: ${errorData}`);
       }
       
       const data = await response.json();
+      console.log(data)
       return data.data || data;
     } catch (error) {
       console.error(`❌ API Error for ${endpoint}:`, error);

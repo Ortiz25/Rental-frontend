@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   DollarSign,
   TrendingUp,
@@ -6,6 +6,7 @@ import {
   BarChart3,
   PieChart,
   FileText,
+  Search,
 } from "lucide-react";
 import {
   LineChart,
@@ -32,10 +33,14 @@ const COLORS = [
 ];
 
 const OverviewTab = ({ financialData }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [transactionsPerPage, setTransactionsPerPage] = useState(10);
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "KES",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value || 0);
@@ -43,6 +48,38 @@ const OverviewTab = ({ financialData }) => {
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(1)}%`;
+  };
+
+  const filteredTransactions = financialData.recentTransactions.filter(
+    (transaction) =>
+      transaction.description
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(
+    filteredTransactions.length / transactionsPerPage
+  );
+  const startIndex = (currentPage - 1) * transactionsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(
+    startIndex,
+    startIndex + transactionsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handlePerPageChange = (e) => {
+    setTransactionsPerPage(parseInt(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing per page
   };
 
   const renderFinancialMetric = (
@@ -217,74 +254,72 @@ const OverviewTab = ({ financialData }) => {
       {/* Recent Transactions */}
       <div className="bg-white rounded-lg shadow border border-gray-100">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-bold flex items-center">
-            <FileText className="w-5 h-5 mr-2 text-gray-600" />
-            Recent Transactions
-          </h3>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <h3 className="text-lg font-bold flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-gray-600" />
+              Recent Transactions
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search transactions..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm w-full sm:w-64"
+                />
+              </div>
+              <select
+                value={transactionsPerPage}
+                onChange={handlePerPageChange}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+              >
+                <option value={10}>10 per page</option>
+                <option value={20}>20 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
+              </select>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Desktop Table */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {financialData.recentTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(transaction.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {transaction.description}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
-                      {transaction.category}
-                    </span>
-                  </td>
-                  <td
-                    className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
-                      transaction.type === "Income"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {transaction.type === "Income" ? "+" : "-"}
-                    {formatCurrency(transaction.amount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Card View */}
-        <div className="md:hidden">
-          {financialData.recentTransactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className="p-4 border-b border-gray-200 last:border-b-0"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-sm text-gray-600">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Description
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Amount
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {paginatedTransactions.map((transaction) => (
+              <tr key={transaction.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(transaction.date).toLocaleDateString()}
-                </div>
-                <div
-                  className={`font-medium ${
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  {transaction.description}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                    {transaction.category}
+                  </span>
+                </td>
+                <td
+                  className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
                     transaction.type === "Income"
                       ? "text-green-600"
                       : "text-red-600"
@@ -292,27 +327,105 @@ const OverviewTab = ({ financialData }) => {
                 >
                   {transaction.type === "Income" ? "+" : "-"}
                   {formatCurrency(transaction.amount)}
-                </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden">
+        {paginatedTransactions.map((transaction) => (
+          <div
+            key={transaction.id}
+            className="p-4 border-b border-gray-200 last:border-b-0"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="text-sm text-gray-600">
+                {new Date(transaction.date).toLocaleDateString()}
               </div>
-              <div className="mb-1 font-medium text-gray-900">
-                {transaction.description}
-              </div>
-              <div className="text-sm">
-                <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
-                  {transaction.category}
-                </span>
+              <div
+                className={`font-medium ${
+                  transaction.type === "Income"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {transaction.type === "Income" ? "+" : "-"}
+                {formatCurrency(transaction.amount)}
               </div>
             </div>
-          ))}
-        </div>
-
-        {financialData.recentTransactions.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No recent transactions found</p>
+            <div className="mb-1 font-medium text-gray-900">
+              {transaction.description}
+            </div>
+            <div className="text-sm">
+              <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                {transaction.category}
+              </span>
+            </div>
           </div>
-        )}
+        ))}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredTransactions.length > transactionsPerPage && (
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {startIndex + 1} to{" "}
+              {Math.min(
+                startIndex + transactionsPerPage,
+                filteredTransactions.length
+              )}{" "}
+              of {filteredTransactions.length} transactions
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              {[...Array(totalPages)].map((_, index) => {
+                const page = index + 1;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-1 text-sm border rounded-md ${
+                      currentPage === page
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {filteredTransactions.length === 0 && (
+        <div className="p-8 text-center text-gray-500">
+          <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p>
+            {searchTerm
+              ? "No transactions match your search"
+              : "No recent transactions found"}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
