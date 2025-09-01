@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, DollarSign, RefreshCw } from 'lucide-react';
 
 const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }) => {
+  console.log(activeLeases)
   const [newPaymentData, setNewPaymentData] = useState({
     lease_id: '',
     amount_due: 0,

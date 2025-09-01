@@ -23,7 +23,7 @@ import LeaseDetailsModal from "./modals/LeaseDetailModal";
 import EditLeaseModal from "./modals/EditLeaseModal";
 
 const LeaseCard = ({ lease, onRenewal, onCancel, onActivate, onUpdate }) => {
-  console.log(lease);
+
   const [showDetails, setShowDetails] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
 

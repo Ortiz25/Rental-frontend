@@ -1,25 +1,130 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { X, Download, Send } from 'lucide-react';
 
 const InvoiceModal = ({ payment, isOpen, onClose }) => {
+  const printRef = useRef();
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'KES'
     }).format(amount || 0);
   };
 
   const formatDate = (dateString) => {
+    console.log(dateString)
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const handlePrint = () => {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=1000,height=1000');
+    
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        
+        <style>
+          body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            margin: 0;
+            line-height: 1.5;
+          }
+          .invoice-header {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: bold;
+          }
+          table {
+            border-collapse: collapse;
+            width: 100%;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f5f5f5;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .text-green-600 {
+            color: #059669;
+          }
+          .text-red-600 {
+            color: #dc2626;
+          }
+          .text-yellow-600 {
+            color: #d97706;
+          }
+          .text-gray-600 {
+            color: #6b7280;
+          }
+          .font-bold {
+            font-weight: bold;
+          }
+          .font-semibold {
+            font-weight: 600;
+          }
+          .font-medium {
+            font-medium: 500;
+          }
+          .border-t {
+            border-top: 2px solid #d1d5db;
+            padding-top: 16px;
+          }
+          .grid {
+            display: grid;
+          }
+          .grid-cols-2 {
+            grid-template-columns: 1fr 1fr;
+          }
+          .gap-6 {
+            gap: 1.5rem;
+          }
+          .mb-8 {
+            margin-bottom: 2rem;
+          }
+          .mb-6 {
+            margin-bottom: 1.5rem;
+          }
+          .mb-2 {
+            margin-bottom: 0.5rem;
+          }
+          .space-y-1 > * + * {
+            margin-top: 0.25rem;
+          }
+          .space-y-2 > * + * {
+            margin-top: 0.5rem;
+          }
+        </style>
+      </head>
+      <body>
+        
+        ${printRef.current.innerHTML}
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+    //printWindow.close();
   };
 
   if (!isOpen || !payment) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black opacity-50 no-print" onClick={onClose} />
       <div className="relative bg-white rounded-lg shadow-xl w-2/3 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
+        {/* Modal Header - Hidden in print */}
+        <div className="flex justify-between items-center p-6 border-b no-print">
           <h2 className="text-xl font-bold">
             Invoice #{payment.invoice_number || `INV-${payment.id}`}
           </h2>
@@ -28,7 +133,15 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
           </button>
         </div>
 
-        <div className="p-6">
+        {/* Printable Content */}
+        <div ref={printRef} className="p-6">
+          {/* Print-only header */}
+          <div className="hidden print-only mb-6">
+            <h1 className="text-2xl font-bold text-center">
+             {payment.payment_status === "paid" ? "RECEIPT": "INVOICE"}  #{payment.invoice_number || `INV-${payment.id}`}
+            </h1>
+          </div>
+
           {/* Invoice Header */}
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div>
@@ -40,7 +153,7 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
             <div className="text-right">
               <h3 className="font-semibold mb-2 text-lg">Payment Details</h3>
               <div className="space-y-1">
-                <p><span className="text-gray-600">Issue Date:</span> {formatDate(new Date())}</p>
+                <p><span className="text-gray-600">Issue Date:</span> {formatDate(payment.original_due_date)}</p>
                 <p><span className="text-gray-600">Due Date:</span> {formatDate(payment.due_date)}</p>
                 {payment.payment_date && (
                   <p><span className="text-gray-600">Paid Date:</span> {formatDate(payment.payment_date)}</p>
@@ -116,7 +229,7 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
                 
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total Due:</span>
-                  <span>{formatCurrency((payment.amount_due || 0) + (payment.late_fee || 0))}</span>
+                  <span>{formatCurrency((+payment.amount_due || 0) + (+payment.late_fee || 0))}</span>
                 </div>
                 
                 {payment.amount_paid > 0 && (
@@ -169,24 +282,24 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
             <p>Thank you for your business!</p>
             <p>For questions about this invoice, please contact the property management office.</p>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-2 mt-6 pt-6 border-t">
-            <button 
-              onClick={() => window.print()}
-              className="bg-blue-500 text-white px-4 py-2 rounded flex items-center hover:bg-blue-600"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download PDF
-            </button>
-            <button 
-              onClick={() => alert('Email functionality would be implemented here')}
-              className="bg-green-500 text-white px-4 py-2 rounded flex items-center hover:bg-green-600"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Send to Tenant
-            </button>
-          </div>
+        {/* Action Buttons - Hidden in print */}
+        <div className="flex justify-end space-x-2 mt-6 pt-6 border-t px-6 pb-6 no-print">
+          <button 
+            onClick={handlePrint}
+            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center hover:bg-blue-600"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Print Invoice
+          </button>
+          <button 
+            onClick={() => alert('Email functionality would be implemented here')}
+            className="bg-green-500 text-white px-4 py-2 rounded flex items-center hover:bg-green-600"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Send to Tenant
+          </button>
         </div>
       </div>
     </div>

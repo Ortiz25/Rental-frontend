@@ -55,7 +55,7 @@ const Dashboard = () => {
       }
 
       const result = await response.json();
-       console.log(result.data)
+       //console.log(result.data)
       if (result.status === 200) {
         setDashboardData(result.data);
         setLastUpdated(new Date());
@@ -227,7 +227,7 @@ export async function loader() {
     });
 
     const userData = await response.json();
-    console.log('Token verification response:', userData);
+   // console.log('Token verification response:', userData);
 
     // Handle different verification responses
     switch (userData.status) {

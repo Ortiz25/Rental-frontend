@@ -196,7 +196,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
         
         if (leasesResponse.ok) {
           const leasesResult = await leasesResponse.json();
-          console.log("Search results:", leasesResult); // Debug log
+          //console.log("Search results:", leasesResult); // Debug log
           
           if (leasesResult.success && leasesResult.data) {
             currentLease = leasesResult.data.find(lease => 
@@ -219,7 +219,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
           
           if (allLeasesResponse.ok) {
             const allLeasesResult = await allLeasesResponse.json();
-            console.log("All active leases:", allLeasesResult); // Debug log
+            //console.log("All active leases:", allLeasesResult); // Debug log
             
             if (allLeasesResult.success && allLeasesResult.data) {
               currentLease = allLeasesResult.data.find(lease => 
@@ -243,7 +243,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
           
           if (tenantLeasesResponse.ok) {
             const tenantResult = await tenantLeasesResponse.json();
-            console.log("Tenant data:", tenantResult); // Debug log
+            //console.log("Tenant data:", tenantResult); // Debug log
             
             // Check if tenant data includes lease information
             if (tenantResult.status === 200 && tenantResult.data?.lease_id) {
@@ -265,7 +265,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
         }
       }
       
-      console.log("Final current lease found:", currentLease); // Debug log
+     // console.log("Final current lease found:", currentLease); // Debug log
       
       if (currentLease) {
         setLeaseData(currentLease);

@@ -232,7 +232,7 @@ const RentCollection = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showSubmissionDetailsModal, setShowSubmissionDetailsModal] = useState(false);
   const [showBulkVerificationModal, setShowBulkVerificationModal] = useState(false);
-   console.log(payments)
+   console.log(summary)
   // Filters
   const [filters, setFilters] = useState({
     status: 'all',
@@ -315,7 +315,8 @@ const RentCollection = () => {
   const loadActiveLeases = async () => {
     try {
       const result = await rentCollectionAPI.getActiveLeases();
-      if (result.status === 200) {
+      console.log(result)
+      if (result.success) {
         setActiveLeases(result.data);
       }
     } catch (error) {
@@ -431,6 +432,7 @@ const RentCollection = () => {
   };
 
   const handleCreatePayment = async (paymentData) => {
+    console.log(paymentData)
     try {
       setProcessing(true);
       
@@ -895,12 +897,12 @@ const RentCollection = () => {
 
             {/* Action Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-              <div className="flex flex-wrap space-x-2">
+              <div className="flex flex-wrap space-x-2 space-y-2 lg:space-y-0">
                 <button 
                   onClick={() => setShowNewPaymentModal(true)}
                   className="bg-blue-500 text-white px-4 py-2 rounded flex items-center hover:bg-blue-600"
                 >
-                  <Plus className="mr-2 w-4 h-4" /> Record Payment
+                  <Plus className="mr-2 w-4 h-4" /> Record Payment (No-Invoice)
                 </button>
                 <button 
                   onClick={handleSendReminders}

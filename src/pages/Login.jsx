@@ -345,7 +345,7 @@ export async function loader() {
     });
 
     const userData = await response.json();
-    console.log('Token verification response:', userData);
+    //console.log('Token verification response:', userData);
 
     // Handle different verification responses
     switch (userData.status) {

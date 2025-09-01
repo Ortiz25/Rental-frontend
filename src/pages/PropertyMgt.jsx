@@ -59,7 +59,7 @@ const PropertyManagement = () => {
         throw new Error("No authentication token found");
       }
 
-      console.log("Fetching properties...");
+      //console.log("Fetching properties...");
       const response = await fetch("/backend/api/properties", {
         method: "GET",
         headers: {
@@ -79,14 +79,14 @@ const PropertyManagement = () => {
       }
 
       const result = await response.json();
-      console.log("Properties data received:", result);
+      //console.log("Properties data received:", result);
 
       if (result.status === 200) {
         setProperties(result.data.properties);
         setFilteredProperties(result.data.properties);
         setPortfolioStats(result.data.portfolioStats);
         setLastUpdated(new Date());
-        console.log(portfolioStats);
+        //console.log(portfolioStats);
       } else {
         throw new Error(result.message || "Failed to fetch properties");
       }
@@ -150,25 +150,8 @@ const PropertyManagement = () => {
   };
 
   // Handle adding new property
-  const handleAddProperty = async (newPropertyData) => {
+  const handleAddProperty = async (result) => {
     try {
-      const token = localStorage.getItem("token");
-
-      console.log("Creating new property:", newPropertyData);
-      const response = await fetch("/backend/api/properties", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newPropertyData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
 
       if (result.status === 201) {
         console.log("Property created successfully");

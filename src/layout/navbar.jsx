@@ -35,7 +35,7 @@ const Navbar = ({module, children}) => {
   });
   const navigate = useNavigate();
 
-  console.log(activeModule, screenSize);
+ // console.log(activeModule, screenSize);
 
   // Get user data from localStorage
   useEffect(() => {

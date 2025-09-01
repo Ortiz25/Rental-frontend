@@ -348,7 +348,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
       });
 
       const result = await response.json();
-      console.log('API Response:', result);
+      //console.log('API Response:', result);
 
       if (!response.ok) {
         throw new Error(result.message || `HTTP error! status: ${response.status}`);
@@ -359,7 +359,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         
         // Call the parent onSubmit callback
         if (onSubmit) {
-          await onSubmit(result.data);
+          await onSubmit(result);
         }
 
         // Close modal after short delay to show success message
