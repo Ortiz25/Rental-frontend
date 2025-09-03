@@ -308,6 +308,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
 
       if (leasesResponse.ok) {
         const leasesResult = await leasesResponse.json();
+        console.log(leasesResult)
         // Filter leases that have no tenants assigned
         const unassignedLeases = leasesResult.data?.filter(lease => 
           !lease.all_tenant_names || lease.all_tenant_names.trim() === ""

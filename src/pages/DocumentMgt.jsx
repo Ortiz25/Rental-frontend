@@ -27,7 +27,7 @@ const API_BASE_URL = '/backend/api';
 // API helper function
 const apiCall = async (url, options = {}) => {
   const token = localStorage.getItem('token');
-  
+  console.log(url, options)
   const defaultOptions = {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -44,6 +44,7 @@ const apiCall = async (url, options = {}) => {
     ...defaultOptions,
     ...options,
   });
+  console.log(response)
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Network error' }));
@@ -353,8 +354,8 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
     is_important: false,
     is_shared: false,
     expires_at: '',
-    association_type: 'property', // property, unit, tenant, lease
-    property_id: '1', // Default to first property
+    association_type: 'property',
+    property_id: '',
     unit_id: '',
     tenant_id: '',
     lease_id: ''
@@ -367,6 +368,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingAssociations, setIsLoadingAssociations] = useState(false);
+  const [associationError, setAssociationError] = useState(null);
   const fileInputRef = useRef(null);
 
   // Fetch association data when modal opens
@@ -378,6 +380,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
 
   const fetchAssociationData = async () => {
     setIsLoadingAssociations(true);
+    setAssociationError(null);
     
     try {
       // Fetch all association data in parallel
@@ -388,9 +391,16 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
         apiCall('/leases')
       ]);
 
-      // Handle properties
+      // Handle properties with consistent structure
       if (propertiesRes.status === 'fulfilled') {
-        setProperties(propertiesRes.value.data || []);
+        const propertiesData = propertiesRes.value?.data?.properties || propertiesRes.value?.data || [];
+        const formattedProperties = Array.isArray(propertiesData) ? propertiesData.map(property => ({
+          id: property.id,
+          property_name: property.property_name || property.propertyName || property.name || `Property ${property.id}`
+        })) : [];
+        
+        setProperties(formattedProperties);
+        console.log('Properties loaded:', formattedProperties);
       } else {
         console.warn('Failed to fetch properties:', propertiesRes.reason);
         setProperties([
@@ -398,9 +408,17 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
         ]);
       }
 
-      // Handle units
+      // Handle units with consistent structure
       if (unitsRes.status === 'fulfilled') {
-        setUnits(unitsRes.value.data || []);
+        const unitsData = unitsRes.value?.data?.units || unitsRes.value?.data || [];
+        const formattedUnits = Array.isArray(unitsData) ? unitsData.map(unit => ({
+          id: unit.id,
+          unit_number: unit.unit_number || unit.number || `Unit ${unit.id}`,
+          property_name: unit.property_name || unit.propertyName || 'Unknown Property'
+        })) : [];
+        
+        setUnits(formattedUnits);
+        console.log('Units loaded:', formattedUnits);
       } else {
         console.warn('Failed to fetch units:', unitsRes.reason);
         setUnits([
@@ -408,9 +426,18 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
         ]);
       }
 
-      // Handle tenants
+      // Handle tenants with proper name handling
       if (tenantsRes.status === 'fulfilled') {
-        setTenants(tenantsRes.value.data || []);
+        const tenantsData = tenantsRes.value?.data?.tenants || tenantsRes.value?.data || [];
+        const formattedTenants = Array.isArray(tenantsData) ? tenantsData.map(tenant => ({
+          id: tenant.id,
+          first_name: tenant.first_name || tenant.name || 'Unknown',
+          last_name: tenant.last_name || '',
+          email: tenant.email || 'No email'
+        })) : [];
+        
+        setTenants(formattedTenants);
+        console.log('Tenants loaded:', formattedTenants);
       } else {
         console.warn('Failed to fetch tenants:', tenantsRes.reason);
         setTenants([
@@ -418,9 +445,18 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
         ]);
       }
 
-      // Handle leases
+      // Handle leases with consistent structure
       if (leasesRes.status === 'fulfilled') {
-        setLeases(leasesRes.value.data || []);
+        const leasesData = leasesRes.value?.data?.leases || leasesRes.value?.data || [];
+        const formattedLeases = Array.isArray(leasesData) ? leasesData.map(lease => ({
+          id: lease.id,
+          lease_number: lease.lease_number || lease.number || `LEASE-${lease.id}`,
+          property_name: lease.property_name || lease.propertyName || 'Unknown Property',
+          unit_number: lease.unit_number || lease.unitNumber || 'Unknown Unit'
+        })) : [];
+        
+        setLeases(formattedLeases);
+        console.log('Leases loaded:', formattedLeases);
       } else {
         console.warn('Failed to fetch leases:', leasesRes.reason);
         setLeases([
@@ -430,6 +466,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
 
     } catch (error) {
       console.error('Error fetching association data:', error);
+      setAssociationError('Failed to load association data. Using defaults.');
       
       // Set fallback data on complete failure
       setProperties([{ id: 1, property_name: 'Default Property' }]);
@@ -465,7 +502,12 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
       if (files.length === 1) {
         setUploadData(prev => ({
           ...prev,
-          name: files[0].name
+          name: files[0].name.split('.')[0] // Remove file extension for cleaner name
+        }));
+      } else {
+        setUploadData(prev => ({
+          ...prev,
+          name: `${files.length} files selected`
         }));
       }
     }
@@ -486,17 +528,19 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
       is_shared: false,
       expires_at: '',
       association_type: 'property',
-      property_id: '1', // Default to first property
+      property_id: '',
       unit_id: '',
       tenant_id: '',
       lease_id: ''
     });
     setSelectedFiles([]);
     setUploadProgress(0);
+    setAssociationError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (selectedFiles.length === 0) {
       alert('Please select at least one file');
       return;
@@ -518,7 +562,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
 
     try {
       const metadata = {
-        document_name: uploadData.name,
+        document_name: uploadData.name || selectedFiles[0]?.name || 'Untitled Document',
         category: uploadData.category,
         tags: uploadData.tags,
         description: uploadData.description,
@@ -537,11 +581,25 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
     } catch (error) {
       console.error('Upload failed:', error);
       alert(`Upload failed: ${error.message}`);
+      setUploadProgress(0);
     }
   };
 
   const removeFile = (index) => {
-    setSelectedFiles(files => files.filter((_, i) => i !== index));
+    setSelectedFiles(files => {
+      const newFiles = files.filter((_, i) => i !== index);
+      
+      // Update name if files change
+      if (newFiles.length === 0) {
+        setUploadData(prev => ({ ...prev, name: '' }));
+      } else if (newFiles.length === 1) {
+        setUploadData(prev => ({ ...prev, name: newFiles[0].name.split('.')[0] }));
+      } else {
+        setUploadData(prev => ({ ...prev, name: `${newFiles.length} files selected` }));
+      }
+      
+      return newFiles;
+    });
   };
 
   if (!isOpen) return null;
@@ -558,6 +616,13 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Show association loading error if exists */}
+          {associationError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+              <p className="text-yellow-800 text-sm">{associationError}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Document Name</label>
@@ -567,6 +632,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
                 value={uploadData.name}
                 onChange={(e) => setUploadData({...uploadData, name: e.target.value})}
                 required
+                placeholder="Enter document name"
               />
             </div>
 
@@ -652,9 +718,9 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
                     disabled={isLoadingAssociations}
                   >
                     <option value="">
-                      {isLoadingAssociations ? 'Loading...' : 'Select Property'}
+                      {isLoadingAssociations ? 'Loading properties...' : 'Select Property'}
                     </option>
-                    {Array.isArray(properties) && properties.map(property => (
+                    {properties.map(property => (
                       <option key={property.id} value={property.id}>
                         {property.property_name}
                       </option>
@@ -671,9 +737,9 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
                     disabled={isLoadingAssociations}
                   >
                     <option value="">
-                      {isLoadingAssociations ? 'Loading...' : 'Select Unit'}
+                      {isLoadingAssociations ? 'Loading units...' : 'Select Unit'}
                     </option>
-                    {Array.isArray(units) && units.map(unit => (
+                    {units.map(unit => (
                       <option key={unit.id} value={unit.id}>
                         {unit.property_name} - Unit {unit.unit_number}
                       </option>
@@ -690,9 +756,9 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
                     disabled={isLoadingAssociations}
                   >
                     <option value="">
-                      {isLoadingAssociations ? 'Loading...' : 'Select Tenant'}
+                      {isLoadingAssociations ? 'Loading tenants...' : 'Select Tenant'}
                     </option>
-                    {Array.isArray(tenants) && tenants.map(tenant => (
+                    {tenants.map(tenant => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.first_name} {tenant.last_name} ({tenant.email})
                       </option>
@@ -709,9 +775,9 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
                     disabled={isLoadingAssociations}
                   >
                     <option value="">
-                      {isLoadingAssociations ? 'Loading...' : 'Select Lease'}
+                      {isLoadingAssociations ? 'Loading leases...' : 'Select Lease'}
                     </option>
-                    {Array.isArray(leases) && leases.map(lease => (
+                    {leases.map(lease => (
                       <option key={lease.id} value={lease.id}>
                         {lease.lease_number} - {lease.property_name} Unit {lease.unit_number}
                       </option>
@@ -780,7 +846,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
                 <div className="max-h-32 overflow-y-auto">
                   {selectedFiles.map((file, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
-                      <span className="truncate">{file.name}</span>
+                      <span className="truncate" title={file.name}>{file.name}</span>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -819,7 +885,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, categories, loading }) => {
             </button>
             <button
               type="submit"
-              disabled={selectedFiles.length === 0 || loading}
+              disabled={selectedFiles.length === 0 || loading || isLoadingAssociations}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
             >
               {loading ? (

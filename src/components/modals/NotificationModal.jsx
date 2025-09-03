@@ -9,7 +9,7 @@ import {
 
 const NotificationsModal = ({ isOpen, onClose, notifications, onMarkAsRead, loading }) => {
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'urgent'
-
+ 
   const filteredNotifications = notifications.filter(notification => {
     if (filter === 'unread') return !notification.isRead;
     if (filter === 'urgent') return notification.isUrgent;

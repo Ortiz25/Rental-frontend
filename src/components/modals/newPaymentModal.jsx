@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { X, DollarSign, RefreshCw } from 'lucide-react';
 
 const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }) => {
-  console.log(activeLeases)
   const [newPaymentData, setNewPaymentData] = useState({
     lease_id: '',
     amount_due: 0,
@@ -60,7 +59,7 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'KES'
     }).format(amount || 0);
   };
 

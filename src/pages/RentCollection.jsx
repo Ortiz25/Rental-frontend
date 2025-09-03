@@ -232,7 +232,7 @@ const RentCollection = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showSubmissionDetailsModal, setShowSubmissionDetailsModal] = useState(false);
   const [showBulkVerificationModal, setShowBulkVerificationModal] = useState(false);
-   console.log(summary)
+  
   // Filters
   const [filters, setFilters] = useState({
     status: 'all',
