@@ -154,5 +154,13 @@ const formatFinancialValue = (value) => {
 //       }))
 //     };
 //   };
-  
-  export { formatFinancialValue, formatDashboardValue };
+
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "KES",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  };
+  export { formatFinancialValue, formatDashboardValue,formatCurrency };

@@ -10,18 +10,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatCurrency } from "../utils/helperFunctions";
 
 const AnalyticsTab = ({ financialData }) => {
   const { analytics, paymentTrends, propertyPerformance } = financialData;
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value || 0);
-  };
+  
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(1)}%`;

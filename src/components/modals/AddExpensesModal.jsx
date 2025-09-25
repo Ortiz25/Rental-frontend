@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Loader2, Save } from "lucide-react";
 import { apiService } from "../../services/financialApiServices.jsx";
+import { formatCurrency } from "../../utils/helperFunctions.jsx";
 
 const AddExpenseModal = ({
   isOpen,
@@ -110,15 +111,15 @@ const AddExpenseModal = ({
     const amount = parseFloat(formData.amount) || 0;
     switch (formData.frequency) {
       case "monthly":
-        return amount;
+        return formatCurrency( amount);
       case "quarterly":
-        return amount / 3;
+        return formatCurrency( amount / 3);
       case "annual":
-        return amount / 12;
+        return formatCurrency( amount / 12);
       case "one-time":
-        return amount;
+        return formatCurrency( amount);
       default:
-        return amount;
+        return formatCurrency( amount);
     }
   };
 
@@ -227,8 +228,8 @@ const AddExpenseModal = ({
           {formData.amount && (
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-700">
-                <strong>Monthly Equivalent:</strong> $
-                {calculateMonthlyEquivalent().toFixed(2)}
+                <strong>Monthly Equivalent:</strong>
+                {calculateMonthlyEquivalent()}
                 {formData.frequency !== "monthly" && (
                   <span className="text-blue-600 ml-1">
                     (${formData.amount} {formData.frequency})
@@ -328,7 +329,7 @@ const AddExpenseModal = ({
                 </p>
                 <p>
                   <strong>Monthly Impact:</strong> $
-                  {calculateMonthlyEquivalent().toFixed(2)}
+                  {calculateMonthlyEquivalent()}
                 </p>
                 {formData.endDate && (
                   <p>

@@ -82,6 +82,7 @@ const PropertyManagement = () => {
       //console.log("Properties data received:", result);
 
       if (result.status === 200) {
+        console.log(result.data)
         setProperties(result.data.properties);
         setFilteredProperties(result.data.properties);
         setPortfolioStats(result.data.portfolioStats);

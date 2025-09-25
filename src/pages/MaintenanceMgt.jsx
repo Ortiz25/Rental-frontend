@@ -19,6 +19,7 @@ import {
   Settings
 } from 'lucide-react';
 import { redirect } from 'react-router';
+import { formatCurrency } from '../utils/helperFunctions.jsx';
 
 // API service functions
 const maintenanceAPI = {
@@ -833,7 +834,7 @@ const RequestCard = ({
         {request.estimatedCost > 0 && (
           <div>
             <p className="text-sm text-gray-600">Estimated Cost</p>
-            <p className="font-semibold">${request.estimatedCost}</p>
+            <p className="font-semibold">{formatCurrency( request.estimatedCost)}</p>
           </div>
         )}
       </div>

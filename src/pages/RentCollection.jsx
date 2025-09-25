@@ -26,7 +26,7 @@ import GeneratePaymentsModal from '../components/modals/GenerateReportModal.jsx'
 import InvoiceModal from '../components/modals/invoiceModal.jsx';
 import SubmissionDetailsModal from '../components/modals/submissionDetailsModal.jsx';
 import VerificationFilters from '../components/verificationFilters.jsx';
-
+import { formatCurrency } from '../utils/helperFunctions.jsx';
 // API service functions
 const API_BASE_URL = '/backend/api';
 
@@ -668,12 +668,7 @@ const RentCollection = () => {
   };
 
   // Utility functions
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'KES'
-    }).format(amount || 0);
-  };
+  
 
   // Tab Navigation Component
   const TabNavigation = ({ activeTab, onTabChange, verificationStats }) => (

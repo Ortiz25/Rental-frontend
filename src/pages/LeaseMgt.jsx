@@ -21,6 +21,7 @@ import LeaseCancelModal from "../components/modals/LeaseCancelModal.jsx";
 import LeaseRenewalModal from "../components/modals/LeaseRenewalModal.jsx";
 import LeaseActivationModal from "../components/modals/LeaveActivationModal.jsx"; // New import
 import { redirect } from "react-router";
+import { formatFinancialValue } from "../utils/helperFunctions.jsx";
 
 // Updated API service for lease operations with authentication
 const leaseAPI = {
@@ -185,7 +186,7 @@ const LeaseManagement = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showActivationModal, setShowActivationModal] = useState(false); // New state
   const [selectedLeaseForAction, setSelectedLeaseForAction] = useState(null);
-
+    console.log(leaseStats)
   // Handler functions
   const handleRenewal = (lease) => {
     setSelectedLeaseForAction(lease);
@@ -446,6 +447,25 @@ const LeaseManagement = () => {
             </div>
           </div>
 
+           {/* Expiring Soon */}
+           <div className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  Expired
+                </p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">
+                  {loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    leaseStats.expired_leases || 0
+                  )}
+                </p>
+              </div>
+              <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-700" />
+            </div>
+          </div>
+
           {/* Monthly Revenue */}
           <div className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
@@ -457,8 +477,8 @@ const LeaseManagement = () => {
                   {loading ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    `${(
-                      leaseStats.total_monthly_revenue || 0
+                    `KES${(
+                      formatFinancialValue(leaseStats.total_monthly_revenue) || 0
                     ).toLocaleString()}`
                   )}
                 </p>

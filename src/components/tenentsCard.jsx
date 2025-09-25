@@ -15,6 +15,7 @@ import BlacklistTenantModal from "./modals/BlacklistTenantModal.jsx";
 import BlacklistHistory from "./blacklistHistory.jsx";
 import { Shield, History, AlertTriangle } from "lucide-react";
 import EditTenantModal from "./modals/EditTenantModal.jsx";
+import { formatCurrency } from "../utils/helperFunctions.jsx";
 
 const TenantCard = ({
   tenant,
@@ -248,7 +249,7 @@ const TenantCard = ({
           <p className="text-sm text-gray-600">Monthly Rent</p>
           <p className="font-semibold">
             {tenant.rentAmount
-              ? `KSh ${tenant.rentAmount.toLocaleString()}`
+              ? `${formatCurrency(tenant.rentAmount)}`
               : "N/A"}
           </p>
         </div>

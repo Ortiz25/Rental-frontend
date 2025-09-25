@@ -1,4 +1,3 @@
-// components/ExpenseManagementTab.jsx
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
@@ -30,6 +29,7 @@ import AddExpenseModal from '../components/modals/AddExpensesModal.jsx';
 
 // Import API service
 import { apiService } from '../services/financialApiServices.jsx';
+import { formatCurrency } from '../utils/helperFunctions.jsx';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658'];
 
@@ -139,13 +139,7 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
+ 
   const getFrequencyBadgeColor = (frequency) => {
     const colors = {
       monthly: 'bg-blue-100 text-blue-800',

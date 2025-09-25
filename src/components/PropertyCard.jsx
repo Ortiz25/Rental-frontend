@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Edit, TrashIcon, MoreHorizontal, Home } from "lucide-react";
 import UpdatePropertyModal from "./modals/updatePropertyModal";
 import DeletePropertyModal from "./modals/deletePropertyModal";
+import { formatCurrency } from "../utils/helperFunctions";
 
 const PropertyCard = ({ property, onUpdate }) => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
 
   const handleUpdateProperty = async (updatedProperty) => {
     try {
@@ -135,7 +137,7 @@ const PropertyCard = ({ property, onUpdate }) => {
           <p className="text-xs sm:text-sm text-gray-600">
             <span className="font-medium">Rent:</span>
             <span className="font-semibold text-gray-900 ml-1">
-              KSh {property.monthlyRent?.toLocaleString() || "N/A"}/mo
+             {formatCurrency( property.monthlyRent) || "N/A"}/mo
             </span>
           </p>
         </div>

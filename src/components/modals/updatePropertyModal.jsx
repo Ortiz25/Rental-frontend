@@ -87,6 +87,7 @@ const UpdatePropertyModal = ({
   // Load property data when modal opens
   useEffect(() => {
     if (isOpen && property) {
+      console.log(property)
       // Load property data
       setPropertyData({
         propertyName: property.propertyName || "",
@@ -277,7 +278,7 @@ const UpdatePropertyModal = ({
         description: propertyData.description.trim(),
         amenities: propertyData.amenities,
       };
-
+      console.log(formattedProperty)
       const response = await fetch(
         `/backend/api/properties/${property.id}`,
         {

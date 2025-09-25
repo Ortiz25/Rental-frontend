@@ -24,7 +24,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-
+   console.log(dashboardData)
   // Fetch dashboard data from API
   const fetchDashboardData = async () => {
     try {

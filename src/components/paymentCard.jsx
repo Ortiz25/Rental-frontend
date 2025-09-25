@@ -6,6 +6,7 @@ import {
   AlertTriangle, 
   FileText 
 } from 'lucide-react';
+import { formatCurrency } from '../utils/helperFunctions';
 
 const PaymentCard = ({ payment, onViewInvoice, onProcessPayment }) => {
 
@@ -29,12 +30,7 @@ const PaymentCard = ({ payment, onViewInvoice, onProcessPayment }) => {
     return icons[status];
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'KES'
-    }).format(amount || 0);
-  };
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
