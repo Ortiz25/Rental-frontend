@@ -103,7 +103,7 @@ const SecuritySettings = () => {
         </div>
   
         {/* Two-Factor Authentication */}
-        <div className="bg-white rounded-lg shadow">
+        {/* <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
           </div>
@@ -152,7 +152,7 @@ const SecuritySettings = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
   
         {/* Session Policy */}
         <div className="bg-white rounded-lg shadow">

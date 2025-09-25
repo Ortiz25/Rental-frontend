@@ -87,7 +87,7 @@ const Dashboard = () => {
 
   // Icon mapping with modern styling
   const getIcon = (iconName) => {
-    console.log(iconName);
+   
     const iconProps = "w-6 h-6 text-slate-600";
     const icons = {
       BuildingIcon: <Building className={iconProps} />,
@@ -308,7 +308,7 @@ export async function loader() {
       case 200:
         const userRole =
           userData.user?.role || localStorage.getItem("userRole");
-        const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+        const allowedRoles = ["Super Admin", "Admin", "Manager"];
 
         if (!userRole || !allowedRoles.includes(userRole)) {
           console.log("User role not authorized for dashboard:", userRole);

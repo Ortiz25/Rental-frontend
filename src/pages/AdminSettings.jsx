@@ -19,11 +19,11 @@ const AdminSettings = () => {
       name: "User Management",
       icon: <Users className="w-5 h-5" />,
     },
-    {
-      id: "roles",
-      name: "Roles & Permissions",
-      icon: <Shield className="w-5 h-5" />,
-    },
+    // {
+    //   id: "roles",
+    //   name: "Roles & Permissions",
+    //   icon: <Shield className="w-5 h-5" />,
+    // },
     {
       id: "security",
       name: "Security Settings",
@@ -86,7 +86,7 @@ const AdminSettings = () => {
         </nav>
 
         {/* Quick Actions (Optional) */}
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* <div className="absolute bottom-4 left-4 right-4">
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <div className="flex items-center space-x-2">
               <Settings className="w-4 h-4 text-blue-600" />
@@ -94,7 +94,7 @@ const AdminSettings = () => {
             </div>
             <p className="text-xs text-blue-700 mt-1">All systems operational</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Main Content Area */}
@@ -135,7 +135,7 @@ const AdminSettings = () => {
         <main className="flex-1 overflow-auto bg-gray-50">
           <div className="p-8">
             {activeTab === "users" && <UserManagement />}
-            {activeTab === "roles" && <RolesManagement />}
+            {/* {activeTab === "roles" && <RolesManagement />} */}
             {activeTab === "security" && <SecuritySettings />}
             {activeTab === "notifications" && <NotificationSettings />}
             {activeTab === "system" && <SystemSettings />}

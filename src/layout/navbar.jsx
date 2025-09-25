@@ -127,31 +127,31 @@ const Navbar = ({module, children}) => {
       name: 'Property Management', 
       icon: <BuildingIcon size={20} />,
       route: "/property",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Tenant Management', 
       icon: <UsersIcon size={20} />,
       route: "/tenant",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Lease Management', 
       icon: <FileTextIcon size={20} />,
       route: "/lease",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Rent Collection', 
       icon: <DollarSignIcon size={20} />,
       route: "/rent",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Maintenance', 
       icon: <WrenchIcon size={20} />,
       route: "/maintenance",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Financial Reports', 
@@ -163,13 +163,13 @@ const Navbar = ({module, children}) => {
       name: 'Document Management', 
       icon: <ShieldCheckIcon size={20} />,
       route: "/documents",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Communication', 
       icon: <MailIcon size={20} />,
       route: "/communications",
-      roles: ['Admin', 'Manager', 'Owner', "Super Admin"]
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 
       name: 'Admin Settings', 

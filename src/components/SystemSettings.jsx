@@ -227,7 +227,7 @@ const SystemSettings = () => {
         </div> */}
   
         {/* API Settings */}
-        <div className="bg-white rounded-lg shadow">
+        {/* <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h3 className="text-lg font-medium">API Configuration</h3>
             <p className="text-sm text-gray-600 mt-1">Manage API access and keys</p>
@@ -272,7 +272,7 @@ const SystemSettings = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
   
         {/* Save Button */}
         <div className="flex justify-end">

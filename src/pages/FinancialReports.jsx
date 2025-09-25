@@ -319,7 +319,7 @@ export async function loader() {
     }
 
     // Check role permissions
-    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const allowedRoles = ["Super Admin", "Admin", "Manager"];
     const userRole = userData.user?.role || localStorage.getItem("userRole");
 
     if (!userRole || !allowedRoles.includes(userRole)) {

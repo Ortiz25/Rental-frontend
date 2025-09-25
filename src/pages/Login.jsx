@@ -287,6 +287,19 @@ export async function action({ request, params }) {
           return redirect("/tenant_dash");
 
          }
+         if(resData.user.role === "Staff" || resData.user.role === "Staff" ){
+
+          localStorage.setItem("token", resData.token);
+          localStorage.setItem("user", JSON.stringify(resData.user));
+          localStorage.setItem("name", resData.user.name);
+          
+          // Optional: Store additional user data
+          localStorage.setItem("userRole", resData.user.role);
+          localStorage.setItem("userId", resData.user.id.toString());
+          console.log("Redirecting to tenants dash")
+          return redirect("/property");
+
+         }
         // Store token and user data
         if (resData.token) {
           localStorage.setItem("token", resData.token);
@@ -345,11 +358,15 @@ export async function loader() {
     });
 
     const userData = await response.json();
-    //console.log('Token verification response:', userData);
+    console.log('Token verification response:', userData);
 
     // Handle different verification responses
     switch (userData.status) {
       case 200:
+        if(userData.user.role === "Staff" || userData.user.role === "Staff" ){
+          console.log(userData.user.role)
+          return redirect("/property");
+         }
         // Token is valid, redirect to dashboard
         return redirect("/dashboard");
 
