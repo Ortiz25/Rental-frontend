@@ -1125,12 +1125,12 @@ const DocumentManagement = () => {
               <Upload className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               <span>Upload Document</span>
             </button>
-            <button 
+            {/* <button 
               className="bg-gray-100 hover:bg-gray-200 px-3 sm:px-4 py-2 rounded flex items-center flex-shrink-0 text-sm sm:text-base transition-colors"
             >
               <FolderPlus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               <span>New Folder</span>
-            </button>
+            </button> */}
           </div>
 
           {/* Search and Filter */}

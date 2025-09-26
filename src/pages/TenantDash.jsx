@@ -960,6 +960,65 @@ const TenantDashboard = () => {
     }
   };
 
+   // Download document
+   const  downloadDocument = async (documentId) => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(`/backend/api/documents/${documentId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      // Check if response is ok
+      if (!response.ok) {
+        // Try to get error message from JSON response
+        let errorMessage = 'Download failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // If not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
+      }
+
+      // Check if response is actually a file (blob)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // This is an error response in JSON format
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Download failed');
+      }
+
+      // Get the blob
+      return response.blob();
+      
+    } catch (error) {
+      console.error('Download error details:', error);
+      throw error;
+    }
+  }
+
+  // View document
+ const viewDocument = async (documentId) => {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`/backend/api/documents/${documentId}/view`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('View failed');
+    }
+
+    return response.blob();
+  }
+
   // Load data on component mount
   useEffect(() => {
     fetchTenantData();
@@ -1412,7 +1471,7 @@ const TenantDashboard = () => {
         </div>
 
         {/* Documents Section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        {/* <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Important Documents</h2>
             <FileText className="w-5 h-5 text-orange-500" />
@@ -1446,7 +1505,7 @@ const TenantDashboard = () => {
               </div>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* Payment Submissions Section */}
         {tenantData.paymentSubmissions &&
@@ -1560,10 +1619,7 @@ const TenantDashboard = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() =>
-                          window.open(
-                            `/backend/api/documents/${document.id}/view`,
-                            "_blank"
-                          )
+                          viewDocument(document.id)
                         }
                         className="text-blue-500 hover:text-blue-700"
                         title="View Document"
@@ -1572,10 +1628,7 @@ const TenantDashboard = () => {
                       </button>
                       <button
                         onClick={() =>
-                          window.open(
-                            `/backend/api/documents/${document.id}/download`,
-                            "_blank"
-                          )
+                          downloadDocument(document.id)
                         }
                         className="text-green-500 hover:text-green-700"
                         title="Download Document"
