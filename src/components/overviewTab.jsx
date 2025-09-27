@@ -21,6 +21,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { formatCurrency } from "../utils/helperFunctions";
 
 const COLORS = [
   "#0088FE",
@@ -37,15 +38,7 @@ const OverviewTab = ({ financialData }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactionsPerPage, setTransactionsPerPage] = useState(10);
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "KES",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value || 0);
-  };
-
+   console.log(financialData)
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(1)}%`;
   };

@@ -87,7 +87,7 @@ const UpdatePropertyModal = ({
   // Load property data when modal opens
   useEffect(() => {
     if (isOpen && property) {
-      console.log(property)
+      console.log(property);
       // Load property data
       setPropertyData({
         propertyName: property.propertyName || "",
@@ -187,12 +187,12 @@ const UpdatePropertyModal = ({
       fetchAmenities();
     }
   }, [isOpen]);
-
+  console.log(propertyData)
   const isMultiUnitProperty = () => {
-    return (
-      propertyData.propertyType === "Apartment" && propertyUnits.length > 1
-    );
+    return propertyData && propertyUnits.length > 1;
   };
+
+  console.log(isMultiUnitProperty())
 
   const handleAmenityChange = (amenity, checked) => {
     if (checked) {
@@ -278,7 +278,7 @@ const UpdatePropertyModal = ({
         description: propertyData.description.trim(),
         amenities: propertyData.amenities,
       };
-      console.log(formattedProperty)
+      console.log(formattedProperty);
       const response = await fetch(
         `/backend/api/properties/${property.id}`,
         {
@@ -686,6 +686,57 @@ const UpdatePropertyModal = ({
                     </span>
                   </div>
                 </div>
+
+                {/* If only one unit exists, show unit details */}
+                {property.units && property.units.length === 1 && (
+                  <div className="mt-6 border-t pt-4">
+                    <h4 className="text-md font-semibold mb-3">Unit Details</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Unit:</span>
+                        <span className="ml-2 font-semibold">
+                          {property.units[0].unit_number}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Bedrooms:</span>
+                        <span className="ml-2 font-semibold">
+                          {property.units[0].bedrooms}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Bathrooms:</span>
+                        <span className="ml-2 font-semibold">
+                          {property.units[0].bathrooms}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Size (sq ft):</span>
+                        <span className="ml-2 font-semibold">
+                          {property.units[0].size_sq_ft}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Rent:</span>
+                        <span className="ml-2 font-semibold text-blue-600">
+                          KES {property.units[0].monthly_rent.toLocaleString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Occupancy:</span>
+                        <span
+                          className={`ml-2 font-semibold ${
+                            property.units[0].occupancy_status === "occupied"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {property.units[0].occupancy_status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Amenities */}

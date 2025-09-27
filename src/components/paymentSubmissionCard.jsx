@@ -4,6 +4,7 @@ import {
   X, 
   FileText 
 } from 'lucide-react';
+import { formatCurrency } from '../utils/helperFunctions';
 
 const PaymentSubmissionCard = ({ 
   submission, 
@@ -48,12 +49,7 @@ const PaymentSubmissionCard = ({
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
+  
 
   const urgency = getUrgencyIndicator(submission.submission_date);
 

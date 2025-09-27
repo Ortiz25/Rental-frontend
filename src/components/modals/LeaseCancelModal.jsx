@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, XCircle, AlertTriangle, DollarSign, Calendar, FileText, Loader2 } from 'lucide-react';
-
+import { formatCurrency } from '../../utils/helperFunctions';
 const LeaseCancelModal = ({ lease, isOpen, onClose, onSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -133,12 +133,7 @@ const LeaseCancelModal = ({ lease, isOpen, onClose, onSubmit }) => {
 
   if (!isOpen || !lease) return null;
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
+
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';

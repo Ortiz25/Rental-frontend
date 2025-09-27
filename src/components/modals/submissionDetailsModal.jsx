@@ -1,13 +1,10 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { formatCurrency } from '../../utils/helperFunctions';
 
 const SubmissionDetailsModal = ({ submission, isOpen, onClose }) => {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
+
+  
 
   if (!isOpen || !submission) return null;
 

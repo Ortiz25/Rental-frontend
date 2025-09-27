@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, Save } from 'lucide-react';
 import { apiService } from '../../services/financialApiServices.jsx';
+import { formatCurrency } from '../../utils/helperFunctions.jsx';
 
 const GenerateReportModal = ({ isOpen, onClose, onError }) => {
   const [reportSettings, setReportSettings] = useState({
@@ -12,15 +13,6 @@ const GenerateReportModal = ({ isOpen, onClose, onError }) => {
     includeCharts: true
   });
   const [generating, setGenerating] = useState(false);
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value || 0);
-  };
 
   const handleGenerateReport = async (e) => {
     e.preventDefault();

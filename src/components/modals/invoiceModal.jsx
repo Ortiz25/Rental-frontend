@@ -1,15 +1,10 @@
 import React, { useRef } from 'react';
 import { X, Download, Send } from 'lucide-react';
+import { formatCurrency } from '../../utils/helperFunctions';
 
 const InvoiceModal = ({ payment, isOpen, onClose }) => {
   const printRef = useRef();
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'KES'
-    }).format(amount || 0);
-  };
 
   const formatDate = (dateString) => {
     console.log(dateString)

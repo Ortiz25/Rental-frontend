@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Users, Shield, Lock, Bell, Settings, ArrowLeft } from "lucide-react";
+import { Users, Shield, Lock, Bell, Settings, ArrowLeft, WalletCards } from "lucide-react";
 import { redirect, useNavigate } from "react-router";
 import Navbar from "../layout/navbar.jsx";
 import UserManagement from "../components/UserManagement.jsx";
-import RolesManagement from "../components/EditUserRole.jsx";
+import PaymentMethodsManagement from "../components/PaymentMethods.jsx";
 import SecuritySettings from "../components/SecuritySettings.jsx";
 import NotificationSettings from "../components/NotificationSettings.jsx";
 import SystemSettings from "../components/SystemSettings.jsx";
@@ -20,9 +20,9 @@ const AdminSettings = () => {
       icon: <Users className="w-5 h-5" />,
     },
     // {
-    //   id: "roles",
-    //   name: "Roles & Permissions",
-    //   icon: <Shield className="w-5 h-5" />,
+    //   id: "payments",
+    //   name: "payment methods",
+    //   icon: <WalletCards className="w-5 h-5" />,
     // },
     {
       id: "security",
@@ -135,7 +135,7 @@ const AdminSettings = () => {
         <main className="flex-1 overflow-auto bg-gray-50">
           <div className="p-8">
             {activeTab === "users" && <UserManagement />}
-            {/* {activeTab === "roles" && <RolesManagement />} */}
+            {/* {activeTab === "payments" && <PaymentMethodsManagement />} */}
             {activeTab === "security" && <SecuritySettings />}
             {activeTab === "notifications" && <NotificationSettings />}
             {activeTab === "system" && <SystemSettings />}

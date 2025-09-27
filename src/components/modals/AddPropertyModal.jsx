@@ -84,17 +84,18 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch('/backend/api/amenities', {
+        const response = await fetch('/backend/api/properties/amenities', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-
+        console.log(response)
         if (response.ok) {
           const result = await response.json();
           if (result.status === 200) {
+            console.log(result)
             const amenityNames = result.data.map(amenity => amenity.name);
             setAvailableAmenities(amenityNames);
           }
@@ -336,7 +337,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         units: formattedUnits
       };
 
-      console.log('Sending property data:', requestData);
+      //console.log('Sending property data:', requestData);
 
       const response = await fetch('/backend/api/properties', {
         method: 'POST',

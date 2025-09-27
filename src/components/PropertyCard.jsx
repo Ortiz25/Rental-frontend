@@ -5,6 +5,7 @@ import DeletePropertyModal from "./modals/deletePropertyModal";
 import { formatCurrency } from "../utils/helperFunctions";
 
 const PropertyCard = ({ property, onUpdate }) => {
+  console.log(property)
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
