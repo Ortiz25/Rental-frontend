@@ -16,7 +16,8 @@ import {
   Camera,
   Paperclip,
   Clock,
-  Settings
+  Settings,
+  Loader
 } from 'lucide-react';
 import { redirect } from 'react-router';
 import { formatCurrency } from '../utils/helperFunctions.jsx';
@@ -1001,11 +1002,15 @@ const MaintenanceManagement = () => {
     }
   };
 
+
   if (loading) {
     return (
       <Navbar module={activeModule}>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading maintenance requests...</div>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader className="mx-auto h-12 w-12 animate-spin text-blue-600" />
+            <p className="mt-4 text-lg text-gray-600">Loading maintenance requests....</p>
+          </div>
         </div>
       </Navbar>
     );

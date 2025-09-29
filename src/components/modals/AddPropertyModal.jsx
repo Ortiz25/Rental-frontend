@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Camera, X, Plus, Trash2, Loader, AlertCircle, CheckCircle, Building, Home } from "lucide-react";
+import {
+  Camera,
+  X,
+  Plus,
+  Trash2,
+  Loader,
+  AlertCircle,
+  CheckCircle,
+  Building,
+  Home,
+} from "lucide-react";
 
 const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
   const [propertyData, setPropertyData] = useState({
@@ -24,7 +34,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
       sizeSquareFt: "",
       monthlyRent: "",
       securityDeposit: "",
-    }
+    },
   ]);
 
   const [isMultiUnit, setIsMultiUnit] = useState(false);
@@ -32,19 +42,21 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [availableAmenities, setAvailableAmenities] = useState([]);
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
 
   const propertyTypes = [
     "Apartment",
-    "House", 
+    "House",
     "Condominium",
     "Townhouse",
     "Studio",
-    "Other"
+    "Other",
   ];
 
   const defaultAmenityOptions = [
     "Air Conditioning",
-    "Heating", 
+    "Heating",
     "Washer/Dryer",
     "Dishwasher",
     "Parking",
@@ -62,7 +74,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
     "Concierge",
     "Fitness Center",
     "Rooftop Access",
-    "Business Center"
+    "Business Center",
   ];
 
   const utilityOptions = [
@@ -74,36 +86,39 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
     "Trash",
     "Sewer",
     "Heating",
-    "Cooling"
+    "Cooling",
   ];
 
   // Fetch available amenities from API
   useEffect(() => {
     const fetchAmenities = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await fetch('/backend/api/properties/amenities', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        console.log(response)
+        const response = await fetch(
+          "/backend/api/properties/amenities",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(response);
         if (response.ok) {
           const result = await response.json();
           if (result.status === 200) {
-            console.log(result)
-            const amenityNames = result.data.map(amenity => amenity.name);
+            console.log(result);
+            const amenityNames = result.data.map((amenity) => amenity.name);
             setAvailableAmenities(amenityNames);
           }
         } else {
           setAvailableAmenities(defaultAmenityOptions);
         }
       } catch (error) {
-        console.error('Error fetching amenities:', error);
+        console.error("Error fetching amenities:", error);
         setAvailableAmenities(defaultAmenityOptions);
       }
     };
@@ -136,72 +151,125 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
       amenities: [],
       photos: [],
     });
-    setUnits([{
-      unitNumber: "",
-      bedrooms: "",
-      bathrooms: "",
-      sizeSquareFt: "",
-      monthlyRent: "",
-      securityDeposit: "",
-    }]);
+    setUnits([
+      {
+        unitNumber: "",
+        bedrooms: "",
+        bathrooms: "",
+        sizeSquareFt: "",
+        monthlyRent: "",
+        securityDeposit: "",
+      },
+    ]);
     setIsMultiUnit(false);
+    photoPreviews.forEach((preview) => URL.revokeObjectURL(preview.preview));
+    setPhotoFiles([]);
+    setPhotoPreviews([]);
+  };
+
+  const handlePhotoChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    // Limit to 10 photos
+    if (files.length + photoFiles.length > 10) {
+      setError("Maximum 10 photos allowed");
+      return;
+    }
+
+    // Validate file sizes (5MB each)
+    const invalidFiles = files.filter((file) => file.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      setError("Each photo must be less than 5MB");
+      return;
+    }
+
+    // Create previews
+    const newPreviews = files.map((file) => ({
+      file: file,
+      preview: URL.createObjectURL(file),
+      name: file.name,
+    }));
+
+    setPhotoFiles([...photoFiles, ...files]);
+    setPhotoPreviews([...photoPreviews, ...newPreviews]);
+  };
+
+  const removePhoto = (index) => {
+    const newFiles = photoFiles.filter((_, i) => i !== index);
+    const newPreviews = photoPreviews.filter((_, i) => i !== index);
+
+    // Revoke the preview URL to free memory
+    URL.revokeObjectURL(photoPreviews[index].preview);
+
+    setPhotoFiles(newFiles);
+    setPhotoPreviews(newPreviews);
   };
 
   const handlePropertyTypeChange = (type) => {
     setPropertyData({ ...propertyData, propertyType: type });
-    
+
     // Enable multi-unit mode for apartments and condominiums
     if (type === "Apartment" || type === "Condominium") {
       setIsMultiUnit(true);
       // Start with 5 units for apartments as a reasonable default
       const initialUnitCount = type === "Apartment" ? 5 : 3;
-      const newUnits = Array(initialUnitCount).fill(null).map((_, index) => ({
-        unitNumber: type === "Apartment" ? `${Math.floor(index / 10) + 1}0${(index % 10) + 1}` : `Unit ${index + 1}`,
-        bedrooms: "",
-        bathrooms: "",
-        sizeSquareFt: "",
-        monthlyRent: "",
-        securityDeposit: "",
-      }));
+      const newUnits = Array(initialUnitCount)
+        .fill(null)
+        .map((_, index) => ({
+          unitNumber:
+            type === "Apartment"
+              ? `${Math.floor(index / 10) + 1}0${(index % 10) + 1}`
+              : `Unit ${index + 1}`,
+          bedrooms: "",
+          bathrooms: "",
+          sizeSquareFt: "",
+          monthlyRent: "",
+          securityDeposit: "",
+        }));
       setUnits(newUnits);
-      setPropertyData(prev => ({ ...prev, totalUnits: initialUnitCount }));
+      setPropertyData((prev) => ({ ...prev, totalUnits: initialUnitCount }));
     } else {
       setIsMultiUnit(false);
-      setPropertyData(prev => ({ ...prev, totalUnits: 1 }));
-      setUnits([{
-        unitNumber: "Main",
-        bedrooms: "",
-        bathrooms: "",
-        sizeSquareFt: "",
-        monthlyRent: "",
-        securityDeposit: "",
-      }]);
+      setPropertyData((prev) => ({ ...prev, totalUnits: 1 }));
+      setUnits([
+        {
+          unitNumber: "Main",
+          bedrooms: "",
+          bathrooms: "",
+          sizeSquareFt: "",
+          monthlyRent: "",
+          securityDeposit: "",
+        },
+      ]);
     }
   };
 
   const addUnit = () => {
-    const nextUnitNumber = isMultiUnit ? 
-      (propertyData.propertyType === "Apartment" ? 
-        `${Math.floor(units.length / 10) + 1}0${(units.length % 10) + 1}` : 
-        `Unit ${units.length + 1}`) : 
-      "Main";
-      
-    setUnits([...units, {
-      unitNumber: nextUnitNumber,
-      bedrooms: "",
-      bathrooms: "",
-      sizeSquareFt: "",
-      monthlyRent: "",
-      securityDeposit: "",
-    }]);
-    setPropertyData(prev => ({ ...prev, totalUnits: units.length + 1 }));
+    const nextUnitNumber = isMultiUnit
+      ? propertyData.propertyType === "Apartment"
+        ? `${Math.floor(units.length / 10) + 1}0${(units.length % 10) + 1}`
+        : `Unit ${units.length + 1}`
+      : "Main";
+
+    setUnits([
+      ...units,
+      {
+        unitNumber: nextUnitNumber,
+        bedrooms: "",
+        bathrooms: "",
+        sizeSquareFt: "",
+        monthlyRent: "",
+        securityDeposit: "",
+      },
+    ]);
+    setPropertyData((prev) => ({ ...prev, totalUnits: units.length + 1 }));
   };
 
   const removeUnit = (index) => {
     if (units.length > 1) {
       const newUnits = units.filter((_, i) => i !== index);
       setUnits(newUnits);
-      setPropertyData(prev => ({ ...prev, totalUnits: newUnits.length }));
+      setPropertyData((prev) => ({ ...prev, totalUnits: newUnits.length }));
     }
   };
 
@@ -213,9 +281,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
 
   // Bulk update functionality for multi-unit properties
   const bulkUpdateUnits = (field, value) => {
-    const newUnits = units.map(unit => ({
+    const newUnits = units.map((unit) => ({
       ...unit,
-      [field]: value
+      [field]: value,
     }));
     setUnits(newUnits);
   };
@@ -224,9 +292,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
   const generateUnitNumbers = () => {
     const newUnits = units.map((unit, index) => ({
       ...unit,
-      unitNumber: propertyData.propertyType === "Apartment" ? 
-        `${Math.floor(index / 10) + 1}0${(index % 10) + 1}` : 
-        `Unit ${index + 1}`
+      unitNumber:
+        propertyData.propertyType === "Apartment"
+          ? `${Math.floor(index / 10) + 1}0${(index % 10) + 1}`
+          : `Unit ${index + 1}`,
     }));
     setUnits(newUnits);
   };
@@ -273,9 +342,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         return;
       }
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error("No authentication token found");
       }
 
       // For multi-unit properties, calculate average values from units
@@ -284,13 +353,28 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
       let avgSize = null;
 
       if (isMultiUnit && units.length > 0) {
-        const rents = units.filter(u => u.monthlyRent).map(u => parseFloat(u.monthlyRent));
-        const deposits = units.filter(u => u.securityDeposit).map(u => parseFloat(u.securityDeposit));
-        const sizes = units.filter(u => u.sizeSquareFt).map(u => parseInt(u.sizeSquareFt));
+        const rents = units
+          .filter((u) => u.monthlyRent)
+          .map((u) => parseFloat(u.monthlyRent));
+        const deposits = units
+          .filter((u) => u.securityDeposit)
+          .map((u) => parseFloat(u.securityDeposit));
+        const sizes = units
+          .filter((u) => u.sizeSquareFt)
+          .map((u) => parseInt(u.sizeSquareFt));
 
-        avgRent = rents.length > 0 ? rents.reduce((a, b) => a + b, 0) / rents.length : null;
-        avgDeposit = deposits.length > 0 ? deposits.reduce((a, b) => a + b, 0) / deposits.length : null;
-        avgSize = sizes.length > 0 ? Math.round(sizes.reduce((a, b) => a + b, 0) / sizes.length) : null;
+        avgRent =
+          rents.length > 0
+            ? rents.reduce((a, b) => a + b, 0) / rents.length
+            : null;
+        avgDeposit =
+          deposits.length > 0
+            ? deposits.reduce((a, b) => a + b, 0) / deposits.length
+            : null;
+        avgSize =
+          sizes.length > 0
+            ? Math.round(sizes.reduce((a, b) => a + b, 0) / sizes.length)
+            : null;
       }
 
       // Format the property data for the API
@@ -299,9 +383,21 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         address: propertyData.address.trim(),
         propertyType: propertyData.propertyType,
         totalUnits: propertyData.totalUnits,
-        sizeSquareFt: isMultiUnit ? avgSize : (propertyData.sizeSquareFt ? parseInt(propertyData.sizeSquareFt) : null),
-        monthlyRent: isMultiUnit ? avgRent : (propertyData.monthlyRent ? parseFloat(propertyData.monthlyRent) : null),
-        securityDeposit: isMultiUnit ? avgDeposit : (propertyData.securityDeposit ? parseFloat(propertyData.securityDeposit) : null),
+        sizeSquareFt: isMultiUnit
+          ? avgSize
+          : propertyData.sizeSquareFt
+          ? parseInt(propertyData.sizeSquareFt)
+          : null,
+        monthlyRent: isMultiUnit
+          ? avgRent
+          : propertyData.monthlyRent
+          ? parseFloat(propertyData.monthlyRent)
+          : null,
+        securityDeposit: isMultiUnit
+          ? avgDeposit
+          : propertyData.securityDeposit
+          ? parseFloat(propertyData.securityDeposit)
+          : null,
         description: propertyData.description.trim(),
         amenities: propertyData.amenities,
       };
@@ -309,55 +405,78 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
       // Format units data
       let formattedUnits = [];
       if (isMultiUnit) {
-        formattedUnits = units.map(unit => ({
+        formattedUnits = units.map((unit) => ({
           unitNumber: unit.unitNumber.trim(),
           bedrooms: parseInt(unit.bedrooms) || 0,
           bathrooms: parseFloat(unit.bathrooms) || 0,
           sizeSquareFt: unit.sizeSquareFt ? parseInt(unit.sizeSquareFt) : null,
           monthlyRent: unit.monthlyRent ? parseFloat(unit.monthlyRent) : null,
-          securityDeposit: unit.securityDeposit ? parseFloat(unit.securityDeposit) : null,
-          occupancyStatus: "vacant"
+          securityDeposit: unit.securityDeposit
+            ? parseFloat(unit.securityDeposit)
+            : null,
+          occupancyStatus: "vacant",
         }));
       } else {
         // For single unit properties, create one unit
         const unit = units[0];
-        formattedUnits = [{
-          unitNumber: "Main",
-          bedrooms: parseInt(unit.bedrooms) || 0,
-          bathrooms: parseFloat(unit.bathrooms) || 0,
-          sizeSquareFt: unit.sizeSquareFt ? parseInt(unit.sizeSquareFt) : formattedProperty.sizeSquareFt,
-          monthlyRent: unit.monthlyRent ? parseFloat(unit.monthlyRent) : formattedProperty.monthlyRent,
-          securityDeposit: unit.securityDeposit ? parseFloat(unit.securityDeposit) : formattedProperty.securityDeposit,
-          occupancyStatus: "vacant"
-        }];
+        formattedUnits = [
+          {
+            unitNumber: "Main",
+            bedrooms: parseInt(unit.bedrooms) || 0,
+            bathrooms: parseFloat(unit.bathrooms) || 0,
+            sizeSquareFt: unit.sizeSquareFt
+              ? parseInt(unit.sizeSquareFt)
+              : formattedProperty.sizeSquareFt,
+            monthlyRent: unit.monthlyRent
+              ? parseFloat(unit.monthlyRent)
+              : formattedProperty.monthlyRent,
+            securityDeposit: unit.securityDeposit
+              ? parseFloat(unit.securityDeposit)
+              : formattedProperty.securityDeposit,
+            occupancyStatus: "vacant",
+          },
+        ];
       }
 
       const requestData = {
         ...formattedProperty,
-        units: formattedUnits
+        units: formattedUnits,
       };
 
-      //console.log('Sending property data:', requestData);
+      // Create FormData for file upload
+      const formData = new FormData();
 
-      const response = await fetch('/backend/api/properties', {
-        method: 'POST',
+      // Append property data as JSON string
+      formData.append("propertyData", JSON.stringify(requestData));
+
+      // Append photo files
+      photoFiles.forEach((file) => {
+        formData.append("photos", file);
+      });
+
+      console.log("Sending property data with", photoFiles.length, "photos");
+
+      const response = await fetch("/backend/api/properties", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type - browser will set it automatically with boundary for FormData
         },
-        body: JSON.stringify(requestData)
+        body: formData,
       });
 
       const result = await response.json();
-      //console.log('API Response:', result);
+      console.log("API Response:", result);
 
       if (!response.ok) {
-        throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          result.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       if (result.status === 201) {
         setSuccess(true);
-        
+
         // Call the parent onSubmit callback
         if (onSubmit) {
           await onSubmit(result);
@@ -369,14 +488,12 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
           resetForm();
           setSuccess(false);
         }, 1500);
-
       } else {
-        throw new Error(result.message || 'Failed to create property');
+        throw new Error(result.message || "Failed to create property");
       }
-
     } catch (error) {
-      console.error('Error creating property:', error);
-      setError(error.message || 'An unexpected error occurred');
+      console.error("Error creating property:", error);
+      setError(error.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -391,7 +508,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
     } else {
       setPropertyData({
         ...propertyData,
-        utilities: propertyData.utilities.filter(u => u !== utility),
+        utilities: propertyData.utilities.filter((u) => u !== utility),
       });
     }
   };
@@ -405,7 +522,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
     } else {
       setPropertyData({
         ...propertyData,
-        amenities: propertyData.amenities.filter(a => a !== amenity),
+        amenities: propertyData.amenities.filter((a) => a !== amenity),
       });
     }
   };
@@ -414,7 +531,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={!loading ? onClose : undefined} />
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={!loading ? onClose : undefined}
+      />
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
           <div className="flex items-center">
@@ -442,10 +562,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                     Property Created Successfully!
                   </h3>
                   <p className="text-sm text-green-700 mt-1">
-                    {isMultiUnit ? 
-                      `Property with ${units.length} units has been added to your portfolio.` :
-                      'The property has been added to your portfolio.'
-                    }
+                    {isMultiUnit
+                      ? `Property with ${units.length} units has been added to your portfolio.`
+                      : "The property has been added to your portfolio."}
                   </p>
                 </div>
               </div>
@@ -483,7 +602,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={propertyData.propertyName}
                   onChange={(e) =>
-                    setPropertyData({ ...propertyData, propertyName: e.target.value })
+                    setPropertyData({
+                      ...propertyData,
+                      propertyName: e.target.value,
+                    })
                   }
                   disabled={loading}
                   placeholder="e.g., Sunset Apartments, Green Valley Homes"
@@ -525,7 +647,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={propertyData.address}
                   onChange={(e) =>
-                    setPropertyData({ ...propertyData, address: e.target.value })
+                    setPropertyData({
+                      ...propertyData,
+                      address: e.target.value,
+                    })
                   }
                   disabled={loading}
                   placeholder="Full property address including city and postal code"
@@ -544,7 +669,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={propertyData.sizeSquareFt}
                       onChange={(e) =>
-                        setPropertyData({ ...propertyData, sizeSquareFt: e.target.value })
+                        setPropertyData({
+                          ...propertyData,
+                          sizeSquareFt: e.target.value,
+                        })
                       }
                       disabled={loading}
                       min="0"
@@ -562,7 +690,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={propertyData.monthlyRent}
                         onChange={(e) =>
-                          setPropertyData({ ...propertyData, monthlyRent: e.target.value })
+                          setPropertyData({
+                            ...propertyData,
+                            monthlyRent: e.target.value,
+                          })
                         }
                         disabled={loading}
                         min="0"
@@ -579,7 +710,10 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={propertyData.securityDeposit}
                         onChange={(e) =>
-                          setPropertyData({ ...propertyData, securityDeposit: e.target.value })
+                          setPropertyData({
+                            ...propertyData,
+                            securityDeposit: e.target.value,
+                          })
                         }
                         disabled={loading}
                         min="0"
@@ -629,56 +763,81 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                 <h4 className="font-medium mb-3">Bulk Update All Units:</h4>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <div>
-                    <label className="block text-xs font-medium mb-1">Bedrooms</label>
+                    <label className="block text-xs font-medium mb-1">
+                      Bedrooms
+                    </label>
                     <input
                       type="number"
                       className="w-full p-2 border rounded text-sm"
                       placeholder="Apply to all"
                       min="0"
-                      onChange={(e) => e.target.value && bulkUpdateUnits('bedrooms', e.target.value)}
+                      onChange={(e) =>
+                        e.target.value &&
+                        bulkUpdateUnits("bedrooms", e.target.value)
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium mb-1">Bathrooms</label>
+                    <label className="block text-xs font-medium mb-1">
+                      Bathrooms
+                    </label>
                     <input
                       type="number"
                       className="w-full p-2 border rounded text-sm"
                       placeholder="Apply to all"
                       min="0"
                       step="0.5"
-                      onChange={(e) => e.target.value && bulkUpdateUnits('bathrooms', e.target.value)}
+                      onChange={(e) =>
+                        e.target.value &&
+                        bulkUpdateUnits("bathrooms", e.target.value)
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium mb-1">Size (sq ft)</label>
+                    <label className="block text-xs font-medium mb-1">
+                      Size (sq ft)
+                    </label>
                     <input
                       type="number"
                       className="w-full p-2 border rounded text-sm"
                       placeholder="Apply to all"
                       min="0"
-                      onChange={(e) => e.target.value && bulkUpdateUnits('sizeSquareFt', e.target.value)}
+                      onChange={(e) =>
+                        e.target.value &&
+                        bulkUpdateUnits("sizeSquareFt", e.target.value)
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium mb-1">Rent (KSh)</label>
+                    <label className="block text-xs font-medium mb-1">
+                      Rent (KSh)
+                    </label>
                     <input
                       type="number"
                       className="w-full p-2 border rounded text-sm"
                       placeholder="Apply to all"
                       min="0"
                       step="100"
-                      onChange={(e) => e.target.value && bulkUpdateUnits('monthlyRent', e.target.value)}
+                      onChange={(e) =>
+                        e.target.value &&
+                        bulkUpdateUnits("monthlyRent", e.target.value)
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium mb-1">Deposit (KSh)</label>
+                    <label className="block text-xs font-medium mb-1">
+                      Deposit (KSh)
+                    </label>
                     <input
                       type="number"
                       className="w-full p-2 border rounded text-sm"
                       placeholder="Apply to all"
                       min="0"
                       step="100"
-                      onChange={(e) => e.target.value && bulkUpdateUnits('securityDeposit', e.target.value)}
+                      onChange={(e) =>
+                        e.target.value &&
+                        bulkUpdateUnits("securityDeposit", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -714,7 +873,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                           type="text"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           value={unit.unitNumber}
-                          onChange={(e) => updateUnit(index, 'unitNumber', e.target.value)}
+                          onChange={(e) =>
+                            updateUnit(index, "unitNumber", e.target.value)
+                          }
                           placeholder="e.g., 101, A1"
                           disabled={loading}
                           required={isMultiUnit}
@@ -730,7 +891,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         type="number"
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={unit.bedrooms}
-                        onChange={(e) => updateUnit(index, 'bedrooms', e.target.value)}
+                        onChange={(e) =>
+                          updateUnit(index, "bedrooms", e.target.value)
+                        }
                         disabled={loading}
                         min="0"
                         required
@@ -745,7 +908,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         type="number"
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={unit.bathrooms}
-                        onChange={(e) => updateUnit(index, 'bathrooms', e.target.value)}
+                        onChange={(e) =>
+                          updateUnit(index, "bathrooms", e.target.value)
+                        }
                         disabled={loading}
                         min="0"
                         step="0.5"
@@ -761,7 +926,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         type="number"
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={unit.sizeSquareFt}
-                        onChange={(e) => updateUnit(index, 'sizeSquareFt', e.target.value)}
+                        onChange={(e) =>
+                          updateUnit(index, "sizeSquareFt", e.target.value)
+                        }
                         disabled={loading}
                         min="0"
                       />
@@ -775,7 +942,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         type="number"
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={unit.monthlyRent}
-                        onChange={(e) => updateUnit(index, 'monthlyRent', e.target.value)}
+                        onChange={(e) =>
+                          updateUnit(index, "monthlyRent", e.target.value)
+                        }
                         disabled={loading}
                         min="0"
                         step="100"
@@ -790,7 +959,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                         type="number"
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={unit.securityDeposit}
-                        onChange={(e) => updateUnit(index, 'securityDeposit', e.target.value)}
+                        onChange={(e) =>
+                          updateUnit(index, "securityDeposit", e.target.value)
+                        }
                         disabled={loading}
                         min="0"
                         step="100"
@@ -814,7 +985,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                     <input
                       type="checkbox"
                       checked={propertyData.utilities.includes(utility)}
-                      onChange={(e) => handleUtilityChange(utility, e.target.checked)}
+                      onChange={(e) =>
+                        handleUtilityChange(utility, e.target.checked)
+                      }
                       disabled={loading}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -834,7 +1007,9 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                     <input
                       type="checkbox"
                       checked={propertyData.amenities.includes(amenity)}
-                      onChange={(e) => handleAmenityChange(amenity, e.target.checked)}
+                      onChange={(e) =>
+                        handleAmenityChange(amenity, e.target.checked)
+                      }
                       disabled={loading}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -857,25 +1032,41 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
                 <div>
                   <span className="text-gray-600">Avg. Bedrooms:</span>
                   <span className="ml-2 font-semibold">
-                    {units.filter(u => u.bedrooms).length > 0 ? 
-                      (units.reduce((sum, u) => sum + (parseInt(u.bedrooms) || 0), 0) / units.filter(u => u.bedrooms).length).toFixed(1) : 
-                      'N/A'
-                    }
+                    {units.filter((u) => u.bedrooms).length > 0
+                      ? (
+                          units.reduce(
+                            (sum, u) => sum + (parseInt(u.bedrooms) || 0),
+                            0
+                          ) / units.filter((u) => u.bedrooms).length
+                        ).toFixed(1)
+                      : "N/A"}
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-600">Avg. Rent:</span>
                   <span className="ml-2 font-semibold">
-                    {units.filter(u => u.monthlyRent).length > 0 ? 
-                      `KSh ${(units.reduce((sum, u) => sum + (parseFloat(u.monthlyRent) || 0), 0) / units.filter(u => u.monthlyRent).length).toLocaleString()}` : 
-                      'N/A'
-                    }
+                    {units.filter((u) => u.monthlyRent).length > 0
+                      ? `KSh ${(
+                          units.reduce(
+                            (sum, u) => sum + (parseFloat(u.monthlyRent) || 0),
+                            0
+                          ) / units.filter((u) => u.monthlyRent).length
+                        ).toLocaleString()}`
+                      : "N/A"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Total Potential Revenue:</span>
+                  <span className="text-gray-600">
+                    Total Potential Revenue:
+                  </span>
                   <span className="ml-2 font-semibold text-green-600">
-                    KSh {units.reduce((sum, u) => sum + (parseFloat(u.monthlyRent) || 0), 0).toLocaleString()}
+                    KSh{" "}
+                    {units
+                      .reduce(
+                        (sum, u) => sum + (parseFloat(u.monthlyRent) || 0),
+                        0
+                      )
+                      .toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -883,21 +1074,65 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
           )}
 
           {/* Photos Upload (Disabled for now) */}
+          {/* Photos Upload - NOW ENABLED */}
           <div className="mb-6">
             <label className="block text-sm font-medium mb-2">
-              Property Photos (Coming Soon)
+              Property Photos (Max 10 photos, 5MB each)
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 opacity-50">
+
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
               <div className="text-center">
                 <Camera className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="mt-2">
-                  <span className="text-gray-500">Photo upload coming in next update</span>
+                  <label htmlFor="photo-upload" className="cursor-pointer">
+                    <span className="text-blue-600 hover:text-blue-500">
+                      Upload photos
+                    </span>
+                    <input
+                      id="photo-upload"
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handlePhotoChange}
+                      disabled={loading}
+                      className="hidden"
+                    />
+                  </label>
+                  <span className="text-gray-500"> or drag and drop</span>
                 </div>
-                <p className="text-xs text-gray-500">
-                  PNG, JPG, GIF support planned
+                <p className="text-xs text-gray-500 mt-1">
+                  PNG, JPG, GIF, WebP up to 5MB each
                 </p>
               </div>
             </div>
+
+            {/* Photo Previews */}
+            {photoPreviews.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {photoPreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview.preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      disabled={loading}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    {index === 0 && (
+                      <span className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -910,12 +1145,16 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
               rows={4}
               value={propertyData.description}
               onChange={(e) =>
-                setPropertyData({ ...propertyData, description: e.target.value })
+                setPropertyData({
+                  ...propertyData,
+                  description: e.target.value,
+                })
               }
               disabled={loading}
-              placeholder={isMultiUnit ? 
-                "Describe the property complex, location benefits, shared amenities, and what makes it attractive to tenants..." :
-                "Describe the property, location benefits, unique features, and what makes it attractive to tenants..."
+              placeholder={
+                isMultiUnit
+                  ? "Describe the property complex, location benefits, shared amenities, and what makes it attractive to tenants..."
+                  : "Describe the property, location benefits, unique features, and what makes it attractive to tenants..."
               }
             />
           </div>
@@ -937,9 +1176,13 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center transition-colors"
             >
               {loading && <Loader className="w-4 h-4 mr-2 animate-spin" />}
-              {loading ? 'Creating...' : success ? 'Created!' : 
-                isMultiUnit ? `Create Property with ${units.length} Units` : 'Create Property'
-              }
+              {loading
+                ? "Creating..."
+                : success
+                ? "Created!"
+                : isMultiUnit
+                ? `Create Property with ${units.length} Units`
+                : "Create Property"}
             </button>
           </div>
         </div>

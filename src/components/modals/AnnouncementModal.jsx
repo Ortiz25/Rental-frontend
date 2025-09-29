@@ -6,7 +6,7 @@ import {
   Loader,
   Users,
   Building,
-  Globe
+  Globe,
 } from "lucide-react";
 
 const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
@@ -16,7 +16,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
     priority: "normal",
     recipients: "all",
     propertyId: "",
-    scheduledFor: ""
+    scheduledFor: "",
   });
 
   const [properties, setProperties] = useState([]);
@@ -25,6 +25,9 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [recipientCount, setRecipientCount] = useState(0);
+  const [scheduleType, setScheduleType] = useState("now"); // 'now' or 'schedule'
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
 
   // Fetch properties when modal opens
   useEffect(() => {
@@ -37,7 +40,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
         priority: "normal",
         recipients: "all",
         propertyId: "",
-        scheduledFor: ""
+        scheduledFor: "",
       });
       setError("");
       setSuccess("");
@@ -53,23 +56,26 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
   const fetchProperties = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/backend/api/communications/properties', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "/backend/api/communications/properties",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
         setProperties(data.data.properties || []);
       } else {
-        throw new Error('Failed to fetch properties');
+        throw new Error("Failed to fetch properties");
       }
     } catch (error) {
-      console.error('Error fetching properties:', error);
-      setError('Failed to load properties');
+      console.error("Error fetching properties:", error);
+      setError("Failed to load properties");
     } finally {
       setIsLoading(false);
     }
@@ -77,10 +83,18 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
 
   const calculateRecipientCount = () => {
     if (announcementData.recipients === "all") {
-      const totalTenants = properties.reduce((sum, property) => sum + property.activeTenants, 0);
+      const totalTenants = properties.reduce(
+        (sum, property) => sum + property.activeTenants,
+        0
+      );
       setRecipientCount(totalTenants);
-    } else if (announcementData.recipients === "property" && announcementData.propertyId) {
-      const selectedProperty = properties.find(p => p.id.toString() === announcementData.propertyId);
+    } else if (
+      announcementData.recipients === "property" &&
+      announcementData.propertyId
+    ) {
+      const selectedProperty = properties.find(
+        (p) => p.id.toString() === announcementData.propertyId
+      );
       setRecipientCount(selectedProperty ? selectedProperty.activeTenants : 0);
     } else {
       setRecipientCount(0);
@@ -98,7 +112,10 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
       return;
     }
 
-    if (announcementData.recipients === "property" && !announcementData.propertyId) {
+    if (
+      announcementData.recipients === "property" &&
+      !announcementData.propertyId
+    ) {
       setError("Please select a property");
       return;
     }
@@ -108,36 +125,67 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
       return;
     }
 
+    // Handle scheduling validation
+    let scheduled_for = null;
+    if (scheduleType === "schedule") {
+      if (!scheduledDate || !scheduledTime) {
+        setError("Please select both date and time for scheduled announcement");
+        return;
+      }
+      scheduled_for = `${scheduledDate}T${scheduledTime}:00`;
+
+      // Validate future date
+      if (new Date(scheduled_for) <= new Date()) {
+        setError("Scheduled time must be in the future");
+        return;
+      }
+    }
+
     setIsSending(true);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const payload = {
         title: announcementData.title.trim(),
         content: announcementData.content.trim(),
         priority: announcementData.priority,
-        recipients: announcementData.recipients
+        recipients: announcementData.recipients,
+        scheduled_for,
+        send_now: scheduleType === "now",
       };
 
       // Add property ID if targeting specific property
-      if (announcementData.recipients === "property" && announcementData.propertyId) {
+      if (
+        announcementData.recipients === "property" &&
+        announcementData.propertyId
+      ) {
         payload.property_id = parseInt(announcementData.propertyId);
       }
 
-      const response = await fetch('/backend/api/communications/announcements', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await fetch(
+        "/backend/api/communications/announcements",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await response.json();
 
       if (response.ok) {
-        setSuccess(`Announcement sent successfully to ${result.data.recipientCount} recipients!`);
-        
+        const message =
+          scheduleType === "now"
+            ? `Announcement sent successfully to ${result.data.recipientCount} recipients!`
+            : `Announcement scheduled successfully for ${new Date(
+                scheduled_for
+              ).toLocaleString()} to ${result.data.recipientCount} recipients!`;
+
+        setSuccess(message);
+
         // Call parent callback if provided
         if (onAnnouncementSent) {
           onAnnouncementSent(result.data);
@@ -148,11 +196,11 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
           onClose();
         }, 2000);
       } else {
-        throw new Error(result.message || 'Failed to send announcement');
+        throw new Error(result.message || "Failed to send announcement");
       }
     } catch (error) {
-      console.error('Error sending announcement:', error);
-      setError(error.message || 'Failed to send announcement');
+      console.error("Error sending announcement:", error);
+      setError(error.message || "Failed to send announcement");
     } finally {
       setIsSending(false);
     }
@@ -160,10 +208,23 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
 
   const handleClose = () => {
     if (!isSending) {
+      // Reset all form fields
+      setAnnouncementData({
+        title: "",
+        content: "",
+        priority: "normal",
+        recipients: "all",
+        propertyId: "",
+        scheduledFor: "",
+      });
+      setScheduleType("now");
+      setScheduledDate("");
+      setScheduledTime("");
+      setError("");
+      setSuccess("");
       onClose();
     }
   };
-
   const getRecipientIcon = () => {
     switch (announcementData.recipients) {
       case "all":
@@ -178,9 +239,16 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
   const getRecipientText = () => {
     if (announcementData.recipients === "all") {
       return "All tenants across all properties";
-    } else if (announcementData.recipients === "property" && announcementData.propertyId) {
-      const selectedProperty = properties.find(p => p.id.toString() === announcementData.propertyId);
-      return selectedProperty ? `All tenants in ${selectedProperty.name}` : "Select a property";
+    } else if (
+      announcementData.recipients === "property" &&
+      announcementData.propertyId
+    ) {
+      const selectedProperty = properties.find(
+        (p) => p.id.toString() === announcementData.propertyId
+      );
+      return selectedProperty
+        ? `All tenants in ${selectedProperty.name}`
+        : "Select a property";
     }
     return "Select recipients";
   };
@@ -191,7 +259,10 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
         !isOpen && "hidden"
       }`}
     >
-      <div className="absolute inset-0 bg-black opacity-50" onClick={handleClose} />
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={handleClose}
+      />
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">New Announcement</h2>
@@ -271,7 +342,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
                     setAnnouncementData({
                       ...announcementData,
                       recipients: e.target.value,
-                      propertyId: ""
+                      propertyId: "",
                     })
                   }
                   disabled={isSending}
@@ -296,7 +367,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
                   onChange={(e) =>
                     setAnnouncementData({
                       ...announcementData,
-                      recipients: e.target.value
+                      recipients: e.target.value,
                     })
                   }
                   disabled={isSending}
@@ -320,7 +391,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
                     onChange={(e) =>
                       setAnnouncementData({
                         ...announcementData,
-                        propertyId: e.target.value
+                        propertyId: e.target.value,
                       })
                     }
                     disabled={isSending || isLoading}
@@ -329,7 +400,8 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
                     <option value="">Select a property</option>
                     {properties.map((property) => (
                       <option key={property.id} value={property.id}>
-                        {property.name} ({property.activeTenants} active tenants)
+                        {property.name} ({property.activeTenants} active
+                        tenants)
                       </option>
                     ))}
                   </select>
@@ -343,7 +415,8 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
                 <div className="flex items-center space-x-2 text-blue-700">
                   {getRecipientIcon()}
                   <span className="text-sm">
-                    <strong>{recipientCount}</strong> recipient{recipientCount !== 1 ? 's' : ''} - {getRecipientText()}
+                    <strong>{recipientCount}</strong> recipient
+                    {recipientCount !== 1 ? "s" : ""} - {getRecipientText()}
                   </span>
                 </div>
               </div>
@@ -369,8 +442,68 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
               <option value="high">High Priority (Urgent)</option>
             </select>
             <p className="text-sm text-gray-500 mt-1">
-              High priority announcements will be marked as urgent for recipients
+              High priority announcements will be marked as urgent for
+              recipients
             </p>
+          </div>
+
+          {/* Scheduling Section */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">
+              When to send
+            </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="now"
+                  checked={scheduleType === "now"}
+                  onChange={(e) => setScheduleType(e.target.value)}
+                  className="mr-2"
+                />
+                <span className="text-sm">Send now</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="schedule"
+                  checked={scheduleType === "schedule"}
+                  onChange={(e) => setScheduleType(e.target.value)}
+                  className="mr-2"
+                />
+                <span className="text-sm">Schedule for later</span>
+              </label>
+            </div>
+
+            {scheduleType === "schedule" && (
+              <div className="grid grid-cols-2 gap-4 mt-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full p-2 border rounded"
+                    required={scheduleType === "schedule"}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    required={scheduleType === "schedule"}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -390,10 +523,17 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
             >
               {isSending && <Loader className="w-4 h-4 animate-spin" />}
               <span>
-                {isSending 
-                  ? "Sending..." 
-                  : `Send to ${recipientCount} recipient${recipientCount !== 1 ? 's' : ''}`
-                }
+                {isSending
+                  ? scheduleType === "schedule"
+                    ? "Scheduling..."
+                    : "Sending..."
+                  : scheduleType === "schedule"
+                  ? `Schedule for ${recipientCount} recipient${
+                      recipientCount !== 1 ? "s" : ""
+                    }`
+                  : `Send to ${recipientCount} recipient${
+                      recipientCount !== 1 ? "s" : ""
+                    }`}
               </span>
             </button>
           </div>

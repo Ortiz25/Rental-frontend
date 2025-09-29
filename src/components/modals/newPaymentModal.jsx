@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, DollarSign, RefreshCw } from 'lucide-react';
+import { formatCurrency } from '../../utils/helperFunctions';
 
 const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }) => {
   const [newPaymentData, setNewPaymentData] = useState({
@@ -56,12 +57,7 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
     setSelectedLease(null);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'KES'
-    }).format(amount || 0);
-  };
+  
 
   if (!isOpen) return null;
 

@@ -905,12 +905,12 @@ const RentCollection = () => {
                 >
                   <Send className="mr-2 w-4 h-4" /> Send Reminders
                 </button>
-                <button 
+                {/* <button 
                   onClick={handleUpdateOverdue}
                   className="bg-red-500 text-white px-4 py-2 rounded flex items-center hover:bg-red-600"
                 >
                   <RefreshCw className="mr-2 w-4 h-4" /> Update Overdue
-                </button>
+                </button> */}
                 <button 
                   onClick={() => setShowGenerateModal(true)}
                   className="bg-green-500 text-white px-4 py-2 rounded flex items-center hover:bg-green-600"

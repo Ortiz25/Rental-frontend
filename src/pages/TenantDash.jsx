@@ -26,7 +26,7 @@ import NotificationsModal from "../components/modals/NotificationModal.jsx"; // 
 const API_BASE_URL = "/backend/api/tenant-dash";
 
 // Contact Manager Modal Component
-const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
+const ContactManagerModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [messageData, setMessageData] = useState({
     subject: "",
     message: "",
@@ -70,6 +70,7 @@ const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
                 setMessageData({ ...messageData, subject: e.target.value })
               }
               required
+              disabled={loading}
             />
           </div>
 
@@ -81,6 +82,7 @@ const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
               onChange={(e) =>
                 setMessageData({ ...messageData, priority: e.target.value })
               }
+              disabled={loading}
             >
               <option value="low">Low</option>
               <option value="normal">Normal</option>
@@ -98,6 +100,7 @@ const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
                 setMessageData({ ...messageData, message: e.target.value })
               }
               required
+              disabled={loading}
             />
           </div>
 
@@ -106,14 +109,17 @@ const ContactManagerModal = ({ isOpen, onClose, onSubmit }) => {
               type="button"
               onClick={onClose}
               className="px-4 py-2 border rounded hover:bg-gray-50"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
+              disabled={loading}
             >
-              Send Message
+              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {loading ? "Sending..." : "Send Message"}
             </button>
           </div>
         </form>
@@ -960,21 +966,24 @@ const TenantDashboard = () => {
     }
   };
 
-   // Download document
-   const  downloadDocument = async (documentId) => {
-    const token = localStorage.getItem('token');
-    
+  // Download document
+  const downloadDocument = async (documentId) => {
+    const token = localStorage.getItem("token");
+
     try {
-      const response = await fetch(`/backend/api/documents/${documentId}/download`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `/backend/api/documents/${documentId}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       // Check if response is ok
       if (!response.ok) {
         // Try to get error message from JSON response
-        let errorMessage = 'Download failed';
+        let errorMessage = "Download failed";
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
@@ -986,38 +995,40 @@ const TenantDashboard = () => {
       }
 
       // Check if response is actually a file (blob)
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
         // This is an error response in JSON format
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Download failed');
+        throw new Error(errorData.message || "Download failed");
       }
 
       // Get the blob
       return response.blob();
-      
     } catch (error) {
-      console.error('Download error details:', error);
+      console.error("Download error details:", error);
       throw error;
     }
-  }
+  };
 
   // View document
- const viewDocument = async (documentId) => {
-    const token = localStorage.getItem('token');
-    
-    const response = await fetch(`/backend/api/documents/${documentId}/view`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  const viewDocument = async (documentId) => {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `/backend/api/documents/${documentId}/view`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('View failed');
+      throw new Error("View failed");
     }
 
     return response.blob();
-  }
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -1095,12 +1106,47 @@ const TenantDashboard = () => {
   };
 
   // Handle contact manager submission
+
   const handleContactSubmit = async (messageData) => {
     try {
-      console.log("Contact message:", messageData);
-      alert("Message sent to property manager!");
+      setActionLoading(true);
+
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "/backend/api/communications/messages",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tenant_id: tenantData?.tenant?.id,
+            lease_id: tenantData?.tenant?.leaseId,
+            communication_type: "Email",
+            subject: messageData.subject,
+            message_content: messageData.message,
+            direction: "inbound",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send message");
+      }
+
+      const result = await response.json();
+      alert("Message sent successfully to property manager!");
+      setShowContactModal(false);
+
+      // Optionally refresh tenant data to show the new message
+      await fetchTenantData();
     } catch (err) {
+      console.error("Error sending message:", err);
       alert(`Failed to send message: ${err.message}`);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -1193,7 +1239,6 @@ const TenantDashboard = () => {
       </Navbar>
     );
   }
- console.log(tenantData)
   return (
     <Navbar module={activeModule}>
       <div className="space-y-6">
@@ -1594,53 +1639,46 @@ const TenantDashboard = () => {
             </div>
           )}
         {/* Tenant Documents Section */}
-        {tenantData.documents &&
-          tenantData.documents.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold">My Uploaded Documents</h2>
-                <FileText className="w-5 h-5 text-blue-500" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {tenantData.documents.map((document) => (
-                  <div
-                    key={document.id}
-                    className="flex justify-between items-center p-4 bg-gray-50 rounded"
-                  >
-                    <div>
-                      <h3 className="font-medium">{document.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {document.type}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Uploaded: {formatDate(document.date)}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() =>
-                          viewDocument(document.id)
-                        }
-                        className="text-blue-500 hover:text-blue-700"
-                        title="View Document"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          downloadDocument(document.id)
-                        }
-                        className="text-green-500 hover:text-green-700"
-                        title="Download Document"
-                      >
-                        <Download className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {tenantData.documents && tenantData.documents.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">My Uploaded Documents</h2>
+              <FileText className="w-5 h-5 text-blue-500" />
             </div>
-          )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {tenantData.documents.map((document) => (
+                <div
+                  key={document.id}
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded"
+                >
+                  <div>
+                    <h3 className="font-medium">{document.name}</h3>
+                    <p className="text-sm text-gray-600">{document.type}</p>
+                    <p className="text-xs text-gray-500">
+                      Uploaded: {formatDate(document.date)}
+                    </p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => viewDocument(document.id)}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="View Document"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => downloadDocument(document.id)}
+                      className="text-green-500 hover:text-green-700"
+                      title="Download Document"
+                    >
+                      <Download className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Payment History Section */}
         {tenantData.rentHistory && tenantData.rentHistory.length > 0 && (
@@ -1706,6 +1744,7 @@ const TenantDashboard = () => {
           isOpen={showContactModal}
           onClose={() => setShowContactModal(false)}
           onSubmit={handleContactSubmit}
+          loading={actionLoading}
         />
 
         <UploadDocumentModal

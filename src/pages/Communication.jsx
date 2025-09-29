@@ -7,7 +7,7 @@ import {
   Send,
   Users,
   Search,
-  Plus,
+  Briefcase,
   Settings,
   X,
   Filter,
@@ -21,6 +21,14 @@ import {
   RefreshCw,
   Eye,
   MoreHorizontal,
+  User,
+  ArrowUp,
+  Home,
+  MapPin,
+  DollarSign,
+  Bed,
+  Calendar,
+  Info,ArrowDown
 } from "lucide-react";
 import NewMessageModal from "../components/modals/NewMessageModal";
 import AnnouncementModal from "../components/modals/AnnouncementModal";
@@ -34,7 +42,8 @@ const CommunicationTools = () => {
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [activeTab, setActiveTab] = useState("messages");
-
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   // Loading and pagination states
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +51,7 @@ const CommunicationTools = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
+
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -66,7 +76,7 @@ const CommunicationTools = () => {
       fetchAnnouncements();
     }
     fetchStats();
-  }, [activeTab, currentPage, filters]);
+  }, [activeTab, currentPage, filters, itemsPerPage]);
 
   // Debounced search
   useEffect(() => {
@@ -93,10 +103,9 @@ const CommunicationTools = () => {
       const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "10",
+        limit: itemsPerPage.toString(), // Use state variable
         ...filters,
       });
-
       const response = await fetch(
         `/backend/api/communications/messages?${queryParams}`,
         {
@@ -115,6 +124,8 @@ const CommunicationTools = () => {
         setTotalPages(data.data.pagination.totalPages);
         setHasNextPage(data.data.pagination.hasNextPage);
         setHasPreviousPage(data.data.pagination.hasPreviousPage);
+
+        setTotalItems(data.data.pagination.totalAnnouncements); // or totalMessages
       } else {
         throw new Error("Failed to fetch messages");
       }
@@ -149,13 +160,15 @@ const CommunicationTools = () => {
       );
 
       const data = await response.json();
-      console.log(data);
 
       if (response.ok) {
+        console.log(data)
         setAnnouncements(data.data.announcements || []);
         setTotalPages(data.data.pagination.totalPages);
         setHasNextPage(data.data.pagination.hasNextPage);
         setHasPreviousPage(data.data.pagination.hasPreviousPage);
+
+        setTotalItems(data.data.pagination.totalAnnouncements); // or totalMessages
       } else {
         throw new Error("Failed to fetch announcements");
       }
@@ -272,6 +285,11 @@ const CommunicationTools = () => {
     }
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
   const MessageList = () => (
     <div className="space-y-4">
       {isLoading ? (
@@ -297,15 +315,63 @@ const CommunicationTools = () => {
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">{message.sender}</h3>
-                  {getStatusIcon(message.status)}
+                {/* Sender/Recipient Section */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm
+                      ${
+                        message.direction === "outbound"
+                          ? "bg-blue-50 text-blue-700 border border-blue-200"
+                          : "bg-green-50 text-green-700 border border-green-200"
+                      }`}
+                    >
+                      {message.direction === "outbound" ? (
+                        <>
+                          <ArrowUp className="w-4 h-4" />
+                          <span>To: {message.tenant?.name || "Unknown"}</span>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDown className="w-4 h-4" />
+                          <span>From: {message.sender}</span>
+                        </>
+                      )}
+                    </div>
+                    {getStatusIcon(message.status)}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600">{message.property}</p>
+
+                <p className="text-sm text-gray-600 mb-2">{message.property}</p>
+
+                {/* Tenant Details */}
+                {message.tenant && (
+                  <div className="mt-2 bg-gray-50 rounded-md p-3 border-l-4 border-gray-300">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-semibold text-gray-800">
+                        {message.tenant.name}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <Mail className="w-3 h-3" />
+                        <span className="truncate">{message.tenant.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Phone className="w-3 h-3" />
+                        <span>{message.tenant.phone}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {message.subject && (
-                  <p className="text-sm font-medium text-gray-800 mt-1">
-                    {message.subject}
-                  </p>
+                  <div className="mt-3 p-2 bg-blue-50 rounded-md border-l-3 border-blue-400">
+                    <p className="text-sm font-semibold text-blue-800">
+                      Subject: {message.subject}
+                    </p>
+                  </div>
                 )}
               </div>
               <div className="flex items-center space-x-2 text-right">
@@ -321,7 +387,11 @@ const CommunicationTools = () => {
                 </span>
               </div>
             </div>
-            <p className="text-gray-700 line-clamp-2">{message.content}</p>
+            <div className="mt-3 p-3 bg-slate-50 rounded-lg border">
+              <p className="text-gray-800 text-sm leading-relaxed">
+                {message.content}
+              </p>
+            </div>
             {message.followUp?.required && (
               <div className="mt-2 flex items-center space-x-1 text-xs text-orange-600">
                 <Clock className="w-3 h-3" />
@@ -338,55 +408,192 @@ const CommunicationTools = () => {
   );
 
   const AnnouncementList = () => (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {isLoading ? (
-        <div className="flex justify-center items-center py-8">
-          <Loader className="w-6 h-6 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading announcements...</span>
+        <div className="flex flex-col justify-center items-center py-16">
+          <div className="relative">
+            <Loader className="w-8 h-8 animate-spin text-blue-500" />
+            <div className="absolute inset-0 w-8 h-8 border-2 border-blue-100 rounded-full"></div>
+          </div>
+          <span className="mt-4 text-gray-600 font-medium">
+            Loading announcements...
+          </span>
         </div>
       ) : announcements.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <p>No announcements found</p>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+            <Bell className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            No announcements yet
+          </h3>
+          <p className="text-gray-500">
+            Stay tuned for important updates and notifications
+          </p>
         </div>
       ) : (
         announcements.map((announcement) => (
           <div
             key={announcement.id}
-            className={`bg-white rounded-lg shadow-md p-4 ${
-              !announcement.isRead ? "border-l-4 border-blue-500" : ""
+            className={`group relative overflow-hidden bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border ${
+              !announcement.isRead
+                ? "border-l-4 border-l-blue-500 border-gray-200 bg-gradient-to-r from-blue-50/30 to-white"
+                : "border-gray-200 hover:border-gray-300"
             }`}
           >
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">{announcement.title}</h3>
-                  {!announcement.isRead && (
-                    <button
-                      onClick={() => markNotificationAsRead(announcement.id)}
-                      className="text-blue-500 hover:text-blue-700"
-                      title="Mark as read"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
+            {/* Priority Badge - Floating */}
+            <div className="absolute top-4 right-4 z-10">
               <span
-                className={`px-2 py-1 rounded-full text-xs ${
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
                   announcement.priority === "high"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-blue-100 text-blue-800"
+                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                    : "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
                 }`}
               >
+                {announcement.priority === "high" ? (
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                ) : (
+                  <Info className="w-3 h-3 mr-1" />
+                )}
                 {announcement.priority}
               </span>
             </div>
-            <p className="text-gray-700 mb-2">{announcement.content}</p>
-            <div className="flex justify-between items-center text-sm text-gray-500">
-              <span>{announcement.recipients}</span>
-              <span>{announcement.date}</span>
+
+            <div className="p-6">
+              {/* Header Section */}
+              <div className="flex items-start justify-between mb-4 pr-24">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 leading-tight">
+                      {announcement.title}
+                    </h3>
+                    {!announcement.isRead && (
+                      <button
+                        onClick={() => markNotificationAsRead(announcement.id)}
+                        className="group/btn p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200"
+                        title="Mark as read"
+                      >
+                        <Eye className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="mb-6">
+                <p className="text-gray-700 leading-relaxed text-sm">
+                  {announcement.content}
+                </p>
+              </div>
+
+              {/* User & Property Info */}
+              {announcement.user && (
+                <div className="mb-4 space-y-3">
+                  {/* User Info */}
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm font-semibold text-gray-800 truncate">
+                          {announcement.user.fullName}
+                        </p>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {announcement.user.role}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-4 mt-1">
+                        <div className="flex items-center space-x-1">
+                          <Mail className="w-3 h-3 text-gray-400" />
+                          <span className="text-xs text-gray-600 truncate">
+                            {announcement.user.userEmail}
+                          </span>
+                        </div>
+                        {announcement.user.userPhone && (
+                          <div className="flex items-center space-x-1">
+                            <Phone className="w-3 h-3 text-gray-400" />
+                            <span className="text-xs text-gray-600">
+                              {announcement.user.userPhone}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Property Info - Only for Tenants */}
+                  {announcement.property && (
+                    <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                        <Home className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <p className="text-sm font-semibold text-gray-800 truncate">
+                            {announcement.property.propertyName}
+                          </p>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Unit {announcement.property.unitNumber}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="w-3 h-3 text-gray-400" />
+                            <span className="truncate">
+                              {announcement.property.propertyAddress}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <DollarSign className="w-3 h-3 text-gray-400" />
+                            <span>
+                              KSh{" "}
+                              {announcement.property.monthlyRent?.toLocaleString()}
+                              /mo
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Bed className="w-3 h-3 text-gray-400" />
+                            <span>
+                              {announcement.property.bedrooms} bed,{" "}
+                              {announcement.property.bathrooms} bath
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="w-3 h-3 text-gray-400" />
+                            <span className="truncate">
+                              {announcement.property.leaseNumber}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600 font-medium">
+                    {announcement.recipients}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-500">
+                    {announcement.date}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Unread Indicator */}
+            {!announcement.isRead && (
+              <div className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full m-3 shadow-lg animate-pulse"></div>
+            )}
           </div>
         ))
       )}
@@ -394,11 +601,44 @@ const CommunicationTools = () => {
   );
 
   const Pagination = () => (
-    <div className="flex justify-between items-center mt-6">
-      <div className="text-sm text-gray-600">
-        Page {currentPage} of {totalPages}
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mt-6">
+      {/* Page Info and Items Per Page Selector */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+        <div className="text-sm text-gray-600">
+          Page {currentPage} of {totalPages}
+        </div>
+        <div className="flex items-center space-x-2">
+          <label className="text-sm text-gray-600">Show:</label>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span className="text-sm text-gray-600">per page</span>
+        </div>
+        <div className="text-sm text-gray-600">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+          {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
+          items
+        </div>
       </div>
+
+      {/* Navigation Buttons */}
       <div className="flex space-x-2">
+        <button
+          onClick={() => handlePageChange(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          title="First page"
+        >
+          First
+        </button>
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={!hasPreviousPage}
@@ -412,6 +652,14 @@ const CommunicationTools = () => {
           className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
         >
           Next
+        </button>
+        <button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          title="Last page"
+        >
+          Last
         </button>
       </div>
     </div>
@@ -640,9 +888,18 @@ const CommunicationTools = () => {
         </div>
 
         {/* Content */}
-        <div>
-          {activeTab === "messages" ? <MessageList /> : <AnnouncementList />}
-          {totalPages > 1 && <Pagination />}
+        <div className="flex flex-col h-full">
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+            {activeTab === "messages" ? <MessageList /> : <AnnouncementList />}
+          </div>
+
+          {/* Fixed pagination at bottom */}
+          {totalPages > 1 && (
+            <div className="flex-shrink-0 mt-4 pt-4 border-t border-gray-200 bg-white">
+              <Pagination />
+            </div>
+          )}
         </div>
 
         {/* Modals */}
