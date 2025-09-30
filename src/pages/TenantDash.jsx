@@ -919,6 +919,7 @@ const TenantDashboard = () => {
       }
 
       const result = await response.json();
+      console.log(result)
       setTenantData(result.data);
     } catch (err) {
       setError(err.message);
@@ -942,7 +943,7 @@ const TenantDashboard = () => {
           },
         }
       );
-
+        console.log(response)
       if (response.ok) {
         // Update local state to reflect the change
         setTenantData((prevData) => ({
@@ -1516,7 +1517,7 @@ const TenantDashboard = () => {
         </div>
 
         {/* Documents Section */}
-        {/* <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Important Documents</h2>
             <FileText className="w-5 h-5 text-orange-500" />
@@ -1550,7 +1551,7 @@ const TenantDashboard = () => {
               </div>
             )}
           </div>
-        </div> */}
+        </div>
 
         {/* Payment Submissions Section */}
         {tenantData.paymentSubmissions &&

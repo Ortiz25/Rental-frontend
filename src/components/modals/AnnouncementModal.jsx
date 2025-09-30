@@ -153,7 +153,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
         scheduled_for,
         send_now: scheduleType === "now",
       };
-
+      console.log(payload)
       // Add property ID if targeting specific property
       if (
         announcementData.recipients === "property" &&
