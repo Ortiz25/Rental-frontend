@@ -967,55 +967,98 @@ const TenantDashboard = () => {
     }
   };
 
-  // Download document
-  const downloadDocument = async (documentId) => {
-    console.log("download", documentId)
-    const token = localStorage.getItem("token");
+// Download document - ENHANCED VERSION with debugging
+const downloadDocument = async (documentId) => {
+  console.log("🔽 Starting download for document ID:", documentId);
+  const token = localStorage.getItem("token");
 
-    try {
-      const response = await fetch(
-        `/backend/api/documents/${documentId}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Check if response is ok
-      if (!response.ok) {
-        // Try to get error message from JSON response
-        let errorMessage = "Download failed";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (jsonError) {
-          // If not JSON, use status text
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(`${errorMessage} (Status: ${response.status})`);
+  try {
+    const response = await fetch(
+      `/backend/api/documents/${documentId}/download`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      // Check if response is actually a file (blob)
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        // This is an error response in JSON format
+    console.log("📡 Response status:", response.status);
+    console.log("📡 Response headers:", response.headers);
+
+    if (!response.ok) {
+      console.error("❌ Response not OK:", response.status);
+      let errorMessage = "Download failed";
+      try {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Download failed");
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        errorMessage = response.statusText || errorMessage;
       }
-
-      // Get the blob
-      return response.blob();
-    } catch (error) {
-      console.error("Download error details:", error);
-      throw error;
+      throw new Error(`${errorMessage} (Status: ${response.status})`);
     }
-  };
 
-  // View document
-  const viewDocument = async (documentId) => {
-    const token = localStorage.getItem("token");
-    console.log("Viewdocument", documentId)
+    // Check content type
+    const contentType = response.headers.get("content-type");
+    console.log("📄 Content-Type:", contentType);
+    
+    if (contentType && contentType.includes("application/json")) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Download failed");
+    }
+
+    // Get the blob
+    console.log("📦 Converting response to blob...");
+    const blob = await response.blob();
+    console.log("📦 Blob size:", blob.size, "bytes");
+    
+    if (blob.size === 0) {
+      throw new Error("Downloaded file is empty");
+    }
+
+    // Get filename from Content-Disposition header
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'document.pdf';
+    
+    if (contentDisposition) {
+      console.log("📋 Content-Disposition:", contentDisposition);
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+    
+    console.log("💾 Filename:", filename);
+
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    console.log("🖱️ Triggering download click...");
+    link.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      console.log("✅ Download completed and cleaned up");
+    }, 100);
+    
+  } catch (error) {
+    console.error("❌ Download error:", error);
+    alert(`Download failed: ${error.message}`);
+  }
+};
+
+// View document - ENHANCED VERSION with debugging
+const viewDocument = async (documentId) => {
+  const token = localStorage.getItem("token");
+  console.log("👁️ Starting view for document ID:", documentId);
+  
+  try {
     const response = await fetch(
       `/backend/api/documents/${documentId}/view`,
       {
@@ -1025,12 +1068,50 @@ const TenantDashboard = () => {
       }
     );
 
+    console.log("📡 Response status:", response.status);
+
     if (!response.ok) {
-      throw new Error("View failed");
+      console.error("❌ Response not OK:", response.status);
+      throw new Error(`View failed (Status: ${response.status})`);
     }
 
-    return response.blob();
-  };
+    // Get the blob
+    console.log("📦 Converting response to blob...");
+    const blob = await response.blob();
+    console.log("📦 Blob size:", blob.size, "bytes");
+    console.log("📦 Blob type:", blob.type);
+    
+    if (blob.size === 0) {
+      throw new Error("Document is empty");
+    }
+
+    // Create URL and open in new tab
+    const url = window.URL.createObjectURL(blob);
+    console.log("🔗 Created blob URL:", url);
+    
+    const newWindow = window.open(url, '_blank');
+    
+    if (!newWindow) {
+      console.warn("⚠️ Popup blocked, trying download instead");
+      // Fallback to download if popup is blocked
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `document-${documentId}.pdf`;
+      link.click();
+    }
+    
+    // Cleanup after delay
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      console.log("✅ Blob URL revoked");
+    }, 5000);
+    
+    console.log("✅ Document opened successfully");
+  } catch (error) {
+    console.error("❌ View error:", error);
+    alert(`Failed to view document: ${error.message}`);
+  }
+};
 
   // Load data on component mount
   useEffect(() => {
