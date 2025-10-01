@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, RefreshCw } from 'lucide-react';
+import { formatCurrency } from '../../utils/helperFunctions';
 
 const BulkVerificationModal = ({ 
   selectedSubmissions, 
@@ -16,7 +17,7 @@ const BulkVerificationModal = ({
   });
 
   const selectedItems = submissions.filter(sub => selectedSubmissions.includes(sub.id));
-  const totalAmount = selectedItems.reduce((sum, sub) => sum + sub.amount, 0);
+  const totalAmount = selectedItems.reduce((sum, sub) => sum + +sub.amount, 0);
 
   const handleBulkAction = async () => {
     if (!bulkData.admin_notes.trim()) {
@@ -26,13 +27,7 @@ const BulkVerificationModal = ({
     await onBulkVerify(selectedSubmissions, bulkData);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
-
+   console.log(totalAmount)
   if (!isOpen || selectedSubmissions.length === 0) return null;
 
   return (

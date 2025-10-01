@@ -554,8 +554,8 @@ const RentCollection = () => {
           admin_notes: bulkData.admin_notes,
           apply_to_accounts: bulkData.apply_to_accounts
         });
-        
-        if (result.success) {
+    
+        if (result.success || result.status === 200) {
           setPendingSubmissions(prev => prev.filter(sub => !submissionIds.includes(sub.id)));
           alert(`${submissionIds.length} payment${submissionIds.length > 1 ? 's' : ''} verified successfully!`);
         } else {
@@ -569,7 +569,6 @@ const RentCollection = () => {
             })
           )
         );
-        
         const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
         const failed = results.length - successful;
         

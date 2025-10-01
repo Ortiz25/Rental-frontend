@@ -342,7 +342,7 @@ useEffect(() => {
             />
             <SearchIcon className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
           </div>
-          {!userRole === "Staff" && <button
+          {userRole !== "Staff" && <button
             onClick={() => setShowAddPropertyModal(true)}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg flex items-center justify-center text-sm sm:text-base transition-colors whitespace-nowrap"
           >
