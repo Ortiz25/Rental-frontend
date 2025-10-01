@@ -25,29 +25,30 @@ const PropertyCard = ({ property, onUpdate }) => {
   const [showUnitsDropdown, setShowUnitsDropdown] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
 
-
   // Default placeholder image
   const defaultImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showUnitsDropdown &&
+        !event.target.closest(".units-dropdown-container")
+      ) {
+        setShowUnitsDropdown(false);
+      }
+    };
 
-    useEffect(() => {
-      const handleClickOutside = (event) => {
-        if (showUnitsDropdown && !event.target.closest('.units-dropdown-container')) {
-          setShowUnitsDropdown(false);
-        }
-      };
-    
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-      
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('touchstart', handleClickOutside);
-      };
-    }, [showUnitsDropdown]);  
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
 
-    const isDropdownVisible = showUnitsDropdown || isHovering;
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showUnitsDropdown]);
+
+  const isDropdownVisible = showUnitsDropdown || isHovering;
   // Fetch property photos
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -132,7 +133,7 @@ const PropertyCard = ({ property, onUpdate }) => {
     photos.length > 0
       ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
       : defaultImage;
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-visible">
       {/* Photo Section */}
@@ -213,7 +214,7 @@ const PropertyCard = ({ property, onUpdate }) => {
       </div>
 
       {/* Content Section */}
-      <div className="p-3 sm:p-4 lg:p-6">
+      <div className="p-3 sm:p-4 lg:p-6 relative">
         {/* Property Name - New Addition */}
         <div className="mb-3">
           <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 leading-tight">
@@ -262,110 +263,212 @@ const PropertyCard = ({ property, onUpdate }) => {
               </button>
             )}
             {property.totalUnits > 1 && (
-  <div 
-    className="relative units-dropdown-container"
-    onMouseEnter={() => setIsHovering(true)}
-    onMouseLeave={() => setIsHovering(false)}
-  >
-    <button 
-      onClick={() => setShowUnitsDropdown(!showUnitsDropdown)}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-200"
-    >
-      <Home className="w-4 h-4" />
-      <span>Units ({property.units?.length || 0})</span>
-    </button>
-
-    {isDropdownVisible && (
-      <div 
-        className="absolute top-full right-0 sm:right-0 left-0 sm:left-auto mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-20 w-full sm:w-72 max-w-sm"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
-        <div className="p-3">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3 pb-2 border-b">
-            <span className="text-sm font-semibold text-gray-700">
-              Unit Overview
-            </span>
-            <div className="flex gap-2 text-xs">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                {property.units?.filter(
-                  (u) => u.occupancy_status === "occupied"
-                ).length || 0}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                {property.units?.filter(
-                  (u) => u.occupancy_status === "vacant"
-                ).length || 0}
-              </span>
-            </div>
-          </div>
-
-          {/* Units List */}
-          <div className="max-h-64 overflow-y-auto space-y-2 pr-1 pb-2">
-            {property.units?.map((unit) => (
-              <button
-                key={unit.id}
-                onClick={() => {
-                  handleEditUnit(unit);
-                  setShowUnitsDropdown(false);
-                  setIsHovering(false);
-                }}
-                disabled={userRole === "Staff"}
-                className="w-full text-left p-2.5 hover:bg-gray-50 active:bg-gray-100 rounded-lg border border-gray-100 transition-all hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              <div
+                className="relative units-dropdown-container"
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">
-                        Unit {unit.unit_number}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${
-                          unit.occupancy_status === "occupied"
-                            ? "bg-green-100 text-green-700 border border-green-200"
-                            : unit.occupancy_status === "maintenance"
-                            ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
-                            : "bg-gray-100 text-gray-600 border border-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            unit.occupancy_status === "occupied"
-                              ? "bg-green-500"
-                              : unit.occupancy_status === "maintenance"
-                              ? "bg-yellow-500"
-                              : "bg-gray-400"
-                          }`}
-                        ></span>
-                        {unit.occupancy_status === "occupied"
-                          ? "Occupied"
-                          : unit.occupancy_status === "maintenance"
-                          ? "Maintenance"
-                          : "Vacant"}
-                      </span>
+                <button
+                  onClick={() => setShowUnitsDropdown(!showUnitsDropdown)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-200"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Units ({property.units?.length || 0})</span>
+                </button>
+
+                {isDropdownVisible && (
+                  <>
+                    {/* Mobile: Full card width */}
+                    <div
+                      className="sm:hidden absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-20 left-[-0.75rem] right-[-0.75rem]"
+                      style={{ width: "calc(100% + 1.5rem)" }}
+                      onMouseEnter={() => setIsHovering(true)}
+                      onMouseLeave={() => setIsHovering(false)}
+                    >
+                      <div className="p-3">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                          <span className="text-sm font-semibold text-gray-700">
+                            Unit Overview
+                          </span>
+                          <div className="flex gap-2 text-xs">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                              {property.units?.filter(
+                                (u) => u.occupancy_status === "occupied"
+                              ).length || 0}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                              {property.units?.filter(
+                                (u) => u.occupancy_status === "vacant"
+                              ).length || 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Units List */}
+                        <div className="max-h-64 overflow-y-auto space-y-2 pr-1 pb-2">
+                          {property.units?.map((unit) => (
+                            <button
+                              key={unit.id}
+                              onClick={() => {
+                                handleEditUnit(unit);
+                                setShowUnitsDropdown(false);
+                                setIsHovering(false);
+                              }}
+                              disabled={userRole === "Staff"}
+                              className="w-full text-left p-2.5 hover:bg-gray-50 active:bg-gray-100 rounded-lg border border-gray-100 transition-all hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-semibold text-gray-900">
+                                      Unit {unit.unit_number}
+                                    </span>
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${
+                                        unit.occupancy_status === "occupied"
+                                          ? "bg-green-100 text-green-700 border border-green-200"
+                                          : unit.occupancy_status ===
+                                            "maintenance"
+                                          ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                                          : "bg-gray-100 text-gray-600 border border-gray-200"
+                                      }`}
+                                    >
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full ${
+                                          unit.occupancy_status === "occupied"
+                                            ? "bg-green-500"
+                                            : unit.occupancy_status ===
+                                              "maintenance"
+                                            ? "bg-yellow-500"
+                                            : "bg-gray-400"
+                                        }`}
+                                      ></span>
+                                      {unit.occupancy_status === "occupied"
+                                        ? "Occupied"
+                                        : unit.occupancy_status ===
+                                          "maintenance"
+                                        ? "Maintenance"
+                                        : "Vacant"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 flex-wrap">
+                                    <span>{unit.bedrooms} bed</span>
+                                    <span>•</span>
+                                    <span>{unit.bathrooms} bath</span>
+                                    <span>•</span>
+                                    <span className="font-medium text-gray-700">
+                                      KES {unit.monthly_rent?.toLocaleString()}
+                                      /mo
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs text-gray-500 flex-wrap">
-                      <span>{unit.bedrooms} bed</span>
-                      <span>•</span>
-                      <span>{unit.bathrooms} bath</span>
-                      <span>•</span>
-                      <span className="font-medium text-gray-700">
-                        KES {unit.monthly_rent?.toLocaleString()}/mo
-                      </span>
+
+                    {/* Desktop: Right-aligned, fixed width */}
+                    <div
+                      className="hidden sm:block absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-20 w-72"
+                      onMouseEnter={() => setIsHovering(true)}
+                      onMouseLeave={() => setIsHovering(false)}
+                    >
+                      {/* Same content as above */}
+                      <div className="p-3">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                          <span className="text-sm font-semibold text-gray-700">
+                            Unit Overview
+                          </span>
+                          <div className="flex gap-2 text-xs">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                              {property.units?.filter(
+                                (u) => u.occupancy_status === "occupied"
+                              ).length || 0}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                              {property.units?.filter(
+                                (u) => u.occupancy_status === "vacant"
+                              ).length || 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Units List */}
+                        <div className="max-h-64 overflow-y-auto space-y-2 pr-1 pb-2">
+                          {property.units?.map((unit) => (
+                            <button
+                              key={unit.id}
+                              onClick={() => {
+                                handleEditUnit(unit);
+                                setShowUnitsDropdown(false);
+                                setIsHovering(false);
+                              }}
+                              disabled={userRole === "Staff"}
+                              className="w-full text-left p-2.5 hover:bg-gray-50 active:bg-gray-100 rounded-lg border border-gray-100 transition-all hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-semibold text-gray-900">
+                                      Unit {unit.unit_number}
+                                    </span>
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${
+                                        unit.occupancy_status === "occupied"
+                                          ? "bg-green-100 text-green-700 border border-green-200"
+                                          : unit.occupancy_status ===
+                                            "maintenance"
+                                          ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                                          : "bg-gray-100 text-gray-600 border border-gray-200"
+                                      }`}
+                                    >
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full ${
+                                          unit.occupancy_status === "occupied"
+                                            ? "bg-green-500"
+                                            : unit.occupancy_status ===
+                                              "maintenance"
+                                            ? "bg-yellow-500"
+                                            : "bg-gray-400"
+                                        }`}
+                                      ></span>
+                                      {unit.occupancy_status === "occupied"
+                                        ? "Occupied"
+                                        : unit.occupancy_status ===
+                                          "maintenance"
+                                        ? "Maintenance"
+                                        : "Vacant"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                                    <span>{unit.bedrooms} bed</span>
+                                    <span>•</span>
+                                    <span>{unit.bathrooms} bath</span>
+                                    <span>•</span>
+                                    <span className="font-medium text-gray-700">
+                                      KES {unit.monthly_rent?.toLocaleString()}
+                                      /mo
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-)}
+                  </>
+                )}
+              </div>
+            )}
             {userRole !== "Staff" && (
               <button
                 onClick={() => setShowDeleteModal(true)}
