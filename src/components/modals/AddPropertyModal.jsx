@@ -97,7 +97,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
         if (!token) return;
 
         const response = await fetch(
-          "/backend/api/properties/amenities",
+          "http://localhost:5020/api/properties/amenities",
           {
             method: "GET",
             headers: {
@@ -456,7 +456,7 @@ const AddPropertyModal = ({ isOpen, onClose, onSubmit }) => {
 
       console.log("Sending property data with", photoFiles.length, "photos");
 
-      const response = await fetch("/backend/api/properties", {
+      const response = await fetch("http://localhost:5020/api/properties", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

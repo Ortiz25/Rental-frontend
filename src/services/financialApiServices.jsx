@@ -1,6 +1,6 @@
 // services/FinancialApiService.js
 
-const API_BASE_URL = '/backend/api';
+const API_BASE_URL = 'http://localhost:5020/api';
 
 class FinancialApiService {
   constructor() {

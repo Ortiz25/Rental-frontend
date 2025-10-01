@@ -55,6 +55,65 @@ const PaymentCard = ({ payment, onViewInvoice, onProcessPayment }) => {
           <p className="text-sm text-gray-600">Due Amount</p>
           <p className="font-semibold">{formatCurrency(payment.amount_due)}</p>
         </div>
+          {/* ADD UTILITY BREAKDOWN */}
+          {payment.utilities_charges > 0 && (
+          <>
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-blue-900">Utility Charges:</span>
+                <span className="font-bold text-blue-900">{formatCurrency(payment.utilities_charges)}</span>
+              </div>
+              
+              {payment.utility_breakdown && (
+                <div className="space-y-1 text-xs text-gray-700 ml-2">
+                  {payment.utility_breakdown.water_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Water:</span>
+                      <span>{formatCurrency(payment.utility_breakdown.water_charges)}</span>
+                    </div>
+                  )}
+                  {payment.utility_breakdown.electricity_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Electricity:</span>
+                      <span>{formatCurrency(payment.utility_breakdown.electricity_charges)}</span>
+                    </div>
+                  )}
+                  {payment.utility_breakdown.gas_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Gas:</span>
+                      <span>{formatCurrency(payment.utility_breakdown.gas_charges)}</span>
+                    </div>
+                  )}
+                  {payment.utility_breakdown.service_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Service Charges:</span>
+                      <span>{formatCurrency(payment.utility_breakdown.service_charges)}</span>
+                    </div>
+                  )}
+                  {payment.utility_breakdown.garbage_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Garbage:</span>
+                      <span>{formatCurrency(payment.utility_breakdown.garbage_charges)}</span>
+                    </div>
+                  )}
+                  {payment.utility_breakdown.common_area_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Common Area:</span>
+                      <span>{formatCurrency(payment.utility_breakdown.common_area_charges)}</span>
+                    </div>
+                  )}
+                  {payment.utility_breakdown.other_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span>• Other ({payment.utility_breakdown.other_charges_description || 'Misc'}):</span>
+                      <span>{formatCurrency(payment.utility_breakdown.other_charges)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         <div>
           <p className="text-sm text-gray-600">Due Date</p>
           <p className="font-semibold">{formatDate(payment.due_date)}</p>
@@ -66,11 +125,20 @@ const PaymentCard = ({ payment, onViewInvoice, onProcessPayment }) => {
           </div>
         )}
         {payment.late_fee > 0 && (
-          <div className="text-red-600">
-            <p className="text-sm">Late Fee</p>
-            <p className="font-semibold">{formatCurrency(payment.late_fee)}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Late Fee:</span>
+            <span className="font-medium text-red-600">{formatCurrency(payment.late_fee)}</span>
           </div>
         )}
+        <div className="flex justify-between items-center pt-2 border-t-2 border-gray-300">
+          <span className="text-lg font-bold">Total Amount Due:</span>
+          <span className="text-lg font-bold text-blue-600">
+            {formatCurrency(payment.total_amount_due || 
+              (parseFloat(payment.amount_due) + 
+               parseFloat(payment.utilities_charges || 0) + 
+               parseFloat(payment.late_fee || 0)))}
+          </span>
+        </div>
       </div>
 
       {payment.payment_method && (

@@ -108,7 +108,7 @@ const UpdatePropertyModal = ({
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `/backend/api/properties/${property.id}/photos`,
+          `http://localhost:5020/api/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -211,7 +211,7 @@ const UpdatePropertyModal = ({
         if (!token) return;
 
         const response = await fetch(
-          "/backend/api/properties/amenities",
+          "http://localhost:5020/api/properties/amenities",
           {
             method: "GET",
             headers: {
@@ -305,7 +305,7 @@ const UpdatePropertyModal = ({
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `/backend/api/properties/${property.id}/photos/${photoId}/set-primary`,
+        `http://localhost:5020/api/properties/${property.id}/photos/${photoId}/set-primary`,
         {
           method: "PUT",
           headers: {
@@ -414,7 +414,7 @@ const UpdatePropertyModal = ({
       };
   
       const response = await fetch(
-        `/backend/api/properties/${property.id}`,
+        `http://localhost:5020/api/properties/${property.id}`,
         {
           method: "PUT",
           headers: {
@@ -452,7 +452,7 @@ const UpdatePropertyModal = ({
         };
   
         const unitResponse = await fetch(
-          `/backend/api/properties/${property.id}/units/${unitData.id}`,
+          `http://localhost:5020/api/properties/${property.id}/units/${unitData.id}`,
           {
             method: "PUT",
             headers: {
@@ -475,7 +475,7 @@ const UpdatePropertyModal = ({
       if (photosToDelete.length > 0) {
         for (const photoId of photosToDelete) {
           await fetch(
-            `/backend/api/properties/${property.id}/photos/${photoId}`,
+            `http://localhost:5020/api/properties/${property.id}/photos/${photoId}`,
             {
               method: "DELETE",
               headers: {
@@ -494,7 +494,7 @@ const UpdatePropertyModal = ({
         });
   
         await fetch(
-          `/backend/api/properties/${property.id}/photos`,
+          `http://localhost:5020/api/properties/${property.id}/photos`,
           {
             method: "POST",
             headers: {
@@ -564,7 +564,7 @@ const UpdatePropertyModal = ({
       };
 
       const response = await fetch(
-        `/backend/api/properties/${property.id}/units/${unitData.id}`,
+        `http://localhost:5020/api/properties/${property.id}/units/${unitData.id}`,
         {
           method: "PUT",
           headers: {
@@ -742,7 +742,7 @@ const UpdatePropertyModal = ({
                               src={
                                 photo.isNew
                                   ? photo.preview
-                                  : `/backend/api/properties/photos/${photo.file_name}`
+                                  : `http://localhost:5020/api/properties/photos/${photo.file_name}`
                               }
                               alt={`Property ${index + 1}`}
                               className={`w-full h-32 object-cover rounded-lg ${
