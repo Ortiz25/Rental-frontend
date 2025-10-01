@@ -30,6 +30,7 @@ import TenantCard from "../components/tenentsCard.jsx";
 const TenantManagement = () => {
   const [activeModule, setActiveModule] = useState("Tenant Management");
   const [tenants, setTenants] = useState([]);
+  console.log(tenants)
   const [blacklistedTenants, setBlacklistedTenants] = useState([]);
   const [tenantStats, setTenantStats] = useState({
     totalTenants: 0,

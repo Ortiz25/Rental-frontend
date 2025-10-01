@@ -17,6 +17,8 @@ import {
   formatFinancialValue,
   formatDashboardValue,
 } from "../utils/helperFunctions.jsx";
+import { redirect } from "react-router";
+
 
 const Dashboard = () => {
   const [activeModule, setActiveModule] = useState("Dashboard");
@@ -356,7 +358,7 @@ export async function loader() {
           localStorage.removeItem(key)
         );
         return redirect("/?message=verification_failed");
-    }
+    } 
   } catch (error) {
     console.error("Token verification error:", error);
     if (error.name === "TypeError" && error.message.includes("fetch")) {

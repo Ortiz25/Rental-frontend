@@ -64,16 +64,16 @@ const AdminSettings = () => {
       name: "User Management",
       icon: <Users className="w-5 h-5" />,
     },
-    {
-      id: "security",
-      name: "Security Settings",
-      icon: <Lock className="w-5 h-5" />,
-    },
-    {
-      id: "notifications",
-      name: "Notification Settings",
-      icon: <Bell className="w-5 h-5" />,
-    },
+    // {
+    //   id: "security",
+    //   name: "Security Settings",
+    //   icon: <Lock className="w-5 h-5" />,
+    // },
+    // {
+    //   id: "notifications",
+    //   name: "Notification Settings",
+    //   icon: <Bell className="w-5 h-5" />,
+    // },
     {
       id: "system",
       name: "System Settings",
@@ -305,8 +305,8 @@ const AdminSettings = () => {
         <main className="flex-1 overflow-auto bg-gray-50">
           <div className="p-8">
             {activeTab === "users" && <UserManagement />}
-            {activeTab === "security" && <SecuritySettings />}
-            {activeTab === "notifications" && <NotificationSettings />}
+            {/* {activeTab === "security" && <SecuritySettings />}
+            {activeTab === "notifications" && <NotificationSettings />} */}
             {activeTab === "system" && <SystemSettings />}
           </div>
         </main>

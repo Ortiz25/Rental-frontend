@@ -18,6 +18,7 @@ import AddPropertyModal from "../components/modals/AddPropertyModal.jsx";
 import UpdatePropertyModal from "../components/modals/updatePropertyModal.jsx";
 
 const PropertyManagement = () => {
+  const userRole = localStorage.getItem("userRole");
   const [activeModule, setActiveModule] = useState("Property Management");
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
@@ -103,41 +104,83 @@ const PropertyManagement = () => {
   useEffect(() => {
     fetchProperties();
   }, []);
-
+  
   // Filter properties based on search term and filters
-  useEffect(() => {
-    let results = properties.filter((property) => {
-      const matchesSearch =
-        property.propertyName
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        property.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.type?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesFilters =
-        (filters.minRent === "" ||
-          property.monthlyRent >= parseFloat(filters.minRent)) &&
-        (filters.maxRent === "" ||
-          property.monthlyRent <= parseFloat(filters.maxRent)) &&
-        (filters.bedrooms === "" ||
-          property.bedrooms === parseInt(filters.bedrooms)) &&
-        (filters.occupancyState === "" ||
-          property.occupancyState === filters.occupancyState) &&
-        (filters.minVacancies === "" ||
-          property.vacantUnits >= parseInt(filters.minVacancies)) &&
-        (filters.propertyType === "" ||
-          property.type === filters.propertyType) &&
-        (filters.blacklistStatus === "" ||
-          (filters.blacklistStatus === "blacklisted" && tenant.isBlacklisted) ||
-          (filters.blacklistStatus === "not_blacklisted" &&
-            !tenant.isBlacklisted)) &&
-        (filters.tenantStatus === "" || tenant.status === filters.tenantStatus);
+useEffect(() => {
+  let results = properties.filter((property) => {
+    // Search term matching
+    const matchesSearch =
+      property.propertyName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      property.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.type?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesFilters;
-    });
+    // Property type filter
+    const matchesPropertyType =
+      filters.propertyType === "" || property.type === filters.propertyType;
 
-    setFilteredProperties(results);
-  }, [searchTerm, properties, filters]);
+    // Rent range filters
+    const matchesMinRent =
+      filters.minRent === "" ||
+      property.monthlyRent >= parseFloat(filters.minRent);
+
+    const matchesMaxRent =
+      filters.maxRent === "" ||
+      property.monthlyRent <= parseFloat(filters.maxRent);
+
+    // Bedrooms filter - handle both single and multi-unit properties
+    const matchesBedrooms = (() => {
+      if (filters.bedrooms === "") return true;
+      
+      const filterValue = parseInt(filters.bedrooms);
+      
+      // For single-unit properties, check the property bedrooms directly
+      if (property.totalUnits === 1) {
+        if (filterValue === 4) {
+          return property.bedrooms >= 4;
+        }
+        return property.bedrooms === filterValue;
+      }
+      
+      // For multi-unit properties, check if any unit matches
+      if (property.units && property.units.length > 0) {
+        return property.units.some(unit => {
+          if (filterValue === 4) {
+            return unit.bedrooms >= 4;
+          }
+          return unit.bedrooms === filterValue;
+        });
+      }
+      
+      return false;
+    })();
+
+    // Occupancy state filter
+    const matchesOccupancyState =
+      filters.occupancyState === "" ||
+      property.occupancyState === filters.occupancyState;
+
+    // Min vacancies filter
+    const matchesMinVacancies =
+      filters.minVacancies === "" ||
+      property.vacantUnits >= parseInt(filters.minVacancies);
+
+    // Combine all filter conditions
+    return (
+      matchesSearch &&
+      matchesPropertyType &&
+      matchesMinRent &&
+      matchesMaxRent &&
+      matchesBedrooms &&
+      matchesOccupancyState &&
+      matchesMinVacancies
+    );
+  });
+
+  setFilteredProperties(results);
+}, [searchTerm, properties, filters]);
 
   const handleUpdateProperty = async (updatedProperty) => {
     try {
@@ -299,14 +342,14 @@ const PropertyManagement = () => {
             />
             <SearchIcon className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
           </div>
-
-          <button
+          {!userRole === "Staff" && <button
             onClick={() => setShowAddPropertyModal(true)}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg flex items-center justify-center text-sm sm:text-base transition-colors whitespace-nowrap"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
             <span>Add Property</span>
-          </button>
+          </button> }
+          
         </div>
 
         {/* Advanced Filters */}
@@ -479,7 +522,7 @@ const PropertyManagement = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-visible">
             {filteredProperties.map((property) => (
               <PropertyCard
                 key={property.id}

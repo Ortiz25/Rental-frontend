@@ -969,6 +969,7 @@ const TenantDashboard = () => {
 
   // Download document
   const downloadDocument = async (documentId) => {
+    console.log("download", documentId)
     const token = localStorage.getItem("token");
 
     try {
@@ -1014,7 +1015,7 @@ const TenantDashboard = () => {
   // View document
   const viewDocument = async (documentId) => {
     const token = localStorage.getItem("token");
-
+    console.log("Viewdocument", documentId)
     const response = await fetch(
       `/backend/api/documents/${documentId}/view`,
       {
@@ -1516,42 +1517,7 @@ const TenantDashboard = () => {
           </div>
         </div>
 
-        {/* Documents Section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Important Documents</h2>
-            <FileText className="w-5 h-5 text-orange-500" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tenantData.documents && tenantData.documents.length > 0 ? (
-              tenantData.documents.map((document) => (
-                <div
-                  key={document.id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded"
-                >
-                  <div>
-                    <h3 className="font-medium">{document.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {formatDate(document.date)}
-                    </p>
-                    {document.category && (
-                      <p className="text-xs text-gray-500">
-                        {document.category}
-                      </p>
-                    )}
-                  </div>
-                  <button className="text-blue-500 hover:text-blue-700">
-                    <Download className="w-5 h-5" />
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-8 text-gray-500">
-                No documents available
-              </div>
-            )}
-          </div>
-        </div>
+        
 
         {/* Payment Submissions Section */}
         {tenantData.paymentSubmissions &&

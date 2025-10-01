@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Edit, TrashIcon, MoreHorizontal, Home, Camera, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Edit,
+  TrashIcon,
+  MoreHorizontal,
+  Home,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import UpdatePropertyModal from "./modals/updatePropertyModal";
 import DeletePropertyModal from "./modals/deletePropertyModal";
 import { formatCurrency } from "../utils/helperFunctions";
 
 const PropertyCard = ({ property, onUpdate }) => {
-  console.log(property);
+  const userRole = localStorage.getItem("userRole");
+  console.log(!userRole === "Staff");
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -15,7 +24,8 @@ const PropertyCard = ({ property, onUpdate }) => {
   const [loadingPhotos, setLoadingPhotos] = useState(true);
 
   // Default placeholder image
-  const defaultImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
+  const defaultImage =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
 
   // Fetch property photos
   useEffect(() => {
@@ -92,19 +102,20 @@ const PropertyCard = ({ property, onUpdate }) => {
   };
 
   const prevPhoto = () => {
-    setCurrentPhotoIndex((prev) => 
+    setCurrentPhotoIndex((prev) =>
       prev === 0 ? Math.max(photos.length - 1, 0) : prev - 1
     );
   };
 
-  const currentPhoto = photos.length > 0 
-    ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
-    : defaultImage;
-
+  const currentPhoto =
+    photos.length > 0
+      ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
+      : defaultImage;
+  
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-visible">
       {/* Photo Section */}
-      <div className="relative h-48 sm:h-56 bg-gray-200 overflow-hidden group">
+      <div className="relative h-48 sm:h-56 bg-gray-200 overflow-hidden group rounded-t-lg">
         {loadingPhotos ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <div className="animate-pulse flex flex-col items-center">
@@ -122,7 +133,7 @@ const PropertyCard = ({ property, onUpdate }) => {
                 e.target.src = defaultImage;
               }}
             />
-            
+
             {/* Photo Counter Badge */}
             {photos.length > 0 && (
               <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs flex items-center">
@@ -182,74 +193,153 @@ const PropertyCard = ({ property, onUpdate }) => {
 
       {/* Content Section */}
       <div className="p-3 sm:p-4 lg:p-6">
-        {/* Header Section */}
+        {/* Property Name - New Addition */}
+        <div className="mb-3">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 leading-tight">
+            {property.propertyName}
+          </h2>
+        </div>
+
+        {/* Header Section - Address and Actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 leading-tight pr-2">
-            {property.address}
-          </h3>
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <p className="text-sm sm:text-base text-gray-600 leading-tight">
+              {property.address}
+            </p>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 sm:gap-1 lg:gap-2 flex-shrink-0">
-            <button
-              onClick={handleEditProperty}
-              className="flex items-center px-2 py-1 sm:px-3 text-xs sm:text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Edit Property"
-            >
-              <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              <span className="hidden sm:inline">Property</span>
-              <span className="sm:hidden">Edit</span>
-            </button>
+            {userRole !== "Staff" && (
+              <button
+                onClick={handleEditProperty}
+                className="flex items-center px-2 py-1 sm:px-3 text-xs sm:text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Edit Property"
+              >
+                <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span className="hidden sm:inline">Property</span>
+                <span className="sm:hidden">Edit</span>
+              </button>
+            )}
 
             {property.totalUnits > 1 && (
-              <div className="relative group">
-                <button className="flex items-center px-2 py-1 sm:px-3 text-xs sm:text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                  <Home className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                  <span className="hidden sm:inline">Units</span>
-                  <span className="sm:hidden">Units</span>
+              <div className="relative group ">
+                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-200">
+                  <Home className="w-4 h-4" />
+                  <span>Units ({property.units?.length || 0})</span>
                 </button>
 
-                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 min-w-32 sm:min-w-48 max-w-64">
-                  <div className="p-2">
-                    <div className="text-xs text-gray-500 font-medium px-2 py-1">
-                      Edit Unit:
+                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 w-72">
+                  <div className="p-3">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                      <span className="text-sm font-semibold text-gray-700">
+                        Unit Overview
+                      </span>
+                      <div className="flex gap-2 text-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                          {property.units?.filter(
+                            (u) => u.occupancy_status === "occupied"
+                          ).length || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                          {property.units?.filter(
+                            (u) => u.occupancy_status === "vacant"
+                          ).length || 0}
+                        </span>
+                      </div>
                     </div>
-                    <div className="max-h-32 sm:max-h-48 overflow-y-auto">
-                      {property.units &&
-                        property.units.map((unit) => (
-                          <button
-                            key={unit.id}
-                            onClick={() => handleEditUnit(unit)}
-                            className="w-full text-left px-2 py-1 hover:bg-gray-50 rounded flex justify-between items-center text-xs sm:text-sm"
-                          >
-                            <span className="truncate">
-                              Unit {unit.unit_number}
-                            </span>
-                            <span
-                              className={`px-1 py-0.5 rounded text-xs flex-shrink-0 ml-2 ${
-                                unit.occupancy_status === "occupied"
-                                  ? "bg-green-100 text-green-700"
-                                  : unit.occupancy_status === "maintenance"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {unit.occupancy_status.charAt(0).toUpperCase()}
-                            </span>
-                          </button>
-                        ))}
+
+                    {/* Units List - FIXED */}
+                    <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                      {property.units?.map((unit) => (
+                        <button
+                          key={unit.id}
+                          onClick={() => handleEditUnit(unit)}
+                          disabled={userRole === "Staff"}
+                          className="w-full text-left p-2.5 hover:bg-gray-50 rounded-lg border border-gray-100 transition-all hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <div className="flex items-center justify-between">
+                            {/* Unit Info */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-gray-900">
+                                  Unit {unit.unit_number}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${
+                                    unit.occupancy_status === "occupied"
+                                      ? "bg-green-100 text-green-700 border border-green-200"
+                                      : unit.occupancy_status === "maintenance"
+                                      ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                                      : "bg-gray-100 text-gray-600 border border-gray-200"
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      unit.occupancy_status === "occupied"
+                                        ? "bg-green-500"
+                                        : unit.occupancy_status ===
+                                          "maintenance"
+                                        ? "bg-yellow-500"
+                                        : "bg-gray-400"
+                                    }`}
+                                  ></span>
+                                  {unit.occupancy_status === "occupied"
+                                    ? "Occupied"
+                                    : unit.occupancy_status === "maintenance"
+                                    ? "Maintenance"
+                                    : "Vacant"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                <span>{unit.bedrooms} bed</span>
+                                <span>•</span>
+                                <span>{unit.bathrooms} bath</span>
+                                <span>•</span>
+                                <span className="font-medium text-gray-700">
+                                  KES {unit.monthly_rent?.toLocaleString()}/mo
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
               </div>
             )}
-
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center px-2 py-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete Property"
-            >
-              <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-            </button>
+            {userRole !== "Staff" && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center px-2 py-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Property"
+              >
+                <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -259,37 +349,102 @@ const PropertyCard = ({ property, onUpdate }) => {
             <p className="text-xs sm:text-sm text-gray-600">
               <span className="font-medium">Type:</span> {property.type}
             </p>
-            <p className="text-xs sm:text-sm text-gray-600">
-              <span className="font-medium">Total Units:</span>{" "}
-              {property.totalUnits}
-            </p>
+
+            {/* Show bedrooms/bathrooms for single unit properties */}
+            {property.totalUnits === 1 && property.bedrooms !== undefined && (
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-medium">Bedrooms:</span>{" "}
+                <span className="font-semibold text-gray-900">
+                  {property.bedrooms}
+                </span>
+              </p>
+            )}
+
+            {property.totalUnits === 1 && property.bathrooms !== undefined && (
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-medium">Bathrooms:</span>{" "}
+                <span className="font-semibold text-gray-900">
+                  {property.bathrooms}
+                </span>
+              </p>
+            )}
+
+            {/* Show total units for multi-unit properties */}
+            {property.totalUnits > 1 && (
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-medium">Total Units:</span>{" "}
+                {property.totalUnits}
+              </p>
+            )}
+
             <p className="text-xs sm:text-sm text-gray-600">
               <span className="font-medium">Rent:</span>
               <span className="font-semibold text-gray-900 ml-1">
                 {formatCurrency(property.monthlyRent) || "N/A"}/mo
               </span>
             </p>
+
+            {/* Show square footage for single unit if available */}
+            {property.totalUnits === 1 && property.squareFootage && (
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-medium">Size:</span>{" "}
+                <span className="font-semibold text-gray-900">
+                  {property.squareFootage} sq ft
+                </span>
+              </p>
+            )}
           </div>
 
           <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm text-gray-600">
-              <span className="font-medium">Occupied:</span>
-              <span className="text-green-600 font-semibold ml-1">
-                {property.occupiedUnits}
-              </span>
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600">
-              <span className="font-medium">Vacant:</span>
-              <span className="text-red-600 font-semibold ml-1">
-                {property.vacantUnits}
-              </span>
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600">
-              <span className="font-medium">Occupancy:</span>
-              <span className="font-semibold ml-1">
-                {property.occupancyRate}%
-              </span>
-            </p>
+            {/* For multi-unit properties, show occupancy stats */}
+            {property.totalUnits > 1 && (
+              <>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-medium">Occupied:</span>
+                  <span className="text-green-600 font-semibold ml-1">
+                    {property.occupiedUnits}
+                  </span>
+                </p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-medium">Vacant:</span>
+                  <span className="text-red-600 font-semibold ml-1">
+                    {property.vacantUnits}
+                  </span>
+                </p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-medium">Occupancy:</span>
+                  <span className="font-semibold ml-1">
+                    {property.occupancyRate}%
+                  </span>
+                </p>
+              </>
+            )}
+
+            {/* For single-unit properties, show status and security deposit */}
+            {property.totalUnits === 1 && (
+              <>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-medium">Status:</span>
+                  <span
+                    className={`font-semibold ml-1 ${
+                      property.occupancyStatus === "Occupied"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {property.occupancyStatus}
+                  </span>
+                </p>
+                {property.securityDeposit && (
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    <span className="font-medium">Security Deposit:</span>
+                    <span className="font-semibold text-gray-900 ml-1">
+                      {formatCurrency(property.securityDeposit)}
+                    </span>
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
 
