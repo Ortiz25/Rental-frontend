@@ -890,829 +890,828 @@ const TenantDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+// Modal states
+const [showPaymentModal, setShowPaymentModal] = useState(false);
+const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+const [showContactModal, setShowContactModal] = useState(false);
+const [showUploadModal, setShowUploadModal] = useState(false);
+const [showNotificationsModal, setShowNotificationsModal] = useState(false);
 
-  // Modal states
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+const [activeModule, setActiveModule] = useState("Tenant Dashboard");
 
-  const [activeModule, setActiveModule] = useState("Tenant Dashboard");
+// Fetch tenant data from API
+const fetchTenantData = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-  // Fetch tenant data from API
-  const fetchTenantData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/tenant/dashboard`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/tenant/dashboard`, {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(result);
+    setTenantData(result.data);
+  } catch (err) {
+    setError(err.message);
+    console.error("Failed to fetch tenant data:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Mark notification as read
+const markNotificationAsRead = async (notificationId) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(
+      `/backend/api/communications/notifications/${notificationId}/read`,
+      {
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const result = await response.json();
-      console.log(result);
-      setTenantData(result.data);
-    } catch (err) {
-      setError(err.message);
-      console.error("Failed to fetch tenant data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Mark notification as read
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `/backend/api/communications/notifications/${notificationId}/read`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log(response);
-      if (response.ok) {
-        // Update local state to reflect the change
-        setTenantData((prevData) => ({
-          ...prevData,
-          notifications: prevData.notifications.map((notification) =>
-            notification.id === notificationId
-              ? { ...notification, isRead: true }
-              : notification
+    );
+    console.log(response);
+    if (response.ok) {
+      // Update local state to reflect the change
+      setTenantData((prevData) => ({
+        ...prevData,
+        notifications: prevData.notifications.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
+        ),
+        stats: {
+          ...prevData.stats,
+          unreadNotifications: Math.max(
+            0,
+            prevData.stats.unreadNotifications - 1
           ),
-          stats: {
-            ...prevData.stats,
-            unreadNotifications: Math.max(
-              0,
-              prevData.stats.unreadNotifications - 1
-            ),
-          },
-        }));
-      }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
+        },
+      }));
     }
-  };
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+  }
+};
 
-  // Download document - ENHANCED VERSION with debugging
-  const downloadDocument = async (documentId) => {
-    console.log("🔽 Starting download for document ID:", documentId);
-    const token = localStorage.getItem("token");
+// Download document - ENHANCED VERSION with debugging
+const downloadDocument = async (documentId) => {
+  console.log("🔽 Starting download for document ID:", documentId);
+  const token = localStorage.getItem("token");
 
-    try {
-      const response = await fetch(
-        `/backend/api/documents/${documentId}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("📡 Response status:", response.status);
-      console.log("📡 Response headers:", response.headers);
-
-      if (!response.ok) {
-        console.error("❌ Response not OK:", response.status);
-        let errorMessage = "Download failed";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (jsonError) {
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(`${errorMessage} (Status: ${response.status})`);
+  try {
+    const response = await fetch(
+      `/backend/api/documents/${documentId}/download`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      // Check content type
-      const contentType = response.headers.get("content-type");
-      console.log("📄 Content-Type:", contentType);
+    console.log("📡 Response status:", response.status);
+    console.log("📡 Response headers:", response.headers);
 
-      if (contentType && contentType.includes("application/json")) {
+    if (!response.ok) {
+      console.error("❌ Response not OK:", response.status);
+      let errorMessage = "Download failed";
+      try {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Download failed");
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        errorMessage = response.statusText || errorMessage;
       }
+      throw new Error(`${errorMessage} (Status: ${response.status})`);
+    }
 
-      // Get the blob
-      console.log("📦 Converting response to blob...");
-      const blob = await response.blob();
-      console.log("📦 Blob size:", blob.size, "bytes");
+    // Check content type
+    const contentType = response.headers.get("content-type");
+    console.log("📄 Content-Type:", contentType);
 
-      if (blob.size === 0) {
-        throw new Error("Downloaded file is empty");
+    if (contentType && contentType.includes("application/json")) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Download failed");
+    }
+
+    // Get the blob
+    console.log("📦 Converting response to blob...");
+    const blob = await response.blob();
+    console.log("📦 Blob size:", blob.size, "bytes");
+
+    if (blob.size === 0) {
+      throw new Error("Downloaded file is empty");
+    }
+
+    // Get filename from Content-Disposition header
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "document.pdf";
+
+    if (contentDisposition) {
+      console.log("📋 Content-Disposition:", contentDisposition);
+      const filenameMatch = contentDisposition.match(
+        /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+      );
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, "");
       }
+    }
 
-      // Get filename from Content-Disposition header
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "document.pdf";
+    console.log("💾 Filename:", filename);
 
-      if (contentDisposition) {
-        console.log("📋 Content-Disposition:", contentDisposition);
-        const filenameMatch = contentDisposition.match(
-          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-        );
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, "");
-        }
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    console.log("🖱️ Triggering download click...");
+    link.click();
+
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      console.log("✅ Download completed and cleaned up");
+    }, 100);
+  } catch (error) {
+    console.error("❌ Download error:", error);
+    alert(`Download failed: ${error.message}`);
+  }
+};
+
+// View document - ENHANCED VERSION with debugging
+const viewDocument = async (documentId) => {
+  const token = localStorage.getItem("token");
+  console.log("👁️ Starting view for document ID:", documentId);
+
+  try {
+    const response = await fetch(
+      `/backend/api/documents/${documentId}/view`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      console.log("💾 Filename:", filename);
+    console.log("📡 Response status:", response.status);
 
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
+    if (!response.ok) {
+      console.error("❌ Response not OK:", response.status);
+      throw new Error(`View failed (Status: ${response.status})`);
+    }
+
+    // Get the blob
+    console.log("📦 Converting response to blob...");
+    const blob = await response.blob();
+    console.log("📦 Blob size:", blob.size, "bytes");
+    console.log("📦 Blob type:", blob.type);
+
+    if (blob.size === 0) {
+      throw new Error("Document is empty");
+    }
+
+    // Create URL and open in new tab
+    const url = window.URL.createObjectURL(blob);
+    console.log("🔗 Created blob URL:", url);
+
+    const newWindow = window.open(url, "_blank");
+
+    if (!newWindow) {
+      console.warn("⚠️ Popup blocked, trying download instead");
+      // Fallback to download if popup is blocked
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;
-      link.style.display = "none";
-
-      document.body.appendChild(link);
-      console.log("🖱️ Triggering download click...");
+      link.download = `document-${documentId}.pdf`;
       link.click();
-
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        console.log("✅ Download completed and cleaned up");
-      }, 100);
-    } catch (error) {
-      console.error("❌ Download error:", error);
-      alert(`Download failed: ${error.message}`);
     }
-  };
 
-  // View document - ENHANCED VERSION with debugging
-  const viewDocument = async (documentId) => {
+    // Cleanup after delay
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      console.log("✅ Blob URL revoked");
+    }, 5000);
+
+    console.log("✅ Document opened successfully");
+  } catch (error) {
+    console.error("❌ View error:", error);
+    alert(`Failed to view document: ${error.message}`);
+  }
+};
+
+// Load data on component mount
+useEffect(() => {
+  fetchTenantData();
+}, []);
+
+// Handle payment submission
+const handlePaymentSubmit = async (paymentData) => {
+  try {
+    setActionLoading(true);
+
     const token = localStorage.getItem("token");
-    console.log("👁️ Starting view for document ID:", documentId);
+    const response = await fetch(`${API_BASE_URL}/tenant/payment/submit`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: paymentData.amount,
+        paymentMethod: paymentData.paymentMethod,
+        reference: paymentData.reference,
+        transactionDate: paymentData.transactionDate,
+        notes: paymentData.notes,
+      }),
+    });
 
-    try {
-      const response = await fetch(
-        `/backend/api/documents/${documentId}/view`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("📡 Response status:", response.status);
-
-      if (!response.ok) {
-        console.error("❌ Response not OK:", response.status);
-        throw new Error(`View failed (Status: ${response.status})`);
-      }
-
-      // Get the blob
-      console.log("📦 Converting response to blob...");
-      const blob = await response.blob();
-      console.log("📦 Blob size:", blob.size, "bytes");
-      console.log("📦 Blob type:", blob.type);
-
-      if (blob.size === 0) {
-        throw new Error("Document is empty");
-      }
-
-      // Create URL and open in new tab
-      const url = window.URL.createObjectURL(blob);
-      console.log("🔗 Created blob URL:", url);
-
-      const newWindow = window.open(url, "_blank");
-
-      if (!newWindow) {
-        console.warn("⚠️ Popup blocked, trying download instead");
-        // Fallback to download if popup is blocked
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `document-${documentId}.pdf`;
-        link.click();
-      }
-
-      // Cleanup after delay
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        console.log("✅ Blob URL revoked");
-      }, 5000);
-
-      console.log("✅ Document opened successfully");
-    } catch (error) {
-      console.error("❌ View error:", error);
-      alert(`Failed to view document: ${error.message}`);
+    if (!response.ok) {
+      throw new Error(`Payment submission failed: ${response.status}`);
     }
-  };
 
-  // Load data on component mount
-  useEffect(() => {
-    fetchTenantData();
-  }, []);
+    const result = await response.json();
+    alert(
+      "Payment submitted successfully! You will be notified once it's verified by our admin team."
+    );
+    setShowPaymentModal(false);
 
-  // Handle payment submission
-  const handlePaymentSubmit = async (paymentData) => {
-    try {
-      setActionLoading(true);
+    await fetchTenantData();
+  } catch (err) {
+    alert(`Payment submission failed: ${err.message}`);
+  } finally {
+    setActionLoading(false);
+  }
+};
 
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/tenant/payment/submit`, {
+// Handle maintenance request submission
+const handleMaintenanceSubmit = async (requestData) => {
+  try {
+    setActionLoading(true);
+
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/tenant/maintenance`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    alert("Maintenance request submitted successfully!");
+    setShowMaintenanceModal(false);
+
+    await fetchTenantData();
+  } catch (err) {
+    alert(`Request failed: ${err.message}`);
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+// Handle contact manager submission
+
+const handleContactSubmit = async (messageData) => {
+  try {
+    setActionLoading(true);
+
+    const token = localStorage.getItem("token");
+    const response = await fetch(
+      "/backend/api/communications/messages",
+      {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: paymentData.amount,
-          paymentMethod: paymentData.paymentMethod,
-          reference: paymentData.reference,
-          transactionDate: paymentData.transactionDate,
-          notes: paymentData.notes,
+          tenant_id: tenantData?.tenant?.id,
+          lease_id: tenantData?.tenant?.leaseId,
+          communication_type: "Email",
+          subject: messageData.subject,
+          message_content: messageData.message,
+          direction: "inbound",
         }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Payment submission failed: ${response.status}`);
       }
-
-      const result = await response.json();
-      alert(
-        "Payment submitted successfully! You will be notified once it's verified by our admin team."
-      );
-      setShowPaymentModal(false);
-
-      await fetchTenantData();
-    } catch (err) {
-      alert(`Payment submission failed: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Handle maintenance request submission
-  const handleMaintenanceSubmit = async (requestData) => {
-    try {
-      setActionLoading(true);
-
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/tenant/maintenance`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      alert("Maintenance request submitted successfully!");
-      setShowMaintenanceModal(false);
-
-      await fetchTenantData();
-    } catch (err) {
-      alert(`Request failed: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Handle contact manager submission
-
-  const handleContactSubmit = async (messageData) => {
-    try {
-      setActionLoading(true);
-
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        "/backend/api/communications/messages",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            tenant_id: tenantData?.tenant?.id,
-            lease_id: tenantData?.tenant?.leaseId,
-            communication_type: "Email",
-            subject: messageData.subject,
-            message_content: messageData.message,
-            direction: "inbound",
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send message");
-      }
-
-      const result = await response.json();
-      alert("Message sent successfully to property manager!");
-      setShowContactModal(false);
-
-      // Optionally refresh tenant data to show the new message
-      await fetchTenantData();
-    } catch (err) {
-      console.error("Error sending message:", err);
-      alert(`Failed to send message: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Handle document upload
-  const handleDocumentUpload = async (uploadData) => {
-    try {
-      setActionLoading(true);
-
-      // The upload is now handled inside the modal
-      // This function will be called after successful upload
-      console.log("Document uploaded successfully:", uploadData);
-
-      // Refresh tenant data to show the new document
-      await fetchTenantData();
-    } catch (err) {
-      console.error("Post-upload processing failed:", err);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "KES",
-      minimumFractionDigits: 0,
-    }).format(amount || 0);
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Loading state
-  if (loading) {
-    return (
-      <Navbar module={activeModule}>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading your dashboard...</p>
-          </div>
-        </div>
-      </Navbar>
     );
-  }
 
-  // Error state
-  if (error) {
-    return (
-      <Navbar module={activeModule}>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Unable to Load Dashboard
-            </h2>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={fetchTenantData}
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
-            </button>
-          </div>
-        </div>
-      </Navbar>
-    );
-  }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to send message");
+    }
 
-  // No data state
-  if (!tenantData?.tenant) {
-    return (
-      <Navbar module={activeModule}>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              No Tenant Data Found
-            </h2>
-            <p className="text-gray-600">
-              Your account may not be associated with a rental property.
-            </p>
-          </div>
-        </div>
-      </Navbar>
-    );
+    const result = await response.json();
+    alert("Message sent successfully to property manager!");
+    setShowContactModal(false);
+
+    // Optionally refresh tenant data to show the new message
+    await fetchTenantData();
+  } catch (err) {
+    console.error("Error sending message:", err);
+    alert(`Failed to send message: ${err.message}`);
+  } finally {
+    setActionLoading(false);
   }
+};
+
+// Handle document upload
+const handleDocumentUpload = async (uploadData) => {
+  try {
+    setActionLoading(true);
+
+    // The upload is now handled inside the modal
+    // This function will be called after successful upload
+    console.log("Document uploaded successfully:", uploadData);
+
+    // Refresh tenant data to show the new document
+    await fetchTenantData();
+  } catch (err) {
+    console.error("Post-upload processing failed:", err);
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+// Format currency
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "KES",
+    minimumFractionDigits: 0,
+  }).format(amount || 0);
+};
+
+// Format date
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString();
+};
+
+// Loading state
+if (loading) {
   return (
     <Navbar module={activeModule}>
-      <div className="space-y-6">
-        {/* Tenant Header */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center space-y-4 sm:space-y-0">
-            <div className="flex flex-col sm:flex-row items-center sm:space-x-4 text-center sm:text-left">
-              <div className="w-20 h-20 sm:w-16 sm:h-16 rounded-full bg-gray-300 mb-3 sm:mb-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-600">
-                  {tenantData.tenant.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </span>
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold">
-                  {tenantData.tenant.name}
-                </h1>
-                <p className="font-semibold">
-                  {tenantData.tenant.propertyName}
-                </p>
-                <p className="text-gray-600">{tenantData.tenant.unit}</p>
-                {tenantData.tenant.leaseNumber && (
-                  <p className="text-sm text-gray-500">
-                    Lease: {tenantData.tenant.leaseNumber}
-                  </p>
-                )}
-              </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    </Navbar>
+  );
+}
+
+// Error state
+if (error) {
+  return (
+    <Navbar module={activeModule}>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Unable to Load Dashboard
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchTenantData}
+            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </button>
+        </div>
+      </div>
+    </Navbar>
+  );
+}
+
+// No data state
+if (!tenantData?.tenant) {
+  return (
+    <Navbar module={activeModule}>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            No Tenant Data Found
+          </h2>
+          <p className="text-gray-600">
+            Your account may not be associated with a rental property.
+          </p>
+        </div>
+      </div>
+    </Navbar>
+  );
+}
+return (
+  <Navbar module={activeModule}>
+    <div className="space-y-6">
+      {/* Tenant Header */}
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center space-y-4 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row items-center sm:space-x-4 text-center sm:text-left">
+            <div className="w-20 h-20 sm:w-16 sm:h-16 rounded-full bg-gray-300 mb-3 sm:mb-0 flex items-center justify-center">
+              <span className="text-2xl font-bold text-gray-600">
+                {tenantData.tenant.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </span>
             </div>
-            <div className="text-center sm:text-right border-t sm:border-t-0 pt-4 sm:pt-0">
-              <p className="text-sm text-gray-600">Lease Period</p>
-              <p className="font-medium">
-                <span className="block sm:inline">
-                  {formatDate(tenantData.tenant.leaseStart)}
-                </span>
-                <span className="hidden sm:inline"> - </span>
-                <span className="block sm:inline">
-                  {formatDate(tenantData.tenant.leaseEnd)}
-                </span>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold">
+                {tenantData.tenant.name}
+              </h1>
+              <p className="font-semibold">
+                {tenantData.tenant.propertyName}
               </p>
-              {tenantData.tenant.leaseStatus && (
-                <p
-                  className={`text-sm font-medium mt-1 ${
-                    tenantData.tenant.leaseStatus === "active"
-                      ? "text-green-600"
-                      : "text-yellow-600"
-                  }`}
-                >
-                  Status: {tenantData.tenant.leaseStatus.toUpperCase()}
+              <p className="text-gray-600">{tenantData.tenant.unit}</p>
+              {tenantData.tenant.leaseNumber && (
+                <p className="text-sm text-gray-500">
+                  Lease: {tenantData.tenant.leaseNumber}
                 </p>
               )}
             </div>
           </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <button
-            onClick={() => setShowPaymentModal(true)}
-            className="bg-white p-3 sm:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-          >
-            <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mb-2 mx-auto" />
-            <h3 className="font-medium text-sm sm:text-base">Make Payment</h3>
-          </button>
-
-          <button
-            onClick={() => setShowMaintenanceModal(true)}
-            className="bg-white p-3 sm:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-          >
-            <WrenchIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mb-2 mx-auto" />
-            <h3 className="font-medium text-sm sm:text-base">
-              Request Maintenance
-            </h3>
-          </button>
-
-          <button
-            onClick={() => setShowContactModal(true)}
-            className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-          >
-            <MessageSquare className="w-8 h-8 text-purple-500 mb-2 mx-auto" />
-            <h3 className="font-medium">Contact Manager</h3>
-          </button>
-
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-          >
-            <Upload className="w-8 h-8 text-orange-500 mb-2 mx-auto" />
-            <h3 className="font-medium">Upload Document</h3>
-          </button>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Rent & Payments Card */}
-          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-base sm:text-lg font-bold">
-                Rent & Payments
-              </h2>
-              <DollarSign className="w-5 h-5 text-green-500" />
-            </div>
-
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex justify-between items-center text-sm sm:text-base">
-                <span className="text-gray-600">Monthly Rent</span>
-                <span className="font-medium">
-                  {formatCurrency(tenantData.tenant.rentAmount)}
-                </span>
-              </div>
-
-              {tenantData.tenant.utilitiesAmount > 0 && (
-                <div className="flex justify-between items-center text-sm sm:text-base">
-                  <span className="text-gray-600">Utilities</span>
-                  <span className="font-medium text-blue-600">
-                    {formatCurrency(tenantData.tenant.utilitiesAmount)}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-sm sm:text-base">
-                <span className="text-gray-600">Current Balance</span>
-                <span
-                  className={`font-medium ${
-                    tenantData.tenant.balance > 0
-                      ? "text-red-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {formatCurrency(tenantData.tenant.balance)}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center text-sm sm:text-base">
-                <span className="text-gray-600">Next Due Date</span>
-                <span className="font-medium">
-                  {formatDate(tenantData.tenant.nextDueDate)}
-                </span>
-              </div>
-
-              <div className="pt-3 sm:pt-4">
-                <button
-                  onClick={() => setShowPaymentModal(true)}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded transition-colors duration-200"
-                >
-                  Make Payment
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Maintenance Requests */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Maintenance Requests</h2>
-              <WrenchIcon className="w-5 h-5 text-blue-500" />
-            </div>
-            <div className="space-y-4">
-              {tenantData.maintenanceRequests &&
-              tenantData.maintenanceRequests.length > 0 ? (
-                tenantData.maintenanceRequests.slice(0, 3).map((request) => (
-                  <div key={request.id} className="border-b pb-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{request.title}</h3>
-                        <p className="text-sm text-gray-600">
-                          Submitted: {formatDate(request.submitted)}
-                        </p>
-                        {request.category && (
-                          <p className="text-xs text-gray-500">
-                            {request.category}
-                          </p>
-                        )}
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          request.status === "In Progress"
-                            ? "bg-blue-100 text-blue-800"
-                            : request.status === "Completed"
-                            ? "bg-green-100 text-green-800"
-                            : request.status === "Open"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {request.status}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No maintenance requests
-                </p>
-              )}
-              <button
-                onClick={() => setShowMaintenanceModal(true)}
-                className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          <div className="text-center sm:text-right border-t sm:border-t-0 pt-4 sm:pt-0">
+            <p className="text-sm text-gray-600">Lease Period</p>
+            <p className="font-medium">
+              <span className="block sm:inline">
+                {formatDate(tenantData.tenant.leaseStart)}
+              </span>
+              <span className="hidden sm:inline"> - </span>
+              <span className="block sm:inline">
+                {formatDate(tenantData.tenant.leaseEnd)}
+              </span>
+            </p>
+            {tenantData.tenant.leaseStatus && (
+              <p
+                className={`text-sm font-medium mt-1 ${
+                  tenantData.tenant.leaseStatus === "active"
+                    ? "text-green-600"
+                    : "text-yellow-600"
+                }`}
               >
-                New Request
+                Status: {tenantData.tenant.leaseStatus.toUpperCase()}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <button
+          onClick={() => setShowPaymentModal(true)}
+          className="bg-white p-3 sm:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+        >
+          <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mb-2 mx-auto" />
+          <h3 className="font-medium text-sm sm:text-base">Make Payment</h3>
+        </button>
+
+        <button
+          onClick={() => setShowMaintenanceModal(true)}
+          className="bg-white p-3 sm:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+        >
+          <WrenchIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mb-2 mx-auto" />
+          <h3 className="font-medium text-sm sm:text-base">
+            Request Maintenance
+          </h3>
+        </button>
+
+        <button
+          onClick={() => setShowContactModal(true)}
+          className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+        >
+          <MessageSquare className="w-8 h-8 text-purple-500 mb-2 mx-auto" />
+          <h3 className="font-medium">Contact Manager</h3>
+        </button>
+
+        <button
+          onClick={() => setShowUploadModal(true)}
+          className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+        >
+          <Upload className="w-8 h-8 text-orange-500 mb-2 mx-auto" />
+          <h3 className="font-medium">Upload Document</h3>
+        </button>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {/* Rent & Payments Card */}
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-base sm:text-lg font-bold">
+              Rent & Payments
+            </h2>
+            <DollarSign className="w-5 h-5 text-green-500" />
+          </div>
+
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex justify-between items-center text-sm sm:text-base">
+              <span className="text-gray-600">Monthly Rent</span>
+              <span className="font-medium">
+                {formatCurrency(tenantData.tenant.rentAmount)}
+              </span>
+            </div>
+
+            {tenantData.tenant.utilitiesAmount > 0 && (
+              <div className="flex justify-between items-center text-sm sm:text-base">
+                <span className="text-gray-600">Utilities</span>
+                <span className="font-medium text-blue-600">
+                  {formatCurrency(tenantData.tenant.utilitiesAmount)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center text-sm sm:text-base">
+              <span className="text-gray-600">Current Balance</span>
+              <span
+                className={`font-medium ${
+                  tenantData.tenant.balance > 0
+                    ? "text-red-600"
+                    : "text-green-600"
+                }`}
+              >
+                {formatCurrency(tenantData.tenant.balance)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center text-sm sm:text-base">
+              <span className="text-gray-600">Next Due Date</span>
+              <span className="font-medium">
+                {formatDate(tenantData.tenant.nextDueDate)}
+              </span>
+            </div>
+
+            <div className="pt-3 sm:pt-4">
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded transition-colors duration-200"
+              >
+                Make Payment
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Updated Notifications Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Notifications</h2>
-              <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <Bell className="w-5 h-5 text-purple-500" />
-                  {tenantData.stats.unreadNotifications > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                      {tenantData.stats.unreadNotifications}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {tenantData.notifications &&
-              tenantData.notifications.length > 0 ? (
-                <>
-                  {/* Show only the first notification */}
-                  {tenantData.notifications.slice(0, 1).map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`border-b pb-4 ${
-                        !notification.isRead
-                          ? "border-l-4 border-l-blue-500 pl-3"
-                          : ""
+        {/* Maintenance Requests */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Maintenance Requests</h2>
+            <WrenchIcon className="w-5 h-5 text-blue-500" />
+          </div>
+          <div className="space-y-4">
+            {tenantData.maintenanceRequests &&
+            tenantData.maintenanceRequests.length > 0 ? (
+              tenantData.maintenanceRequests.slice(0, 3).map((request) => (
+                <div key={request.id} className="border-b pb-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium">{request.title}</h3>
+                      <p className="text-sm text-gray-600">
+                        Submitted: {formatDate(request.submitted)}
+                      </p>
+                      {request.category && (
+                        <p className="text-xs text-gray-500">
+                          {request.category}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        request.status === "In Progress"
+                          ? "bg-blue-100 text-blue-800"
+                          : request.status === "Completed"
+                          ? "bg-green-100 text-green-800"
+                          : request.status === "Open"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <h3 className="font-medium">
-                              {notification.title}
-                            </h3>
-                            {notification.isUrgent && (
-                              <AlertTriangle className="w-4 h-4 text-red-500" />
-                            )}
-                            {!notification.isRead && (
-                              <button
-                                onClick={() =>
-                                  markNotificationAsRead(notification.id)
-                                }
-                                className="text-blue-500 hover:text-blue-700 transition-colors"
-                                title="Mark as read"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {notification.content}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {formatDate(notification.date)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* View All button */}
-                  <button
-                    onClick={() => setShowNotificationsModal(true)}
-                    className="w-full text-blue-500 hover:text-blue-700 py-2 text-sm font-medium transition-colors flex items-center justify-center space-x-1"
-                  >
-                    <span>View All ({tenantData.notifications.length})</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No notifications
-                </p>
-              )}
-            </div>
+                      {request.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">
+                No maintenance requests
+              </p>
+            )}
+            <button
+              onClick={() => setShowMaintenanceModal(true)}
+              className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            >
+              New Request
+            </button>
           </div>
         </div>
 
-        {/* Payment Submissions Section */}
-        {tenantData.paymentSubmissions &&
-          tenantData.paymentSubmissions.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold">
-                  Recent Payment Submissions
-                </h2>
-                <Clock className="w-5 h-5 text-blue-500" />
+        {/* Updated Notifications Card */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Notifications</h2>
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <Bell className="w-5 h-5 text-purple-500" />
+                {tenantData.stats.unreadNotifications > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {tenantData.stats.unreadNotifications}
+                  </span>
+                )}
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Submission Date</th>
-                      <th className="text-left py-2">Amount</th>
+            </div>
+          </div>
 
-                      <th className="text-left py-2">Method</th>
-                      <th className="text-left py-2">Reference</th>
-                      <th className="text-left py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tenantData.paymentSubmissions
-                      .slice(0, 5)
-                      .map((submission) => (
-                        <tr key={submission.id} className="border-b">
-                          <td className="py-2">
-                            {formatDate(submission.submissionDate)}
-                          </td>
-                          <td className="py-2">
-                            {formatCurrency(submission.amount)}
-                          </td>
-                          <td className="py-2 capitalize">
-                            {submission.paymentMethod.replace("_", " ")}
-                          </td>
-                          <td className="py-2 font-mono text-xs">
-                            {submission.transactionReference}
-                          </td>
-                          <td className="py-2">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                submission.verificationStatus === "verified"
-                                  ? "bg-green-100 text-green-800"
-                                  : submission.verificationStatus === "rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}
+          <div className="space-y-4">
+            {tenantData.notifications &&
+            tenantData.notifications.length > 0 ? (
+              <>
+                {/* Show only the first notification */}
+                {tenantData.notifications.slice(0, 1).map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`border-b pb-4 ${
+                      !notification.isRead
+                        ? "border-l-4 border-l-blue-500 pl-3"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="font-medium">
+                            {notification.title}
+                          </h3>
+                          {notification.isUrgent && (
+                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                          )}
+                          {!notification.isRead && (
+                            <button
+                              onClick={() =>
+                                markNotificationAsRead(notification.id)
+                              }
+                              className="text-blue-500 hover:text-blue-700 transition-colors"
+                              title="Mark as read"
                             >
-                              {submission.verificationStatus === "verified"
-                                ? "Verified"
-                                : submission.verificationStatus === "rejected"
-                                ? "Rejected"
-                                : "Pending Verification"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-                <div className="mt-4 text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                  <div className="flex items-start">
-                    <Clock className="w-4 h-4 text-blue-500 mr-2 mt-0.5" />
-                    <div>
-                      <p className="font-medium">
-                        Payment Verification Process:
-                      </p>
-                      <ul className="mt-1 space-y-1 text-xs">
-                        <li>
-                          • Payments are verified by our admin team within 24
-                          hours
-                        </li>
-                        <li>
-                          • You'll receive a notification once verification is
-                          complete
-                        </li>
-                        <li>
-                          • Verified payments are automatically applied to your
-                          account
-                        </li>
-                      </ul>
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {notification.content}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDate(notification.date)}
+                        </p>
+                      </div>
                     </div>
+                  </div>
+                ))}
+
+                {/* View All button */}
+                <button
+                  onClick={() => setShowNotificationsModal(true)}
+                  className="w-full text-blue-500 hover:text-blue-700 py-2 text-sm font-medium transition-colors flex items-center justify-center space-x-1"
+                >
+                  <span>View All ({tenantData.notifications.length})</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <p className="text-gray-500 text-center py-4">
+                No notifications
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Submissions Section */}
+      {tenantData.paymentSubmissions &&
+        tenantData.paymentSubmissions.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">
+                Recent Payment Submissions
+              </h2>
+              <Clock className="w-5 h-5 text-blue-500" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Submission Date</th>
+                    <th className="text-left py-2">Amount</th>
+
+                    <th className="text-left py-2">Method</th>
+                    <th className="text-left py-2">Reference</th>
+                    <th className="text-left py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tenantData.paymentSubmissions
+                    .slice(0, 5)
+                    .map((submission) => (
+                      <tr key={submission.id} className="border-b">
+                        <td className="py-2">
+                          {formatDate(submission.submissionDate)}
+                        </td>
+                        <td className="py-2">
+                          {formatCurrency(submission.amount)}
+                        </td>
+                        <td className="py-2 capitalize">
+                          {submission.paymentMethod.replace("_", " ")}
+                        </td>
+                        <td className="py-2 font-mono text-xs">
+                          {submission.transactionReference}
+                        </td>
+                        <td className="py-2">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              submission.verificationStatus === "verified"
+                                ? "bg-green-100 text-green-800"
+                                : submission.verificationStatus === "rejected"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {submission.verificationStatus === "verified"
+                              ? "Verified"
+                              : submission.verificationStatus === "rejected"
+                              ? "Rejected"
+                              : "Pending Verification"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              <div className="mt-4 text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                <div className="flex items-start">
+                  <Clock className="w-4 h-4 text-blue-500 mr-2 mt-0.5" />
+                  <div>
+                    <p className="font-medium">
+                      Payment Verification Process:
+                    </p>
+                    <ul className="mt-1 space-y-1 text-xs">
+                      <li>
+                        • Payments are verified by our admin team within 24
+                        hours
+                      </li>
+                      <li>
+                        • You'll receive a notification once verification is
+                        complete
+                      </li>
+                      <li>
+                        • Verified payments are automatically applied to your
+                        account
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        {/* Tenant Documents Section */}
-        {tenantData.documents && tenantData.documents.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">My Uploaded Documents</h2>
-              <FileText className="w-5 h-5 text-blue-500" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tenantData.documents.map((document) => (
-                <div
-                  key={document.id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded"
-                >
-                  <div>
-                    <h3 className="font-medium">{document.name}</h3>
-                    <p className="text-sm text-gray-600">{document.type}</p>
-                    <p className="text-xs text-gray-500">
-                      Uploaded: {formatDate(document.date)}
+          </div>
+        )}
+      {/* Tenant Documents Section */}
+      {tenantData.documents && tenantData.documents.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">My Uploaded Documents</h2>
+            <FileText className="w-5 h-5 text-blue-500" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tenantData.documents.map((document) => (
+              <div
+                key={document.id}
+                className="flex justify-between items-center p-4 bg-gray-50 rounded"
+              >
+                <div>
+                  <h3 className="font-medium">{document.name}</h3>
+                  <p className="text-sm text-gray-600">{document.type}</p>
+                  <p className="text-xs text-gray-500">
+                    Uploaded: {formatDate(document.date)}
                     </p>
                   </div>
                   <div className="flex space-x-2">
@@ -1737,41 +1736,51 @@ const TenantDashboard = () => {
           </div>
         )}
 
-        {/* Payment History Section */}
+        {/* Payment History Section - MODERNIZED */}
         {tenantData.rentHistory && tenantData.rentHistory.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Recent Payment History</h2>
-              <Clock className="w-5 h-5 text-blue-500" />
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Payment History</h2>
+                <p className="text-sm text-gray-500 mt-1">Track your rent and utility payments</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <Clock className="w-5 h-5 text-blue-600" />
+              </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Details</th>
-                    <th className="text-right py-2">Amount</th>
-                    <th className="text-left py-2">Status</th>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Date</th>
+                    <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Details</th>
+                    <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Amount</th>
+                    <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tenantData.rentHistory.slice(0, 5).map((payment) => (
                     <React.Fragment key={payment.id}>
-                      <tr className="border-b hover:bg-gray-50">
-                        <td className="py-3">{formatDate(payment.date)}</td>
-                        <td className="py-3">
+                      <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent transition-all duration-200">
+                        <td className="py-4 px-2">
+                          <span className="text-sm font-medium text-gray-900">
+                            {formatDate(payment.date)}
+                          </span>
+                        </td>
+                        <td className="py-4 px-2">
                           <div>
-                            <p className="font-medium">Monthly Payment</p>
+                            <p className="text-sm font-semibold text-gray-900">Monthly Payment</p>
                             {payment.method && (
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 mt-1 flex items-center">
+                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-1.5"></span>
                                 via {payment.method}
                               </p>
                             )}
                           </div>
                         </td>
-                        <td className="py-3 text-right">
+                        <td className="py-4 px-2 text-right">
                           <div>
-                            <p className="font-medium">
+                            <p className="text-sm font-bold text-gray-900">
                               {formatCurrency(payment.totalDue)}
                             </p>
                             {(payment.utilitiesCharges > 0 ||
@@ -1782,22 +1791,30 @@ const TenantDashboard = () => {
                                     `breakdown-${payment.id}`
                                   );
                                   row.classList.toggle("hidden");
+                                  const icon = document.getElementById(
+                                    `chevron-${payment.id}`
+                                  );
+                                  icon.classList.toggle("rotate-180");
                                 }}
-                                className="text-xs text-blue-600 hover:text-blue-800"
+                                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:gap-1.5 transition-all duration-200 group"
                               >
-                                View breakdown
+                                <span>View breakdown</span>
+                                <ChevronRight 
+                                  id={`chevron-${payment.id}`}
+                                  className="w-3.5 h-3.5 transition-transform duration-200" 
+                                />
                               </button>
                             )}
                           </div>
                         </td>
-                        <td className="py-3">
+                        <td className="py-4 px-2">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                               payment.status === "Paid"
-                                ? "bg-green-100 text-green-800"
+                                ? "bg-green-100 text-green-700 ring-1 ring-green-600/20"
                                 : payment.status === "Overdue"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
+                                ? "bg-red-100 text-red-700 ring-1 ring-red-600/20"
+                                : "bg-yellow-100 text-yellow-700 ring-1 ring-yellow-600/20"
                             }`}
                           >
                             {payment.status}
@@ -1805,147 +1822,148 @@ const TenantDashboard = () => {
                         </td>
                       </tr>
 
-                      {/* Expandable breakdown row */}
+                      {/* Expandable breakdown row - MODERNIZED */}
                       {(payment.utilitiesCharges > 0 ||
                         payment.lateFee > 0) && (
                         <tr
                           id={`breakdown-${payment.id}`}
-                          className="hidden bg-blue-50"
+                          className="hidden bg-gradient-to-r from-blue-50 via-blue-25 to-transparent"
                         >
-                          <td colSpan="4" className="py-3 px-4">
-                            <div className="space-y-2 text-sm">
-                              <p className="font-semibold text-gray-700">
-                                Payment Breakdown:
-                              </p>
+                          <td colSpan="4" className="py-4 px-6">
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2">
+                                <div className="h-px flex-1 bg-gradient-to-r from-blue-200 to-transparent"></div>
+                                <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                  Payment Breakdown
+                                </span>
+                                <div className="h-px flex-1 bg-gradient-to-l from-blue-200 to-transparent"></div>
+                              </div>
 
-                              <div className="grid grid-cols-2 gap-2 ml-4">
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">Rent:</span>
-                                  <span className="font-medium">
-                                    {formatCurrency(payment.amountDue)}
-                                  </span>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Rent Card */}
+                                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600 font-medium">Base Rent</span>
+                                    <span className="text-base font-bold text-gray-900">
+                                      {formatCurrency(payment.amountDue)}
+                                    </span>
+                                  </div>
                                 </div>
 
+                                {/* Utilities Card */}
                                 {payment.utilitiesCharges > 0 && (
-                                  <>
-                                    <div className="flex justify-between text-blue-600">
-                                      <span>Utilities Total:</span>
-                                      <span className="font-medium">
-                                        {formatCurrency(
-                                          payment.utilitiesCharges
-                                        )}
+                                  <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+                                    <div className="flex justify-between items-center mb-3">
+                                      <span className="text-sm text-blue-700 font-semibold">Utilities Total</span>
+                                      <span className="text-base font-bold text-blue-700">
+                                        {formatCurrency(payment.utilitiesCharges)}
                                       </span>
                                     </div>
 
                                     {payment.utilityBreakdown && (
-                                      <div className="col-span-2 ml-4 space-y-1 text-xs border-l-2 border-blue-300 pl-3">
-                                        {payment.utilityBreakdown
-                                          .water_charges > 0 && (
-                                          <div className="flex justify-between">
-                                            <span>• Water:</span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .water_charges
-                                              )}
+                                      <div className="space-y-2 pl-3 border-l-2 border-blue-200">
+                                        {payment.utilityBreakdown.water_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              Water
+                                            </span>
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.water_charges)}
                                             </span>
                                           </div>
                                         )}
-                                        {payment.utilityBreakdown
-                                          .electricity_charges > 0 && (
-                                          <div className="flex justify-between">
-                                            <span>• Electricity:</span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .electricity_charges
-                                              )}
+                                        {payment.utilityBreakdown.electricity_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              Electricity
+                                            </span>
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.electricity_charges)}
                                             </span>
                                           </div>
                                         )}
-                                        {payment.utilityBreakdown.gas_charges >
-                                          0 && (
-                                          <div className="flex justify-between">
-                                            <span>• Gas:</span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .gas_charges
-                                              )}
+                                        {payment.utilityBreakdown.gas_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              Gas
+                                            </span>
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.gas_charges)}
                                             </span>
                                           </div>
                                         )}
-                                        {payment.utilityBreakdown
-                                          .service_charges > 0 && (
-                                          <div className="flex justify-between">
-                                            <span>• Service Charges:</span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .service_charges
-                                              )}
+                                        {payment.utilityBreakdown.service_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              Service Charges
+                                            </span>
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.service_charges)}
                                             </span>
                                           </div>
                                         )}
-                                        {payment.utilityBreakdown
-                                          .garbage_charges > 0 && (
-                                          <div className="flex justify-between">
-                                            <span>• Garbage Collection:</span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .garbage_charges
-                                              )}
+                                        {payment.utilityBreakdown.garbage_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              Garbage Collection
+                                            </span>
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.garbage_charges)}
                                             </span>
                                           </div>
                                         )}
-                                        {payment.utilityBreakdown
-                                          .common_area_charges > 0 && (
-                                          <div className="flex justify-between">
-                                            <span>• Common Area:</span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .common_area_charges
-                                              )}
+                                        {payment.utilityBreakdown.common_area_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              Common Area
+                                            </span>
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.common_area_charges)}
                                             </span>
                                           </div>
                                         )}
-                                        {payment.utilityBreakdown
-                                          .other_charges > 0 && (
-                                          <div className="flex justify-between">
-                                            <span>
-                                              • Other (
-                                              {payment.utilityBreakdown
-                                                .other_charges_description ||
-                                                "Misc"}
-                                              ):
+                                        {payment.utilityBreakdown.other_charges > 0 && (
+                                          <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-600 flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                              {payment.utilityBreakdown.other_charges_description || "Other"}
                                             </span>
-                                            <span>
-                                              {formatCurrency(
-                                                payment.utilityBreakdown
-                                                  .other_charges
-                                              )}
+                                            <span className="font-semibold text-gray-700">
+                                              {formatCurrency(payment.utilityBreakdown.other_charges)}
                                             </span>
                                           </div>
                                         )}
                                       </div>
                                     )}
-                                  </>
-                                )}
-
-                                {payment.lateFee > 0 && (
-                                  <div className="flex justify-between text-red-600">
-                                    <span>Late Fee:</span>
-                                    <span className="font-medium">
-                                      {formatCurrency(payment.lateFee)}
-                                    </span>
                                   </div>
                                 )}
 
-                                <div className="col-span-2 flex justify-between border-t pt-2 mt-2 font-bold">
-                                  <span>Total:</span>
-                                  <span>
+                                {/* Late Fee Card */}
+                                {payment.lateFee > 0 && (
+                                  <div className="bg-white rounded-lg p-4 shadow-sm border border-red-100">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-sm text-red-600 font-semibold">Late Fee</span>
+                                      <span className="text-base font-bold text-red-600">
+                                        {formatCurrency(payment.lateFee)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Total Section */}
+                              <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg p-4 shadow-md">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-300 font-semibold uppercase tracking-wide">
+                                    Total Payment
+                                  </span>
+                                  <span className="text-xl font-bold text-white">
                                     {formatCurrency(payment.totalDue)}
                                   </span>
                                 </div>

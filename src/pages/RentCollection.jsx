@@ -40,7 +40,7 @@ const RentCollection = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [activeLeases, setActiveLeases] = useState([]);
-   console.log(activeLeases)
+  console.log(activeLeases);
   // Tab and verification state
   const [activeTab, setActiveTab] = useState("payments");
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
@@ -116,23 +116,46 @@ const RentCollection = () => {
     totalCount: 0,
     limit: 10,
   });
-
+  const [searchInput, setSearchInput] = useState("");
+  const [utilityLoading, setUtilityLoading] = useState(false);
   // Load data on component mount and filter changes
+  // Payments tab effect
   useEffect(() => {
     if (activeTab === "payments") {
       loadPayments();
       loadSummary();
-    } else if (activeTab === "verifications") {
+    }
+  }, [filters, activeTab]);
+
+  // Verifications tab effect
+  useEffect(() => {
+    if (activeTab === "verifications") {
       loadPendingSubmissions();
       loadSubmissionHistory();
       loadVerificationStats();
-    } else if (activeTab === "utilities") {
+    }
+  }, [verificationFilters, activeTab]);
+
+  // Utilities tab effect with debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setUtilityFilters((prev) => ({ ...prev, search: searchInput, page: 1 }));
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+
+  useEffect(() => {
+    if (activeTab === "utilities") {
       loadUtilityCharges();
       loadUtilitySummary();
     }
+  }, [utilityFilters, activeTab]);
 
+  // Load active leases once
+  useEffect(() => {
     if (activeLeases.length === 0) loadActiveLeases();
-  }, [filters, verificationFilters, utilityFilters, activeTab]);
+  }, []);
 
   const handleBillUtilitiesToRent = async (month, year) => {
     try {
@@ -584,16 +607,21 @@ const RentCollection = () => {
   };
   const loadUtilityCharges = async () => {
     try {
-      setLoading(true);
+      console.log('🔵 Loading utility charges with filters:', utilityFilters);
+      setUtilityLoading(true);
       const result = await rentCollectionAPI.getUtilityCharges(utilityFilters);
+      console.log('🟢 API Response:', result);
+      console.log('📊 Data received:', result.data?.length, 'charges');
+      console.log('📄 Pagination:', result.pagination);
+      
       if (result.status === 200) {
         setUtilityCharges(result.data);
         setUtilityPagination(result.pagination);
       }
     } catch (error) {
-      console.error("Error loading utility charges:", error);
+      console.error("❌ Error loading utility charges:", error);
     } finally {
-      setLoading(false);
+      setUtilityLoading(false);
     }
   };
 
@@ -1344,10 +1372,8 @@ const RentCollection = () => {
                   <input
                     placeholder="Search utilities..."
                     className="border rounded px-4 py-2 w-64"
-                    value={utilityFilters.search}
-                    onChange={(e) =>
-                      handleUtilityFilterChange("search", e.target.value)
-                    }
+                    value={searchInput} // Changed from utilityFilters.search
+                    onChange={(e) => setSearchInput(e.target.value)} // Changed
                   />
                   <button
                     type="submit"
@@ -1389,7 +1415,6 @@ const RentCollection = () => {
                 >
                   <Send className="mr-2 w-4 h-4" /> Bill to Rent
                 </button>
-                
               </div>
 
               <div className="text-sm text-gray-600">
@@ -1398,7 +1423,7 @@ const RentCollection = () => {
             </div>
 
             {/* Utility Charges Grid */}
-            {loading ? (
+            {utilityLoading ? (
               <div className="text-center py-8">
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto text-gray-400" />
                 <p className="text-gray-600 mt-2">Loading utility charges...</p>
@@ -1440,7 +1465,7 @@ const RentCollection = () => {
 
                 {/* Pagination */}
                 {utilityPagination.totalPages > 1 && (
-                  <div className="flex justify-center items-center space-x-2 mt-6">
+                  <div className="flex justify-center space-x-2">
                     <button
                       onClick={() =>
                         handleUtilityFilterChange(
@@ -1449,31 +1474,27 @@ const RentCollection = () => {
                         )
                       }
                       disabled={utilityPagination.currentPage === 1}
-                      className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="px-3 py-1 border rounded disabled:opacity-50"
                     >
                       Previous
                     </button>
 
-                    <div className="flex space-x-1">
-                      {Array.from(
-                        { length: utilityPagination.totalPages },
-                        (_, i) => i + 1
-                      ).map((page) => (
-                        <button
-                          key={page}
-                          onClick={() =>
-                            handleUtilityFilterChange("page", page)
-                          }
-                          className={`px-3 py-2 border rounded ${
-                            page === utilityPagination.currentPage
-                              ? "bg-blue-500 text-white border-blue-500"
-                              : "hover:bg-gray-50"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
+                    {Array.from(
+                      { length: utilityPagination.totalPages },
+                      (_, i) => i + 1
+                    ).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handleUtilityFilterChange("page", page)}
+                        className={`px-3 py-1 border rounded ${
+                          page === utilityPagination.currentPage
+                            ? "bg-blue-500 text-white"
+                            : ""
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
                     <button
                       onClick={() =>
@@ -1486,7 +1507,7 @@ const RentCollection = () => {
                         utilityPagination.currentPage ===
                         utilityPagination.totalPages
                       }
-                      className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="px-3 py-1 border rounded disabled:opacity-50"
                     >
                       Next
                     </button>
