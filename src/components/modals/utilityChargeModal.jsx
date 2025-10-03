@@ -9,7 +9,7 @@ const UtilityChargeModal = ({
   onSubmit,
   processing,
 }) => {
-  
+  console.log(activeLeases)
   const [formData, setFormData] = useState({
     lease_id: '',
     billing_month: new Date().toISOString().split('T')[0].substring(0, 7),
@@ -126,7 +126,7 @@ const UtilityChargeModal = ({
                   {activeLeases.map((lease) => (
                     <option key={lease.id} value={lease.id}>
                       {lease.lease_number} - {lease.tenant_name} (
-                      {lease.all_tenant_names}-{lease.property_name})
+                      {lease.primary_tenant_name}-{lease.property_name})
                     </option>
                   ))}
                 </select>

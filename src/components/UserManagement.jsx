@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { UserPlus, Search, Filter, Eye, MoreVertical } from "lucide-react";
 import AddUserModal from "./modals/AddUserModal.jsx";
 import EditUserModal from "./modals/EditUser.jsx";
@@ -20,7 +20,10 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [roles, setRoles] = useState([]);
-  const url = "http://localhost:5020/api/usermgt/"
+  const url = "/backend/api/usermgt/"
+  
+  // Ref for search input to maintain focus
+  const searchInputRef = useRef(null);
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -77,7 +80,7 @@ const UserManagement = () => {
     fetchRoles();
   }, []);
 
-  // Reload users when filters change
+  // Reload users when filters change with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchUsers();
@@ -223,7 +226,7 @@ const UserManagement = () => {
     return "Active";
   };
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -231,7 +234,7 @@ const UserManagement = () => {
     );
   }
 
-  if (error) {
+  if (error && users.length === 0) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <p className="text-red-800">Error loading users: {error}</p>
@@ -262,6 +265,7 @@ const UserManagement = () => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-grow max-w-md">
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search users..."
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

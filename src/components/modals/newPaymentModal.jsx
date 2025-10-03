@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, DollarSign, RefreshCw } from 'lucide-react';
 import { formatCurrency } from '../../utils/helperFunctions';
 
@@ -6,6 +6,7 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
   const [newPaymentData, setNewPaymentData] = useState({
     lease_id: '',
     amount_due: 0,
+    utilities_charges: 0,
     amount_paid: 0,
     payment_method: '',
     payment_reference: '',
@@ -16,6 +17,16 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
   });
   const [selectedLease, setSelectedLease] = useState(null);
 
+  // Calculate total when rent or utilities change
+  useEffect(() => {
+    const total = (parseFloat(newPaymentData.amount_due) || 0) + 
+                  (parseFloat(newPaymentData.utilities_charges) || 0);
+    setNewPaymentData(prev => ({
+      ...prev,
+      amount_paid: total
+    }));
+  }, [newPaymentData.amount_due, newPaymentData.utilities_charges]);
+
   const handleLeaseChange = (leaseId) => {
     const lease = activeLeases.find(l => l.id === parseInt(leaseId));
     setSelectedLease(lease);
@@ -24,6 +35,7 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
         ...prev,
         lease_id: leaseId,
         amount_due: lease.monthly_rent,
+        utilities_charges: 0,
         amount_paid: lease.monthly_rent
       }));
     }
@@ -46,6 +58,7 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
     setNewPaymentData({
       lease_id: '',
       amount_due: 0,
+      utilities_charges: 0,
       amount_paid: 0,
       payment_method: '',
       payment_reference: '',
@@ -57,9 +70,10 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
     setSelectedLease(null);
   };
 
-  
-
   if (!isOpen) return null;
+
+  const totalDue = (parseFloat(newPaymentData.amount_due) || 0) + 
+                   (parseFloat(newPaymentData.utilities_charges) || 0);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -80,6 +94,7 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
               value={newPaymentData.lease_id}
               onChange={(e) => handleLeaseChange(e.target.value)}
               disabled={processing}
+              
             >
               <option value="">Select a lease...</option>
               {activeLeases.map(lease => (
@@ -110,16 +125,55 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Amount Due *</label>
+            <label className="block text-sm font-medium mb-2">Rent Amount *</label>
             <input
               type="number"
               step="0.01"
+              min="0"
               className="w-full p-2 border rounded"
               value={newPaymentData.amount_due}
-              onChange={(e) => handleInputChange('amount_due', parseFloat(e.target.value))}
+              onChange={(e) => handleInputChange('amount_due', parseFloat(e.target.value) || 0)}
               disabled={processing}
             />
           </div>
+
+          {/* ADD UTILITIES FIELD */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Utilities Charges</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              className="w-full p-2 border rounded"
+              value={newPaymentData.utilities_charges}
+              onChange={(e) => handleInputChange('utilities_charges', parseFloat(e.target.value) || 0)}
+              disabled={processing}
+              placeholder="0.00"
+            />
+            <p className="text-xs text-gray-500 mt-1">Optional: Add utility charges for this payment</p>
+          </div>
+
+          {/* SHOW TOTAL DUE */}
+          {totalDue > 0 && (
+            <div className="bg-blue-50 p-3 rounded border border-blue-200">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Total Amount Due:</span>
+                <span className="text-lg font-bold text-blue-900">{formatCurrency(totalDue)}</span>
+              </div>
+              <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                <div className="flex justify-between">
+                  <span>Rent:</span>
+                  <span>{formatCurrency(newPaymentData.amount_due)}</span>
+                </div>
+                {newPaymentData.utilities_charges > 0 && (
+                  <div className="flex justify-between text-blue-600">
+                    <span>Utilities:</span>
+                    <span>{formatCurrency(newPaymentData.utilities_charges)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2">Payment Method *</label>
@@ -146,11 +200,19 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
             <input
               type="number"
               step="0.01"
+              min="0"
               className="w-full p-2 border rounded"
               value={newPaymentData.amount_paid}
-              onChange={(e) => handleInputChange('amount_paid', parseFloat(e.target.value))}
+              onChange={(e) => handleInputChange('amount_paid', parseFloat(e.target.value) || 0)}
               disabled={processing}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {newPaymentData.amount_paid < totalDue 
+                ? `Partial payment (${formatCurrency(totalDue - newPaymentData.amount_paid)} remaining)`
+                : newPaymentData.amount_paid === totalDue
+                ? 'Full payment'
+                : 'Overpayment'}
+            </p>
           </div>
 
           <div>
@@ -192,14 +254,14 @@ const NewPaymentModal = ({ isOpen, onClose, activeLeases, onSubmit, processing }
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded"
+              className="px-4 py-2 border rounded hover:bg-gray-50"
               disabled={processing}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded flex items-center disabled:opacity-50"
+              className="px-4 py-2 bg-green-500 text-white rounded flex items-center hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={processing || !newPaymentData.lease_id || !newPaymentData.payment_method || !newPaymentData.amount_paid}
             >
               {processing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <DollarSign className="w-4 h-4 mr-2" />}

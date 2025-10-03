@@ -4,7 +4,7 @@
 
 
 // API service functions
-const API_BASE_URL = "http://localhost:5020/api";
+const API_BASE_URL = "/backend/api";
 
 
 
@@ -73,7 +73,7 @@ export const rentCollectionAPI = {
   },
 
   getActiveLeases: async () => {
-    const response = await fetch(`${API_BASE_URL}/leases?status=active`, {
+    const response = await fetch(`${API_BASE_URL}/leases/active-for-billing`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "application/json",

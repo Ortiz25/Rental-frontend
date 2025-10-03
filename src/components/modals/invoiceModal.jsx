@@ -5,21 +5,18 @@ import { formatCurrency } from '../../utils/helperFunctions';
 const InvoiceModal = ({ payment, isOpen, onClose }) => {
   const printRef = useRef();
 
-
   const formatDate = (dateString) => {
     console.log(dateString)
     return new Date(dateString).toLocaleDateString();
   };
 
   const handlePrint = () => {
-    // Create a new window for printing
     const printWindow = window.open('', '_blank', 'width=1000,height=1000');
     
     const printContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        
         <style>
           body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -57,6 +54,9 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
           .text-yellow-600 {
             color: #d97706;
           }
+          .text-blue-600 {
+            color: #2563eb;
+          }
           .text-gray-600 {
             color: #6b7280;
           }
@@ -67,7 +67,7 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
             font-weight: 600;
           }
           .font-medium {
-            font-medium: 500;
+            font-weight: 500;
           }
           .border-t {
             border-top: 2px solid #d1d5db;
@@ -97,10 +97,24 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
           .space-y-2 > * + * {
             margin-top: 0.5rem;
           }
+          .bg-blue-50 {
+            background-color: #eff6ff;
+          }
+          .p-3 {
+            padding: 0.75rem;
+          }
+          .rounded {
+            border-radius: 0.25rem;
+          }
+          .ml-4 {
+            margin-left: 1rem;
+          }
+          .pl-4 {
+            padding-left: 1rem;
+          }
         </style>
       </head>
       <body>
-        
         ${printRef.current.innerHTML}
       </body>
       </html>
@@ -109,10 +123,17 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.print();
-    //printWindow.close();
   };
 
   if (!isOpen || !payment) return null;
+
+  // Calculate totals
+  const rentAmount = parseFloat(payment.amount_due) || 0;
+  const utilitiesAmount = parseFloat(payment.utilities_charges) || 0;
+  const lateFee = parseFloat(payment.late_fee) || 0;
+  const totalDue = rentAmount + utilitiesAmount + lateFee;
+  const amountPaid = parseFloat(payment.amount_paid) || 0;
+  const balanceDue = totalDue - amountPaid;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -133,7 +154,7 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
           {/* Print-only header */}
           <div className="hidden print-only mb-6">
             <h1 className="text-2xl font-bold text-center">
-             {payment.payment_status === "paid" ? "RECEIPT": "INVOICE"}  #{payment.invoice_number || `INV-${payment.id}`}
+              {payment.payment_status === "paid" ? "RECEIPT" : "INVOICE"} #{payment.invoice_number || `INV-${payment.id}`}
             </h1>
           </div>
 
@@ -148,7 +169,7 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
             <div className="text-right">
               <h3 className="font-semibold mb-2 text-lg">Payment Details</h3>
               <div className="space-y-1">
-                <p><span className="text-gray-600">Issue Date:</span> {formatDate(payment.original_due_date)}</p>
+                <p><span className="text-gray-600">Issue Date:</span> {formatDate(payment.original_due_date || payment.due_date)}</p>
                 <p><span className="text-gray-600">Due Date:</span> {formatDate(payment.due_date)}</p>
                 {payment.payment_date && (
                   <p><span className="text-gray-600">Paid Date:</span> {formatDate(payment.payment_date)}</p>
@@ -183,11 +204,69 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
                     </div>
                   </td>
                   <td className="text-right py-3 font-medium">
-                    {formatCurrency(payment.amount_due)}
+                    {formatCurrency(rentAmount)}
                   </td>
                 </tr>
                 
-                {payment.late_fee > 0 && (
+                {/* ADD UTILITY CHARGES BREAKDOWN */}
+                {utilitiesAmount > 0 && payment.utility_breakdown && (
+                  <tr className="border-b border-gray-200">
+                    <td className="py-3" colSpan="2">
+                      <div className="bg-blue-50 p-3 rounded">
+                        <div className="flex justify-between font-semibold mb-2 text-blue-900">
+                          <span>Utility Charges</span>
+                          <span>{formatCurrency(utilitiesAmount)}</span>
+                        </div>
+                        <div className="ml-4 space-y-1 text-sm text-gray-700">
+                          {payment.utility_breakdown.water_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Water</span>
+                              <span>{formatCurrency(payment.utility_breakdown.water_charges)}</span>
+                            </div>
+                          )}
+                          {payment.utility_breakdown.electricity_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Electricity</span>
+                              <span>{formatCurrency(payment.utility_breakdown.electricity_charges)}</span>
+                            </div>
+                          )}
+                          {payment.utility_breakdown.gas_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Gas</span>
+                              <span>{formatCurrency(payment.utility_breakdown.gas_charges)}</span>
+                            </div>
+                          )}
+                          {payment.utility_breakdown.service_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Service Charges</span>
+                              <span>{formatCurrency(payment.utility_breakdown.service_charges)}</span>
+                            </div>
+                          )}
+                          {payment.utility_breakdown.garbage_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Garbage Collection</span>
+                              <span>{formatCurrency(payment.utility_breakdown.garbage_charges)}</span>
+                            </div>
+                          )}
+                          {payment.utility_breakdown.common_area_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Common Area Charges</span>
+                              <span>{formatCurrency(payment.utility_breakdown.common_area_charges)}</span>
+                            </div>
+                          )}
+                          {payment.utility_breakdown.other_charges > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Other ({payment.utility_breakdown.other_charges_description || 'Misc'})</span>
+                              <span>{formatCurrency(payment.utility_breakdown.other_charges)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                
+                {lateFee > 0 && (
                   <tr className="border-b border-gray-200">
                     <td className="py-3">
                       <div>
@@ -198,7 +277,7 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
                       </div>
                     </td>
                     <td className="text-right py-3 font-medium text-red-600">
-                      {formatCurrency(payment.late_fee)}
+                      {formatCurrency(lateFee)}
                     </td>
                   </tr>
                 )}
@@ -211,37 +290,39 @@ const InvoiceModal = ({ payment, isOpen, onClose }) => {
             <div className="flex justify-end">
               <div className="w-64 space-y-2">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency(payment.amount_due)}</span>
+                  <span>Rent:</span>
+                  <span>{formatCurrency(rentAmount)}</span>
                 </div>
                 
-                {payment.late_fee > 0 && (
+                {utilitiesAmount > 0 && (
+                  <div className="flex justify-between text-blue-600">
+                    <span>Utilities:</span>
+                    <span>{formatCurrency(utilitiesAmount)}</span>
+                  </div>
+                )}
+                
+                {lateFee > 0 && (
                   <div className="flex justify-between text-red-600">
                     <span>Late Fee:</span>
-                    <span>{formatCurrency(payment.late_fee)}</span>
+                    <span>{formatCurrency(lateFee)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total Due:</span>
-                  <span>{formatCurrency((+payment.amount_due || 0) + (+payment.late_fee || 0))}</span>
+                  <span>{formatCurrency(totalDue)}</span>
                 </div>
                 
-                {payment.amount_paid > 0 && (
+                {amountPaid > 0 && (
                   <>
                     <div className="flex justify-between text-green-600">
                       <span>Amount Paid:</span>
-                      <span>{formatCurrency(payment.amount_paid)}</span>
+                      <span>{formatCurrency(amountPaid)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg border-t pt-2">
                       <span>Balance Due:</span>
-                      <span className={
-                        (payment.amount_due + (payment.late_fee || 0) - payment.amount_paid) > 0 
-                          ? 'text-red-600' : 'text-green-600'
-                      }>
-                        {formatCurrency(
-                          (payment.amount_due || 0) + (payment.late_fee || 0) - (payment.amount_paid || 0)
-                        )}
+                      <span className={balanceDue > 0 ? 'text-red-600' : 'text-green-600'}>
+                        {formatCurrency(balanceDue)}
                       </span>
                     </div>
                   </>

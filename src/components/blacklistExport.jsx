@@ -9,7 +9,7 @@ const BlacklistExport = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5020/api/tenants/export-blacklist?format=${format}`, {
+      const response = await fetch(`/backend/api/tenants/export-blacklist?format=${format}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -36,7 +36,7 @@ const BlacklistExport = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5020/api/tenants/blacklist-report', {
+      const response = await fetch('/backend/api/tenants/blacklist-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
 

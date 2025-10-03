@@ -40,7 +40,7 @@ const RentCollection = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [activeLeases, setActiveLeases] = useState([]);
-
+   console.log(activeLeases)
   // Tab and verification state
   const [activeTab, setActiveTab] = useState("payments");
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
@@ -417,7 +417,7 @@ const RentCollection = () => {
         rejectionData
       );
 
-      if (result.success) {
+      if (result.status === 200) {
         setPendingSubmissions((prev) =>
           prev.filter((sub) => sub.id !== submissionId)
         );
@@ -520,7 +520,7 @@ const RentCollection = () => {
         submission.id
       );
 
-      if (result.success) {
+      if (result.success || result.status === 200) {
         setSelectedSubmission(result.data);
         setShowSubmissionDetailsModal(true);
       } else {
@@ -729,7 +729,7 @@ const RentCollection = () => {
             }`}
           >
             <div className="flex items-center space-x-2">
-              <DollarSign className="w-5 h-5" />
+              <Lightbulb className="w-5 h-5" />
               <span>Utilities</span>
             </div>
           </button>
@@ -1389,9 +1389,7 @@ const RentCollection = () => {
                 >
                   <Send className="mr-2 w-4 h-4" /> Bill to Rent
                 </button>
-                <button className="bg-gray-500 text-white px-4 py-2 rounded flex items-center hover:bg-gray-600">
-                  <Download className="mr-2 w-4 h-4" /> Export Report
-                </button>
+                
               </div>
 
               <div className="text-sm text-gray-600">
@@ -1603,7 +1601,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

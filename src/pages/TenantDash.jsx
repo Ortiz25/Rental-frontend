@@ -23,7 +23,7 @@ import {
 import Navbar from "../layout/navbar";
 import NotificationsModal from "../components/modals/NotificationModal.jsx"; // Import the notifications modal
 
-const API_BASE_URL = "http://localhost:5020/api/tenant-dash";
+const API_BASE_URL = "/backend/api/tenant-dash";
 
 // Contact Manager Modal Component
 const ContactManagerModal = ({ isOpen, onClose, onSubmit, loading }) => {
@@ -194,7 +194,7 @@ const UploadDocumentModal = ({
 
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5020/api/documents/upload",
+        "/backend/api/documents/upload",
         {
           method: "POST",
           headers: {
@@ -919,7 +919,7 @@ const TenantDashboard = () => {
       }
 
       const result = await response.json();
-      console.log(result)
+      console.log(result);
       setTenantData(result.data);
     } catch (err) {
       setError(err.message);
@@ -934,7 +934,7 @@ const TenantDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5020/api/communications/notifications/${notificationId}/read`,
+        `/backend/api/communications/notifications/${notificationId}/read`,
         {
           method: "PATCH",
           headers: {
@@ -943,7 +943,7 @@ const TenantDashboard = () => {
           },
         }
       );
-        console.log(response)
+      console.log(response);
       if (response.ok) {
         // Update local state to reflect the change
         setTenantData((prevData) => ({
@@ -967,151 +967,152 @@ const TenantDashboard = () => {
     }
   };
 
-// Download document - ENHANCED VERSION with debugging
-const downloadDocument = async (documentId) => {
-  console.log("🔽 Starting download for document ID:", documentId);
-  const token = localStorage.getItem("token");
+  // Download document - ENHANCED VERSION with debugging
+  const downloadDocument = async (documentId) => {
+    console.log("🔽 Starting download for document ID:", documentId);
+    const token = localStorage.getItem("token");
 
-  try {
-    const response = await fetch(
-      `http://localhost:5020/api/documents/${documentId}/download`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await fetch(
+        `/backend/api/documents/${documentId}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", response.headers);
+
+      if (!response.ok) {
+        console.error("❌ Response not OK:", response.status);
+        let errorMessage = "Download failed";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
       }
-    );
 
-    console.log("📡 Response status:", response.status);
-    console.log("📡 Response headers:", response.headers);
+      // Check content type
+      const contentType = response.headers.get("content-type");
+      console.log("📄 Content-Type:", contentType);
 
-    if (!response.ok) {
-      console.error("❌ Response not OK:", response.status);
-      let errorMessage = "Download failed";
-      try {
+      if (contentType && contentType.includes("application/json")) {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch (jsonError) {
-        errorMessage = response.statusText || errorMessage;
+        throw new Error(errorData.message || "Download failed");
       }
-      throw new Error(`${errorMessage} (Status: ${response.status})`);
-    }
 
-    // Check content type
-    const contentType = response.headers.get("content-type");
-    console.log("📄 Content-Type:", contentType);
-    
-    if (contentType && contentType.includes("application/json")) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Download failed");
-    }
+      // Get the blob
+      console.log("📦 Converting response to blob...");
+      const blob = await response.blob();
+      console.log("📦 Blob size:", blob.size, "bytes");
 
-    // Get the blob
-    console.log("📦 Converting response to blob...");
-    const blob = await response.blob();
-    console.log("📦 Blob size:", blob.size, "bytes");
-    
-    if (blob.size === 0) {
-      throw new Error("Downloaded file is empty");
-    }
-
-    // Get filename from Content-Disposition header
-    const contentDisposition = response.headers.get('Content-Disposition');
-    let filename = 'document.pdf';
-    
-    if (contentDisposition) {
-      console.log("📋 Content-Disposition:", contentDisposition);
-      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-      if (filenameMatch && filenameMatch[1]) {
-        filename = filenameMatch[1].replace(/['"]/g, '');
+      if (blob.size === 0) {
+        throw new Error("Downloaded file is empty");
       }
-    }
-    
-    console.log("💾 Filename:", filename);
 
-    // Create download link
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
-    
-    document.body.appendChild(link);
-    console.log("🖱️ Triggering download click...");
-    link.click();
-    
-    // Cleanup
-    setTimeout(() => {
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      console.log("✅ Download completed and cleaned up");
-    }, 100);
-    
-  } catch (error) {
-    console.error("❌ Download error:", error);
-    alert(`Download failed: ${error.message}`);
-  }
-};
+      // Get filename from Content-Disposition header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "document.pdf";
 
-// View document - ENHANCED VERSION with debugging
-const viewDocument = async (documentId) => {
-  const token = localStorage.getItem("token");
-  console.log("👁️ Starting view for document ID:", documentId);
-  
-  try {
-    const response = await fetch(
-      `http://localhost:5020/api/documents/${documentId}/view`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      if (contentDisposition) {
+        console.log("📋 Content-Disposition:", contentDisposition);
+        const filenameMatch = contentDisposition.match(
+          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+        );
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, "");
+        }
       }
-    );
 
-    console.log("📡 Response status:", response.status);
+      console.log("💾 Filename:", filename);
 
-    if (!response.ok) {
-      console.error("❌ Response not OK:", response.status);
-      throw new Error(`View failed (Status: ${response.status})`);
-    }
-
-    // Get the blob
-    console.log("📦 Converting response to blob...");
-    const blob = await response.blob();
-    console.log("📦 Blob size:", blob.size, "bytes");
-    console.log("📦 Blob type:", blob.type);
-    
-    if (blob.size === 0) {
-      throw new Error("Document is empty");
-    }
-
-    // Create URL and open in new tab
-    const url = window.URL.createObjectURL(blob);
-    console.log("🔗 Created blob URL:", url);
-    
-    const newWindow = window.open(url, '_blank');
-    
-    if (!newWindow) {
-      console.warn("⚠️ Popup blocked, trying download instead");
-      // Fallback to download if popup is blocked
-      const link = document.createElement('a');
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `document-${documentId}.pdf`;
+      link.download = filename;
+      link.style.display = "none";
+
+      document.body.appendChild(link);
+      console.log("🖱️ Triggering download click...");
       link.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        console.log("✅ Download completed and cleaned up");
+      }, 100);
+    } catch (error) {
+      console.error("❌ Download error:", error);
+      alert(`Download failed: ${error.message}`);
     }
-    
-    // Cleanup after delay
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-      console.log("✅ Blob URL revoked");
-    }, 5000);
-    
-    console.log("✅ Document opened successfully");
-  } catch (error) {
-    console.error("❌ View error:", error);
-    alert(`Failed to view document: ${error.message}`);
-  }
-};
+  };
+
+  // View document - ENHANCED VERSION with debugging
+  const viewDocument = async (documentId) => {
+    const token = localStorage.getItem("token");
+    console.log("👁️ Starting view for document ID:", documentId);
+
+    try {
+      const response = await fetch(
+        `/backend/api/documents/${documentId}/view`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("📡 Response status:", response.status);
+
+      if (!response.ok) {
+        console.error("❌ Response not OK:", response.status);
+        throw new Error(`View failed (Status: ${response.status})`);
+      }
+
+      // Get the blob
+      console.log("📦 Converting response to blob...");
+      const blob = await response.blob();
+      console.log("📦 Blob size:", blob.size, "bytes");
+      console.log("📦 Blob type:", blob.type);
+
+      if (blob.size === 0) {
+        throw new Error("Document is empty");
+      }
+
+      // Create URL and open in new tab
+      const url = window.URL.createObjectURL(blob);
+      console.log("🔗 Created blob URL:", url);
+
+      const newWindow = window.open(url, "_blank");
+
+      if (!newWindow) {
+        console.warn("⚠️ Popup blocked, trying download instead");
+        // Fallback to download if popup is blocked
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `document-${documentId}.pdf`;
+        link.click();
+      }
+
+      // Cleanup after delay
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        console.log("✅ Blob URL revoked");
+      }, 5000);
+
+      console.log("✅ Document opened successfully");
+    } catch (error) {
+      console.error("❌ View error:", error);
+      alert(`Failed to view document: ${error.message}`);
+    }
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -1196,7 +1197,7 @@ const viewDocument = async (documentId) => {
 
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5020/api/communications/messages",
+        "/backend/api/communications/messages",
         {
           method: "POST",
           headers: {
@@ -1434,6 +1435,15 @@ const viewDocument = async (documentId) => {
                 </span>
               </div>
 
+              {tenantData.tenant.utilitiesAmount > 0 && (
+                <div className="flex justify-between items-center text-sm sm:text-base">
+                  <span className="text-gray-600">Utilities</span>
+                  <span className="font-medium text-blue-600">
+                    {formatCurrency(tenantData.tenant.utilitiesAmount)}
+                  </span>
+                </div>
+              )}
+
               <div className="flex justify-between items-center text-sm sm:text-base">
                 <span className="text-gray-600">Current Balance</span>
                 <span
@@ -1598,8 +1608,6 @@ const viewDocument = async (documentId) => {
           </div>
         </div>
 
-        
-
         {/* Payment Submissions Section */}
         {tenantData.paymentSubmissions &&
           tenantData.paymentSubmissions.length > 0 && (
@@ -1616,6 +1624,7 @@ const viewDocument = async (documentId) => {
                     <tr className="border-b">
                       <th className="text-left py-2">Submission Date</th>
                       <th className="text-left py-2">Amount</th>
+
                       <th className="text-left py-2">Method</th>
                       <th className="text-left py-2">Reference</th>
                       <th className="text-left py-2">Status</th>
@@ -1740,31 +1749,212 @@ const viewDocument = async (documentId) => {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Amount</th>
+                    <th className="text-left py-2">Details</th>
+                    <th className="text-right py-2">Amount</th>
                     <th className="text-left py-2">Status</th>
-                    <th className="text-left py-2">Method</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tenantData.rentHistory.slice(0, 5).map((payment) => (
-                    <tr key={payment.id} className="border-b">
-                      <td className="py-2">{formatDate(payment.date)}</td>
-                      <td className="py-2">{formatCurrency(payment.amount)}</td>
-                      <td className="py-2">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            payment.status === "Paid"
-                              ? "bg-green-100 text-green-800"
-                              : payment.status === "Overdue"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                    <React.Fragment key={payment.id}>
+                      <tr className="border-b hover:bg-gray-50">
+                        <td className="py-3">{formatDate(payment.date)}</td>
+                        <td className="py-3">
+                          <div>
+                            <p className="font-medium">Monthly Payment</p>
+                            {payment.method && (
+                              <p className="text-xs text-gray-500">
+                                via {payment.method}
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 text-right">
+                          <div>
+                            <p className="font-medium">
+                              {formatCurrency(payment.totalDue)}
+                            </p>
+                            {(payment.utilitiesCharges > 0 ||
+                              payment.lateFee > 0) && (
+                              <button
+                                onClick={() => {
+                                  const row = document.getElementById(
+                                    `breakdown-${payment.id}`
+                                  );
+                                  row.classList.toggle("hidden");
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-800"
+                              >
+                                View breakdown
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              payment.status === "Paid"
+                                ? "bg-green-100 text-green-800"
+                                : payment.status === "Overdue"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {payment.status}
+                          </span>
+                        </td>
+                      </tr>
+
+                      {/* Expandable breakdown row */}
+                      {(payment.utilitiesCharges > 0 ||
+                        payment.lateFee > 0) && (
+                        <tr
+                          id={`breakdown-${payment.id}`}
+                          className="hidden bg-blue-50"
                         >
-                          {payment.status}
-                        </span>
-                      </td>
-                      <td className="py-2">{payment.method || "N/A"}</td>
-                    </tr>
+                          <td colSpan="4" className="py-3 px-4">
+                            <div className="space-y-2 text-sm">
+                              <p className="font-semibold text-gray-700">
+                                Payment Breakdown:
+                              </p>
+
+                              <div className="grid grid-cols-2 gap-2 ml-4">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Rent:</span>
+                                  <span className="font-medium">
+                                    {formatCurrency(payment.amountDue)}
+                                  </span>
+                                </div>
+
+                                {payment.utilitiesCharges > 0 && (
+                                  <>
+                                    <div className="flex justify-between text-blue-600">
+                                      <span>Utilities Total:</span>
+                                      <span className="font-medium">
+                                        {formatCurrency(
+                                          payment.utilitiesCharges
+                                        )}
+                                      </span>
+                                    </div>
+
+                                    {payment.utilityBreakdown && (
+                                      <div className="col-span-2 ml-4 space-y-1 text-xs border-l-2 border-blue-300 pl-3">
+                                        {payment.utilityBreakdown
+                                          .water_charges > 0 && (
+                                          <div className="flex justify-between">
+                                            <span>• Water:</span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .water_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {payment.utilityBreakdown
+                                          .electricity_charges > 0 && (
+                                          <div className="flex justify-between">
+                                            <span>• Electricity:</span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .electricity_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {payment.utilityBreakdown.gas_charges >
+                                          0 && (
+                                          <div className="flex justify-between">
+                                            <span>• Gas:</span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .gas_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {payment.utilityBreakdown
+                                          .service_charges > 0 && (
+                                          <div className="flex justify-between">
+                                            <span>• Service Charges:</span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .service_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {payment.utilityBreakdown
+                                          .garbage_charges > 0 && (
+                                          <div className="flex justify-between">
+                                            <span>• Garbage Collection:</span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .garbage_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {payment.utilityBreakdown
+                                          .common_area_charges > 0 && (
+                                          <div className="flex justify-between">
+                                            <span>• Common Area:</span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .common_area_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {payment.utilityBreakdown
+                                          .other_charges > 0 && (
+                                          <div className="flex justify-between">
+                                            <span>
+                                              • Other (
+                                              {payment.utilityBreakdown
+                                                .other_charges_description ||
+                                                "Misc"}
+                                              ):
+                                            </span>
+                                            <span>
+                                              {formatCurrency(
+                                                payment.utilityBreakdown
+                                                  .other_charges
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+
+                                {payment.lateFee > 0 && (
+                                  <div className="flex justify-between text-red-600">
+                                    <span>Late Fee:</span>
+                                    <span className="font-medium">
+                                      {formatCurrency(payment.lateFee)}
+                                    </span>
+                                  </div>
+                                )}
+
+                                <div className="col-span-2 flex justify-between border-t pt-2 mt-2 font-bold">
+                                  <span>Total:</span>
+                                  <span>
+                                    {formatCurrency(payment.totalDue)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -1825,7 +2015,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
