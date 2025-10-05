@@ -102,8 +102,9 @@ const AddExpenseModal = ({
     const selectedProperty = properties.find(
       (p) => p.id.toString() === formData.propertyId
     );
+    console.log(selectedProperty)
     return selectedProperty
-      ? selectedProperty.property_name || selectedProperty.name
+      ? selectedProperty.propertyName || selectedProperty.name
       : "";
   };
 
@@ -232,7 +233,7 @@ const AddExpenseModal = ({
                 {calculateMonthlyEquivalent()}
                 {formData.frequency !== "monthly" && (
                   <span className="text-blue-600 ml-1">
-                    (${formData.amount} {formData.frequency})
+                    ({formData.amount} {formData.frequency})
                   </span>
                 )}
               </p>
@@ -324,11 +325,11 @@ const AddExpenseModal = ({
                   <strong>Expense:</strong> {formData.expenseType}
                 </p>
                 <p>
-                  <strong>Amount:</strong> ${formData.amount} (
+                  <strong>Amount:</strong> {formData.amount} (
                   {formData.frequency})
                 </p>
                 <p>
-                  <strong>Monthly Impact:</strong> $
+                  <strong>Monthly Impact:</strong> 
                   {calculateMonthlyEquivalent()}
                 </p>
                 {formData.endDate && (

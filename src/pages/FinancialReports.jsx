@@ -3,14 +3,11 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Download,
   FileText,
-  Printer,
-  X,
   Loader2,
   AlertCircle,
   RefreshCw,
-  PieChart,
+  X,
 } from "lucide-react";
 
 import OverviewTab from "../components/overviewTab.jsx";
@@ -49,24 +46,28 @@ const FinancialReports = () => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedProperty, setSelectedProperty] = useState("all");
 
-  // Load financial data on component mount and when dateRange changes
+  // Load financial data on component mount and when dateRange or selectedProperty changes
   useEffect(() => {
     loadFinancialData();
-  }, [dateRange]);
+  }, [dateRange, selectedProperty]);
 
   const loadFinancialData = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      // Prepare property filter parameter
+      const propertyFilter = selectedProperty !== "all" ? selectedProperty : null;
+      
       // Load core financial data
       const [summaryData, monthlyData, expenseData, transactionsData] =
         await Promise.all([
-          apiService.getFinancialSummary(dateRange),
-          apiService.getMonthlyData(12),
-          apiService.getExpenseBreakdown(dateRange),
-          apiService.getRecentTransactions(15),
+          apiService.getFinancialSummary(dateRange, propertyFilter),
+          apiService.getMonthlyData(12, propertyFilter),
+          apiService.getExpenseBreakdown(dateRange, propertyFilter),
+          apiService.getRecentTransactions(15, propertyFilter),
         ]);
 
       setFinancialData((prev) => ({
@@ -91,10 +92,12 @@ const FinancialReports = () => {
 
   const loadAnalyticsData = async () => {
     try {
+      const propertyFilter = selectedProperty !== "all" ? selectedProperty : null;
+      
       const [analyticsData, trendsData, performanceData] = await Promise.all([
-        apiService.getAnalytics(dateRange),
-        apiService.getPaymentTrends(6),
-        apiService.getPropertyPerformance(dateRange),
+        apiService.getAnalytics(dateRange, propertyFilter),
+        apiService.getPaymentTrends(6, propertyFilter),
+        apiService.getPropertyPerformance(dateRange, propertyFilter),
       ]);
 
       setFinancialData((prev) => ({
@@ -108,6 +111,10 @@ const FinancialReports = () => {
     }
   };
 
+  const handlePropertyChange = (propertyId) => {
+    setSelectedProperty(propertyId);
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadFinancialData();
@@ -118,15 +125,6 @@ const FinancialReports = () => {
     setActiveTab(tab);
     if (tab === "analytics" && !financialData.analytics) {
       await loadAnalyticsData();
-    }
-  };
-
-  const handleExportData = async (format = "csv") => {
-    try {
-      await apiService.exportFinancialData(format);
-    } catch (error) {
-      console.error("Export failed:", error);
-      setError("Failed to export data. Please try again.");
     }
   };
 
@@ -243,22 +241,6 @@ const FinancialReports = () => {
                     <option value="quarter">This Quarter</option>
                     <option value="year">This Year</option>
                   </select>
-
-                  <button
-                    onClick={() => window.print()}
-                    className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    title="Print Report"
-                  >
-                    <Printer className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    onClick={() => handleExportData("csv")}
-                    className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    title="Export to CSV"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -266,7 +248,11 @@ const FinancialReports = () => {
 
           {/* Tab Content */}
           {activeTab === "overview" && (
-            <OverviewTab financialData={financialData} />
+            <OverviewTab 
+              financialData={financialData} 
+              onPropertyChange={handlePropertyChange}
+              selectedPropertyProp={selectedProperty}
+            />
           )}
 
           {activeTab === "analytics" && (
@@ -302,7 +288,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

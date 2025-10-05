@@ -22,7 +22,7 @@ import {
 import Navbar from '../layout/navbar.jsx';
 
 // API Configuration
-const API_BASE_URL = '/backend/api';
+const API_BASE_URL = 'http://localhost:5020/api';
 
 // API helper function
 const apiCall = async (url, options = {}) => {
@@ -1072,6 +1072,8 @@ const DocumentManagement = () => {
     deleteDocument,
   } = useDocuments();
 
+  console.log(documents)
+
   // Apply filters when search term or category changes
   useEffect(() => {
     const newFilters = {};
@@ -1244,7 +1246,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

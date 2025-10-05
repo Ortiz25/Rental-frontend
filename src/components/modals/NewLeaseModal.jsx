@@ -3,7 +3,7 @@ import { X, Plus, Minus, Loader2, AlertCircle } from 'lucide-react';
 
 // API service for fetching supporting data
 const supportAPI = {
-  baseURL:'/backend/api/support-lease',
+  baseURL:'http://localhost:5020/api/support-lease',
   
   // Add auth headers
   getAuthHeaders() {
@@ -459,7 +459,7 @@ const NewLeaseModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Monthly Rent ($) <span className="text-red-500">*</span>
+                    Monthly Rent (KES) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -474,7 +474,7 @@ const NewLeaseModal = ({ isOpen, onClose, onSubmit }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Security Deposit ($) <span className="text-red-500">*</span>
+                    Security Deposit (KES) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -489,7 +489,7 @@ const NewLeaseModal = ({ isOpen, onClose, onSubmit }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pet Deposit ($)
+                    Pet Deposit (KES)
                   </label>
                   <input
                     type="number"
@@ -503,7 +503,7 @@ const NewLeaseModal = ({ isOpen, onClose, onSubmit }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Late Fee ($)
+                    Late Fee (KES)
                   </label>
                   <input
                     type="number"

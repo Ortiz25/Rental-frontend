@@ -15,25 +15,28 @@ import BlacklistTenantModal from "./modals/BlacklistTenantModal.jsx";
 import BlacklistHistory from "./blacklistHistory.jsx";
 import { Shield, History, AlertTriangle } from "lucide-react";
 import EditTenantModal from "./modals/EditTenantModal.jsx";
+import OffboardingDetailsModal from "./modals/offBoardingDetailModal.jsx";
 import { formatCurrency } from "../utils/helperFunctions.jsx";
 
 const TenantCard = ({
   tenant,
-  onUpdate, // Add this prop
-  setSelectedTenant, // Add this prop
-  setShowDetailsModal, // Add this prop
-  setShowOffboardModal, // Add this prop
+  onUpdate,
+  setSelectedTenant,
+  setShowDetailsModal,
+  setShowOffboardModal,
 }) => {
   const [showBlacklistModal, setShowBlacklistModal] = useState(false);
   const [showBlacklistHistory, setShowBlacklistHistory] = useState(false);
   const [isRemovingBlacklist, setIsRemovingBlacklist] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showOffboardingDetails, setShowOffboardingDetails] = useState(false);
+  const [offboardingData, setOffboardingData] = useState(null);
 
   const handleBlacklistTenant = async (tenantId, blacklistData) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/api/tenants/${tenantId}/blacklist`,
+        `http://localhost:5020/api/tenants/${tenantId}/blacklist`,
         {
           method: "POST",
           headers: {
@@ -46,7 +49,6 @@ const TenantCard = ({
 
       const result = await response.json();
       if (result.status === 200) {
-        // Refresh tenant data
         if (onUpdate) onUpdate();
         return true;
       } else {
@@ -63,7 +65,7 @@ const TenantCard = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/api/tenants/${tenantId}/remove-blacklist`,
+        `http://localhost:5020/api/tenants/${tenantId}/remove-blacklist`,
         {
           method: "POST",
           headers: {
@@ -76,7 +78,6 @@ const TenantCard = ({
 
       const result = await response.json();
       if (result.status === 200) {
-        // Refresh tenant data
         if (onUpdate) onUpdate();
         return true;
       } else {
@@ -89,7 +90,30 @@ const TenantCard = ({
     }
   };
 
-  // Parse property name to extract unit information if available
+  const fetchOffboardingDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:5020/api/tenants/${tenant.id}/offboarding-info`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      const result = await response.json();
+      if (result.status === 200) {
+        setOffboardingData(result.data);
+        setShowOffboardingDetails(true);
+      } else {
+        alert('No offboarding information found');
+      }
+    } catch (error) {
+      console.error('Error fetching offboarding details:', error);
+      alert('Failed to fetch offboarding details');
+    }
+  };
+
   const parsePropertyInfo = (propertyName) => {
     if (!propertyName || propertyName === "No Active Lease") {
       return { property: "No Active Lease", unit: null };
@@ -107,10 +131,6 @@ const TenantCard = ({
   );
 
   const handleOffboardClick = () => {
-    console.log("Offboard button clicked for tenant:", tenant);
-    console.log("Tenant status:", tenant.status);
-    console.log("Should be disabled?", tenant.status === "No Active Lease");
-
     if (setSelectedTenant && setShowOffboardModal) {
       setSelectedTenant(tenant);
       setShowOffboardModal(true);
@@ -127,14 +147,40 @@ const TenantCard = ({
         return "bg-red-100 text-red-800";
       case "Blacklisted":
         return "bg-red-200 text-red-900";
+      case "No Active Lease":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
+  const isOffboarded = tenant.status === "No Active Lease";
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-      {/* Header with Status and Actions - FIXED LAYOUT */}
+    <div className={`bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow ${
+      isOffboarded ? 'border-2 border-orange-200' : ''
+    }`}>
+      {/* Offboarded Badge */}
+      {isOffboarded && (
+        <div className="mb-3 bg-orange-50 border border-orange-200 rounded-lg p-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-medium text-orange-800">
+                Tenant Offboarded
+              </span>
+            </div>
+            <button
+              onClick={fetchOffboardingDetails}
+              className="text-xs text-orange-600 hover:text-orange-800 underline"
+            >
+              View Details
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header with Status and Actions */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <h3 className="text-lg font-bold">{tenant.name}</h3>
@@ -188,7 +234,6 @@ const TenantCard = ({
               </>
             ) : (
               <>
-                {/* MAIN BLACKLIST BUTTON - Red warning triangle */}
                 <button
                   onClick={() => {
                     setIsRemovingBlacklist(false);
@@ -200,16 +245,16 @@ const TenantCard = ({
                   <AlertTriangle className="h-4 w-4" />
                 </button>
 
-                {/* Edit Tenant Button */}
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="p-1.5 text-green-500 hover:text-green-700 hover:bg-green-100 rounded transition-colors"
-                  title="Edit tenant information"
-                >
-                  <Edit className="h-4 w-4" />
-                </button>
+                {!isOffboarded && (
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="p-1.5 text-green-500 hover:text-green-700 hover:bg-green-100 rounded transition-colors"
+                    title="Edit tenant information"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                )}
 
-                {/* View Details Button */}
                 <button
                   onClick={() => {
                     if (setSelectedTenant && setShowDetailsModal) {
@@ -292,7 +337,6 @@ const TenantCard = ({
       )}
 
       {/* Action Footer */}
-      {/* Action Footer */}
       <div className="flex justify-between border-t pt-4">
         <div className="flex space-x-3">
           <button
@@ -307,29 +351,28 @@ const TenantCard = ({
             <Eye className="w-4 h-4 mr-1" />
             View Details
           </button>
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="text-green-600 hover:underline text-sm flex items-center"
-          >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit
-          </button>
+          {!isOffboarded && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="text-green-600 hover:underline text-sm flex items-center"
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+            </button>
+          )}
         </div>
-        <button
-          onClick={handleOffboardClick}
-          className={`text-red-600 hover:underline text-sm flex items-center ${
-            tenant.status === "No Active Lease"
-              ? "opacity-50 cursor-not-allowed"
-              : ""
-          }`}
-          disabled={tenant.status === "No Active Lease"}
-        >
-          <UserMinus className="w-4 h-4 mr-1" />
-          Offboard
-        </button>
+        {!isOffboarded && (
+          <button
+            onClick={handleOffboardClick}
+            className="text-red-600 hover:underline text-sm flex items-center"
+          >
+            <UserMinus className="w-4 h-4 mr-1" />
+            Offboard
+          </button>
+        )}
       </div>
 
-      {/* Blacklist Modal */}
+      {/* Modals */}
       <BlacklistTenantModal
         isOpen={showBlacklistModal}
         onClose={() => {
@@ -342,18 +385,28 @@ const TenantCard = ({
         isRemoving={isRemovingBlacklist}
       />
 
-      {/* Blacklist History Modal */}
       <BlacklistHistory
         tenantId={tenant.id}
         isOpen={showBlacklistHistory}
         onClose={() => setShowBlacklistHistory(false)}
       />
-      <EditTenantModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        tenant={tenant}
-        onUpdate={onUpdate}
-      />
+
+      {!isOffboarded && (
+        <EditTenantModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          tenant={tenant}
+          onUpdate={onUpdate}
+        />
+      )}
+
+      {showOffboardingDetails && offboardingData && (
+        <OffboardingDetailsModal
+          details={offboardingData}
+          tenant={tenant}
+          onClose={() => setShowOffboardingDetails(false)}
+        />
+      )}
     </div>
   );
 };

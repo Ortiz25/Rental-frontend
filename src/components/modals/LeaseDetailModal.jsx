@@ -19,6 +19,7 @@ import {
   CreditCard,
   FileCheck
 } from 'lucide-react';
+import { formatCurrency } from '../../utils/helperFunctions';
 
 const LeaseDetailsModal = ({ lease, isOpen, onClose, onRenewal }) => {
   const [showRenewalForm, setShowRenewalForm] = useState(false);
@@ -27,7 +28,7 @@ const LeaseDetailsModal = ({ lease, isOpen, onClose, onRenewal }) => {
     rentIncrease: 0,
     notes: ''
   });
-
+console.log(lease)
   // Handle cases where lease might be undefined
   if (!lease) return null;
 
@@ -39,13 +40,6 @@ const LeaseDetailsModal = ({ lease, isOpen, onClose, onRenewal }) => {
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   };
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'KES'
-    }).format(amount || 0);
-  };
 
   // Format date
   const formatDate = (dateString) => {

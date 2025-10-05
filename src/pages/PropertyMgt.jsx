@@ -61,7 +61,7 @@ const PropertyManagement = () => {
       }
 
       //console.log("Fetching properties...");
-      const response = await fetch("/backend/api/properties", {
+      const response = await fetch("http://localhost:5020/api/properties", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -571,7 +571,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

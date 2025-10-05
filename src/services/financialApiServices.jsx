@@ -1,6 +1,6 @@
 // services/FinancialApiService.js
 
-const API_BASE_URL = '/backend/api';
+const API_BASE_URL = 'http://localhost:5020/api';
 
 class FinancialApiService {
   constructor() {
@@ -44,12 +44,20 @@ class FinancialApiService {
   }
 
   // Financial Summary Methods
-  async getFinancialSummary(period = 'month') {
-    return this.apiCall(`/summary?period=${period}`);
+  async getFinancialSummary(period = 'month', propertyId = null) {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (propertyId) params.append('propertyId', propertyId);
+    
+    return this.apiCall(`/summary?${params.toString()}`);
   }
 
-  async getMonthlyData(months = 12) {
-    return this.apiCall(`/monthly-data?months=${months}`);
+  async getMonthlyData(months = 12, propertyId = null) {
+    const params = new URLSearchParams();
+    params.append('months', months);
+    if (propertyId) params.append('propertyId', propertyId);
+    
+    return this.apiCall(`/monthly-data?${params.toString()}`);
   }
 
   async getExpenseBreakdown(period = 'month', propertyId = null) {
@@ -60,21 +68,37 @@ class FinancialApiService {
     return this.apiCall(`/expense-breakdown?${params.toString()}`);
   }
 
-  async getRecentTransactions(limit = 20) {
-    return this.apiCall(`/recent-transactions?limit=${limit}`);
+  async getRecentTransactions(limit = 20, propertyId = null) {
+    const params = new URLSearchParams();
+    params.append('limit', limit);
+    if (propertyId) params.append('propertyId', propertyId);
+    
+    return this.apiCall(`/recent-transactions?${params.toString()}`);
   }
 
   // Analytics Methods
-  async getAnalytics(period = 'month') {
-    return this.apiCall(`/analytics?period=${period}`);
+  async getAnalytics(period = 'month', propertyId = null) {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (propertyId) params.append('propertyId', propertyId);
+    
+    return this.apiCall(`/analytics?${params.toString()}`);
   }
 
-  async getPaymentTrends(months = 6) {
-    return this.apiCall(`/payment-trends?months=${months}`);
+  async getPaymentTrends(months = 6, propertyId = null) {
+    const params = new URLSearchParams();
+    params.append('months', months);
+    if (propertyId) params.append('propertyId', propertyId);
+    
+    return this.apiCall(`/payment-trends?${params.toString()}`);
   }
 
-  async getPropertyPerformance(period = 'month') {
-    return this.apiCall(`/property-performance?period=${period}`);
+  async getPropertyPerformance(period = 'month', propertyId = null) {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (propertyId) params.append('propertyId', propertyId);
+    
+    return this.apiCall(`/property-performance?${params.toString()}`);
   }
 
   // Report Generation
@@ -144,22 +168,40 @@ class FinancialApiService {
     return this.apiCall('/expense-categories');
   }
 
-  // Properties API (assuming you have this)
+  // Properties API
   async getProperties() {
     try {
       const token = this.getAuthToken();
       const response = await fetch(`${API_BASE_URL}/properties`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         }
       });
+      
+      console.log('Properties API response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch properties: ${response.status}`);
       }
       
       const data = await response.json();
-      return data.data || data;
+      console.log('Properties API full response:', data);
+      
+      // Handle different response structures
+      if (data.data && Array.isArray(data.data.properties)) {
+        return { properties: data.data.properties };
+      } else if (data.data && Array.isArray(data.data)) {
+        return { properties: data.data };
+      } else if (Array.isArray(data.properties)) {
+        return { properties: data.properties };
+      } else if (Array.isArray(data)) {
+        return { properties: data };
+      } else {
+        console.warn('Unexpected properties response structure:', data);
+        return { properties: [] };
+      }
     } catch (error) {
       console.error('Error fetching properties:', error);
       return { properties: [] };

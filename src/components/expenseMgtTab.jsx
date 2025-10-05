@@ -458,7 +458,7 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
       </div>
 
       {/* Live Expense Breakdown Chart */}
-      <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
+      {/* <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
         <h3 className="text-lg font-bold mb-4 flex items-center">
           <PieChart className="w-5 h-5 mr-2 text-green-600" />
           Live Expense Breakdown
@@ -500,7 +500,7 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Add Expense Modal */}
       <AddExpenseModal

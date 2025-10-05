@@ -16,7 +16,7 @@ const SystemSettings = () => {
   const [backups, setBackups] = useState([]);
   const [backingUp, setBackingUp] = useState(false);
 
-  const URL = "/backend";
+  const URL = "http://localhost:5020";
 
   // Fetch backups function (moved outside)
   const fetchBackups = async () => {
