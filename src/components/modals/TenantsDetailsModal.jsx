@@ -131,7 +131,7 @@ const PaymentsTab = ({ tenant }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5020/api/tenants/${tenant.id}/documents`, {
+        const response = await fetch(`/backend/api/tenants/${tenant.id}/documents`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -169,7 +169,7 @@ const PaymentsTab = ({ tenant }) => {
     const handleDownload = async (documentId, documentName) => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5020/api/tenants/documents/${documentId}/download`, {
+        const response = await fetch(`/backend/api/tenants/documents/${documentId}/download`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -202,7 +202,7 @@ const PaymentsTab = ({ tenant }) => {
     const handleView = async (documentId, documentName, mimeType) => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5020/api/tenants/documents/${documentId}/view`, {
+        const response = await fetch(`/backend/api/tenants/documents/${documentId}/view`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -250,7 +250,7 @@ const PaymentsTab = ({ tenant }) => {
         formData.append('document_name', uploadForm.documentName || uploadForm.files[0].name);
         formData.append('description', uploadForm.description);
 
-        const response = await fetch('http://localhost:5020/api/tenants/tenant/upload', {
+        const response = await fetch('/backend/api/tenants/tenant/upload', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
