@@ -896,7 +896,7 @@ const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
 const [showContactModal, setShowContactModal] = useState(false);
 const [showUploadModal, setShowUploadModal] = useState(false);
 const [showNotificationsModal, setShowNotificationsModal] = useState(false);
-
+console.log(tenantData)
 const [activeModule, setActiveModule] = useState("Tenant Dashboard");
 
 // Fetch tenant data from API
@@ -1695,23 +1695,23 @@ return (
           </div>
         )}
       {/* Tenant Documents Section */}
-      {tenantData.documents && tenantData.documents.length > 0 && (
+      {tenantData.tenantDocuments && tenantData.tenantDocuments.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">My Uploaded Documents</h2>
             <FileText className="w-5 h-5 text-blue-500" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tenantData.documents.map((document) => (
+            {tenantData.tenantDocuments.map((document) => (
               <div
                 key={document.id}
                 className="flex justify-between items-center p-4 bg-gray-50 rounded"
               >
                 <div>
-                  <h3 className="font-medium">{document.name}</h3>
-                  <p className="text-sm text-gray-600">{document.type}</p>
+                  <h3 className="font-medium">{document.document_name}</h3>
+                  <p className="text-sm text-gray-600">{document.document_type}</p>
                   <p className="text-xs text-gray-500">
-                    Uploaded: {formatDate(document.date)}
+                    Uploaded: {formatDate(document.upload_date)}
                     </p>
                   </div>
                   <div className="flex space-x-2">
