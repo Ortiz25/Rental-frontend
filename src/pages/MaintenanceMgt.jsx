@@ -1978,8 +1978,11 @@ const MaintenanceManagement = () => {
         (request) =>
           request.title.toLowerCase().includes(query) ||
           request.description.toLowerCase().includes(query) ||
-          request.property.toLowerCase().includes(query) ||
+          (request.property?.name || request.property || "").toLowerCase().includes(query) ||
+          (request.unit?.number || request.unit || "").toString().toLowerCase().includes(query) ||
           request.tenantName?.toLowerCase().includes(query) ||
+          (request.assignedTo || "").toLowerCase().includes(query) ||
+          (request.assignedToName || "").toLowerCase().includes(query) ||
           request.category.toLowerCase().includes(query)
       );
     }
