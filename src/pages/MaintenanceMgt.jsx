@@ -26,7 +26,7 @@ import { formatCurrency } from "../utils/helperFunctions.jsx";
 // API service functions
 const maintenanceAPI = {
   // Fixed Base API URL - removed trailing slash and changed to HTTP
-  baseURL: "http://localhost:5020/api",
+  baseURL: "/backend/api",
 
   // Helper method to get auth headers
   getAuthHeaders: () => {
@@ -267,7 +267,7 @@ const NewRequestModal = ({
 
     try {
       const response = await fetch(
-        `http://localhost:5020/api/maintenance/units/${unitId}/tenants`,
+        `/backend/api/maintenance/units/${unitId}/tenants`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -457,7 +457,7 @@ const NewRequestModal = ({
             localStorage.getItem("token") || sessionStorage.getItem("token");
 
           const photoResponse = await fetch(
-            `http://localhost:5020/api/maintenance/${newRequestId}/photos`,
+            `/backend/api/maintenance/${newRequestId}/photos`,
             {
               method: "POST",
               headers: {
@@ -1015,7 +1015,7 @@ const RequestDetailsModal = ({
         localStorage.getItem("token") || sessionStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5020/api/maintenance/${request.id}/photos`,
+        `/backend/api/maintenance/${request.id}/photos`,
         {
           method: "POST",
           headers: {
@@ -1463,7 +1463,7 @@ const RequestDetailsModal = ({
                         className="relative group aspect-square"
                       >
                         <img
-                          src={`http://localhost:5020/api/maintenance/photos/${photo.id}/file`}
+                          src={`/backend/api/maintenance/photos/${photo.id}/file`}
                           alt={photo.fileName}
                           className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity border border-gray-200"
                           onClick={() => setSelectedPhotoIndex(index)}
@@ -1698,7 +1698,7 @@ const RequestDetailsModal = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={`http://localhost:5020/api/maintenance/photos/${request.photos[selectedPhotoIndex].id}/file`}
+              src={`/backend/api/maintenance/photos/${request.photos[selectedPhotoIndex].id}/file`}
               alt={request.photos[selectedPhotoIndex].fileName}
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />
@@ -1801,7 +1801,7 @@ const RequestCard = ({
             {request.photos.slice(0, 3).map((photo, index) => (
               <div key={photo.id} className="relative flex-shrink-0">
                 <img
-                  src={`http://localhost:5020/api/maintenance/photos/${photo.id}/file`}
+                  src={`/backend/api/maintenance/photos/${photo.id}/file`}
                   alt={`Preview ${index + 1}`}
                   className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => handleOpenDetails(request)}
@@ -2357,7 +2357,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
