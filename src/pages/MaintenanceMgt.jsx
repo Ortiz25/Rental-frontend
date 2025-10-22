@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Calendar,
   Users,
+  User,
   ArrowUpRight,
   X,
   Camera,
@@ -25,7 +26,7 @@ import { formatCurrency } from "../utils/helperFunctions.jsx";
 // API service functions
 const maintenanceAPI = {
   // Fixed Base API URL - removed trailing slash and changed to HTTP
-  baseURL: "/backend/api",
+  baseURL: "http://localhost:5020/api",
 
   // Helper method to get auth headers
   getAuthHeaders: () => {
@@ -266,7 +267,7 @@ const NewRequestModal = ({
 
     try {
       const response = await fetch(
-        `/backend/api/maintenance/units/${unitId}/tenants`,
+        `http://localhost:5020/api/maintenance/units/${unitId}/tenants`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -456,7 +457,7 @@ const NewRequestModal = ({
             localStorage.getItem("token") || sessionStorage.getItem("token");
 
           const photoResponse = await fetch(
-            `/backend/api/maintenance/${newRequestId}/photos`,
+            `http://localhost:5020/api/maintenance/${newRequestId}/photos`,
             {
               method: "POST",
               headers: {
@@ -1014,7 +1015,7 @@ const RequestDetailsModal = ({
         localStorage.getItem("token") || sessionStorage.getItem("token");
 
       const response = await fetch(
-        `/backend/api/maintenance/${request.id}/photos`,
+        `http://localhost:5020/api/maintenance/${request.id}/photos`,
         {
           method: "POST",
           headers: {
@@ -1462,7 +1463,7 @@ const RequestDetailsModal = ({
                         className="relative group aspect-square"
                       >
                         <img
-                          src={`/backend/api/maintenance/photos/${photo.id}/file`}
+                          src={`http://localhost:5020/api/maintenance/photos/${photo.id}/file`}
                           alt={photo.fileName}
                           className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity border border-gray-200"
                           onClick={() => setSelectedPhotoIndex(index)}
@@ -1697,7 +1698,7 @@ const RequestDetailsModal = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={`/backend/api/maintenance/photos/${request.photos[selectedPhotoIndex].id}/file`}
+              src={`http://localhost:5020/api/maintenance/photos/${request.photos[selectedPhotoIndex].id}/file`}
               alt={request.photos[selectedPhotoIndex].fileName}
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />
@@ -1800,7 +1801,7 @@ const RequestCard = ({
             {request.photos.slice(0, 3).map((photo, index) => (
               <div key={photo.id} className="relative flex-shrink-0">
                 <img
-                  src={`/backend/api/maintenance/photos/${photo.id}/file`}
+                  src={`http://localhost:5020/api/maintenance/photos/${photo.id}/file`}
                   alt={`Preview ${index + 1}`}
                   className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => handleOpenDetails(request)}
@@ -1834,6 +1835,14 @@ const RequestCard = ({
           <Users className="w-4 h-4 mr-1.5 flex-shrink-0" />
           <span className="truncate">{request.tenantName}</span>
         </div>
+        {(request.assignedTo || request.assignedToName) && (
+          <div className="flex items-center text-blue-600 font-medium">
+            <User className="w-4 h-4 mr-1.5 flex-shrink-0" />
+            <span className="truncate">
+              {request.assignedToName || request.assignedTo}
+            </span>
+          </div>
+        )}
         {request.estimatedCost > 0 && (
           <div className="flex items-center font-medium text-gray-700">
             <span className="truncate">
@@ -1911,6 +1920,10 @@ const MaintenanceManagement = () => {
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   // Load initial data
   useEffect(() => {
     loadInitialData();
@@ -1919,6 +1932,7 @@ const MaintenanceManagement = () => {
   // Filter requests when filter or search changes
   useEffect(() => {
     filterRequests();
+    setCurrentPage(1); // Reset to first page when filter changes
   }, [requests, filter, searchQuery]);
 
   const loadInitialData = async () => {
@@ -2188,21 +2202,121 @@ const MaintenanceManagement = () => {
             )}
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {filteredRequests.map((request) => (
-              <RequestCard
-                key={request.id}
-                request={request}
-                onStatusUpdate={handleRequestUpdate}
-                getPriorityColor={getPriorityColor}
-                getStatusColor={getStatusColor}
-                setSelectedRequest={setSelectedRequest}
-                setShowDetailsModal={setShowDetailsModal}
-                handleOpenDetails={handleOpenDetails}
-                setShowStatusModal={() => {}} // This is handled within RequestCard now
-              />
-            ))}
-          </div>
+          <>
+            {/* Pagination Controls - Top */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1); // Reset to first page
+                  }}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span className="text-sm text-gray-600">per page</span>
+              </div>
+              <div className="text-sm text-gray-600">
+                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredRequests.length)} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredRequests.length)} of{" "}
+                {filteredRequests.length} requests
+              </div>
+            </div>
+
+            {/* Cards Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {filteredRequests
+                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                .map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    onStatusUpdate={handleRequestUpdate}
+                    getPriorityColor={getPriorityColor}
+                    getStatusColor={getStatusColor}
+                    setSelectedRequest={setSelectedRequest}
+                    setShowDetailsModal={setShowDetailsModal}
+                    handleOpenDetails={handleOpenDetails}
+                    setShowStatusModal={() => {}} // This is handled within RequestCard now
+                  />
+                ))}
+            </div>
+
+            {/* Pagination Controls - Bottom */}
+            {filteredRequests.length > itemsPerPage && (
+              <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {/* Page Numbers */}
+                  {Array.from(
+                    { length: Math.ceil(filteredRequests.length / itemsPerPage) },
+                    (_, i) => i + 1
+                  )
+                    .filter((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+                      return (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      );
+                    })
+                    .map((page, index, array) => (
+                      <React.Fragment key={page}>
+                        {/* Show ellipsis if there's a gap */}
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="px-2 text-gray-400">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                            currentPage === page
+                              ? "bg-blue-500 text-white"
+                              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(prev + 1, Math.ceil(filteredRequests.length / itemsPerPage))
+                    )
+                  }
+                  disabled={currentPage === Math.ceil(filteredRequests.length / itemsPerPage)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentPage === Math.ceil(filteredRequests.length / itemsPerPage)
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Modals */}
@@ -2243,7 +2357,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
