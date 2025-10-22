@@ -21,7 +21,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import Navbar from "../layout/navbar";
-import NotificationsModal from "../components/modals/NotificationModal.jsx"; // Import the notifications modal
+import NotificationsModal from "../components/modals/NotificationModal.jsx"; 
 
 const API_BASE_URL = "/backend/api/tenant-dash";
 
@@ -755,7 +755,6 @@ const PaymentModal = ({
     </div>
   );
 };
-
 const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [requestData, setRequestData] = useState({
     title: "",
@@ -763,27 +762,92 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
     priority: "medium",
     category: "Other",
   });
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
+
+  // Handle photo selection
+  const handlePhotoChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Limit to 10 photos
+    if (files.length + selectedPhotos.length > 10) {
+      alert('Maximum 10 photos allowed');
+      return;
+    }
+
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      if (!validTypes.includes(file.type)) {
+        alert(`${file.name} is not a valid image type`);
+        return false;
+      }
+      
+      if (file.size > maxSize) {
+        alert(`${file.name} exceeds 5MB size limit`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    setSelectedPhotos([...selectedPhotos, ...validFiles]);
+
+    // Create previews
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreviews(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove photo
+  const removePhoto = (index) => {
+    setSelectedPhotos(selectedPhotos.filter((_, i) => i !== index));
+    setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(requestData);
+    // Pass both request data and photos to parent handler
+    onSubmit({ requestData, photos: selectedPhotos });
+    
+    // Reset form
     setRequestData({
       title: "",
       description: "",
       priority: "medium",
       category: "Other",
     });
+    setSelectedPhotos([]);
+    setPhotoPreviews([]);
+  };
+
+  const handleClose = () => {
+    setRequestData({
+      title: "",
+      description: "",
+      priority: "medium",
+      category: "Other",
+    });
+    setSelectedPhotos([]);
+    setPhotoPreviews([]);
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-96">
-        <div className="flex justify-between items-center p-6 border-b">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={!loading ? handleClose : undefined} />
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
           <h2 className="text-xl font-bold">New Maintenance Request</h2>
-          <button onClick={onClose} disabled={loading}>
+          <button onClick={!loading ? handleClose : undefined} disabled={loading}>
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -791,11 +855,11 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              Issue Title
+              Issue Title *
             </label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Brief description of the issue"
               value={requestData.title}
               onChange={(e) =>
@@ -808,10 +872,10 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Description
+              Description *
             </label>
             <textarea
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               rows={4}
               placeholder="Detailed description of the issue"
               value={requestData.description}
@@ -824,9 +888,9 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Category</label>
+            <label className="block text-sm font-medium mb-2">Category *</label>
             <select
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={requestData.category}
               onChange={(e) =>
                 setRequestData({ ...requestData, category: e.target.value })
@@ -845,9 +909,9 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Priority</label>
+            <label className="block text-sm font-medium mb-2">Priority *</label>
             <select
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={requestData.priority}
               onChange={(e) =>
                 setRequestData({ ...requestData, priority: e.target.value })
@@ -861,22 +925,75 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
             </select>
           </div>
 
+          {/* Photo Upload Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Photos (Optional - Max 10, 5MB each)
+            </label>
+            
+            <div className="space-y-3">
+              {/* File Input */}
+              <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Paperclip className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF, WEBP (MAX. 5MB)</p>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                    disabled={selectedPhotos.length >= 10 || loading}
+                  />
+                </label>
+              </div>
+
+              {/* Photo Previews */}
+              {photoPreviews.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        disabled={loading}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded hover:bg-gray-50"
+              onClick={handleClose}
+              className="px-4 py-2 border rounded hover:bg-gray-50 transition-colors"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center transition-colors"
               disabled={loading}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Submit Request
+              {loading ? "Submitting..." : "Submit Request"}
             </button>
           </div>
         </form>
@@ -884,6 +1001,7 @@ const MaintenanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
     </div>
   );
 };
+
 
 const TenantDashboard = () => {
   const [tenantData, setTenantData] = useState(null);
@@ -1158,11 +1276,13 @@ const handlePaymentSubmit = async (paymentData) => {
 };
 
 // Handle maintenance request submission
-const handleMaintenanceSubmit = async (requestData) => {
+const handleMaintenanceSubmit = async ({ requestData, photos }) => {
   try {
     setActionLoading(true);
 
     const token = localStorage.getItem("token");
+    
+    // First, create the maintenance request
     const response = await fetch(`${API_BASE_URL}/tenant/maintenance`, {
       method: "POST",
       headers: {
@@ -1177,11 +1297,38 @@ const handleMaintenanceSubmit = async (requestData) => {
     }
 
     const result = await response.json();
+    const maintenanceRequestId = result.data?.id || result.data?.request?.id;
+
+    // Then upload photos if any were selected
+    if (photos && photos.length > 0 && maintenanceRequestId) {
+      const photoFormData = new FormData();
+      photos.forEach(photo => {
+        photoFormData.append('photos', photo);
+      });
+      photoFormData.append('is_before_photo', 'true');
+
+      const photoResponse = await fetch(
+        `/backend/api/maintenance/${maintenanceRequestId}/photos`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: photoFormData,
+        }
+      );
+
+      if (!photoResponse.ok) {
+        console.error('Photo upload failed but request was created');
+        alert('Request created successfully, but some photos failed to upload');
+      }
+    }
+
     alert("Maintenance request submitted successfully!");
     setShowMaintenanceModal(false);
-
     await fetchTenantData();
   } catch (err) {
+    console.error('Maintenance request error:', err);
     alert(`Request failed: ${err.message}`);
   } finally {
     setActionLoading(false);

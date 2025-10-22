@@ -14,6 +14,7 @@ import TenantDashboard from "./pages/TenantDash";
 import LoginPage from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminSettings from "./pages/AdminSettings";
+import ResetPassword from "./pages/ResetPassword";
 import { loader as LoginLoader, action as LoginAction } from "./pages/Login";
 import { loader as DashLoarder } from "./pages/Dashboard";
 import { loader as propertyLoader } from "./pages/PropertyMgt";
@@ -41,7 +42,10 @@ const router = createBrowserRouter([
     errorElement: <NotFound />,
     loader: DashLoarder,
   },
-  { path: "/forgot", element: <ForgotPassword />, errorElement: <NotFound /> },
+  { path: "/forgot", element: <ForgotPassword />, errorElement: <NotFound /> }, {
+    path: "/resetpassword",
+    element: <ResetPassword />,
+  },
 
   {
     path: "/property",

@@ -1,5 +1,6 @@
-@import "tailwindcss";
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @media print {
     .no-print {
@@ -34,3 +35,4 @@
   .print-only {
     display: none;
   }
+

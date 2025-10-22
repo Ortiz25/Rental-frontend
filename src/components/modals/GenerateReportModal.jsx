@@ -1,5 +1,3 @@
-// components/GenerateReportModal.jsx
-
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, Save } from 'lucide-react';
 import { apiService } from '../../services/financialApiServices.jsx';
@@ -68,8 +66,8 @@ const GenerateReportModal = ({ isOpen, onClose, onError }) => {
       // Get selected property name for display
       const selectedPropertyName = reportSettings.propertyId === 'all' 
         ? 'All Properties' 
-        : properties.find(p => p.id === parseInt(reportSettings.propertyId))?.property_name || 'Unknown Property';
-      
+        : properties.find(p => p.id === parseInt(reportSettings.propertyId))?.propertyName || 'Unknown Property';
+      console.log(properties)
       // Create a detailed report file
       const reportContent = `
 FINANCIAL REPORT
@@ -296,7 +294,7 @@ Report ID: ${reportData.report.reportId}
             <div className="bg-gray-50 p-3 rounded-lg">
               <h4 className="text-sm font-medium mb-2">Report Preview</h4>
               <div className="text-xs text-gray-600 space-y-1">
-                <p><strong>Property:</strong> {reportSettings.propertyId === 'all' ? 'All Properties' : properties.find(p => p.id === parseInt(reportSettings.propertyId))?.property_name || 'Loading...'}</p>
+                <p><strong>Property:</strong> {reportSettings.propertyId === 'all' ? 'All Properties' : properties.find(p => p.id === parseInt(reportSettings.propertyId))?.propertyName || 'Loading...'}</p>
                 <p><strong>Period:</strong> {new Date(reportSettings.startDate).toLocaleDateString()} - {new Date(reportSettings.endDate).toLocaleDateString()}</p>
                 <p><strong>Type:</strong> {reportSettings.type.charAt(0).toUpperCase() + reportSettings.type.slice(1)} Report</p>
                 <p><strong>Format:</strong> Text file (.txt)</p>

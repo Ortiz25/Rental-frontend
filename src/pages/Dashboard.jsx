@@ -199,61 +199,90 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Modern Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-6">
-            {dashboardData?.moduleSummaries?.map((module, index) => (
-              <div
-                key={module.name}
-                className="group relative bg-white/70 backdrop-blur-sm rounded-3xl border border-slate-200/50 p-4 lg:p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/30 transition-all duration-500 hover:-translate-y-1"
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
-              >
-                {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-slate-50/30 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          {/* Modern Dashboard Grid - Updated Layout */}
+          <div className="space-y-6 lg:space-y-8">
+            {dashboardData?.moduleSummaries?.map((module, index) => {
+              // Check if this is the Financial Summary module
+              const isFinancialSummary = module.name === 'Financial Summary';
+              
+              return (
+                <div
+                  key={module.name}
+                  className={`group relative bg-white/70 backdrop-blur-sm rounded-3xl border border-slate-200/50 p-4 lg:p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/30 transition-all duration-500 hover:-translate-y-1 ${
+                    isFinancialSummary ? 'col-span-full' : ''
+                  }`}
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                  }}
+                >
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-slate-50/30 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                <div className="relative">
-                  {/* Module Header */}
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-3 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl border border-slate-200/50 group-hover:shadow-md transition-all duration-300">
-                        {getIcon(module.icon)}
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors">
-                          {module.name}
-                        </h2>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-2 sm:gap-2 lg:gap-3">
-                    {module.stats.map((stat, statIndex) => (
-                      <div
-                        key={stat.label}
-                        className={`relative p-2 sm:p-3 lg:p-4 rounded-2xl ${stat.color} hover:scale-105 transition-all duration-300 cursor-pointer group/stat`}
-                        style={{
-                          animationDelay: `${index * 100 + statIndex * 50}ms`,
-                        }}
-                      >
-                        {/* Hover effect overlay */}
-                        <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover/stat:opacity-100 transition-opacity duration-300"></div>
-
-                        <div className="relative text-center space-y-1 sm:space-y-2">
-                          <div className="text-xs sm:text-xs lg:text-sm font-medium text-slate-600 uppercase tracking-wider break-words hyphens-auto leading-tight">
-                            {stat.label}
-                          </div>
-                          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-slate-800 break-words leading-tight">
-                            {stat.value}
-                          </div>
+                  <div className="relative">
+                    {/* Module Header */}
+                    <div className="flex items-center justify-between mb-6 lg:mb-8">
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-3 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl border border-slate-200/50 group-hover:shadow-md transition-all duration-300 ${
+                          isFinancialSummary ? 'bg-gradient-to-br from-emerald-100 to-green-50' : ''
+                        }`}>
+                          {getIcon(module.icon)}
+                        </div>
+                        <div>
+                          <h2 className="text-xl lg:text-2xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors">
+                            {module.name}
+                          </h2>
+                          {isFinancialSummary && (
+                            <p className="text-sm text-slate-500 mt-1">
+                              Complete financial overview for the current month
+                            </p>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Stats Grid - Responsive based on module */}
+                    <div className={`grid gap-3 sm:gap-4 lg:gap-4 ${
+                      isFinancialSummary 
+                        ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7' 
+                        : 'grid-cols-2 lg:grid-cols-3'
+                    }`}>
+                      {module.stats.map((stat, statIndex) => (
+                        <div
+                          key={stat.label}
+                          className={`relative p-3 sm:p-4 lg:p-5 rounded-2xl ${stat.color} hover:scale-105 transition-all duration-300 cursor-pointer group/stat ${
+                            isFinancialSummary ? 'min-h-[120px] sm:min-h-[140px]' : ''
+                          }`}
+                          style={{
+                            animationDelay: `${index * 100 + statIndex * 50}ms`,
+                          }}
+                        >
+                          {/* Hover effect overlay */}
+                          <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover/stat:opacity-100 transition-opacity duration-300"></div>
+
+                          <div className="relative h-full flex flex-col justify-between space-y-2 sm:space-y-3">
+                            <div className="text-xs sm:text-xs lg:text-sm font-medium text-slate-600 uppercase tracking-wider break-words hyphens-auto leading-tight">
+                              {stat.label}
+                            </div>
+                            <div className={`font-bold text-slate-800 break-words leading-tight ${
+                              isFinancialSummary 
+                                ? 'text-base sm:text-lg lg:text-xl xl:text-2xl' 
+                                : 'text-lg sm:text-xl lg:text-2xl xl:text-3xl'
+                            }`}>
+                              {stat.value}
+                            </div>
+                            {stat.sublabel && (
+                              <div className="text-xs text-slate-500 font-medium mt-1 leading-tight">
+                                {stat.sublabel}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Modern Loading Overlay */}

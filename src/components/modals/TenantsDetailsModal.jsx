@@ -454,7 +454,7 @@ const PaymentsTab = ({ tenant }) => {
 
 const TenantDetailsModal = ({ tenant, isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('info');
-    console.log(tenant)
+  
     const renderInfoTab = () => (
       <div className="space-y-4">
         <div className="flex items-center space-x-4">
@@ -510,7 +510,7 @@ const TenantDetailsModal = ({ tenant, isOpen, onClose }) => {
   
     return (
       <div className={`fixed inset-0 flex items-center justify-center z-50 ${!isOpen && 'hidden'}`}>
-        <div className="absolute inset-0 bg-black opacity-50" onClick={onClose} />
+        <div className="absolute inset-0 bg-black opacity-50 " onClick={onClose} />
         <div className="relative bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
           <div className="flex justify-between items-center p-6 border-b">
             <h2 className="text-xl font-bold">Tenant Details</h2>
