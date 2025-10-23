@@ -16,6 +16,7 @@ import {
   Share2,
   Phone,
 } from "lucide-react";
+import PropertyDetailsModal from "./modals/PropertiesDetailModal";
 
 const VacancyCard = ({ property, onContactInquiry }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -23,6 +24,7 @@ const VacancyCard = ({ property, onContactInquiry }) => {
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const defaultImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
@@ -102,12 +104,13 @@ const VacancyCard = ({ property, onContactInquiry }) => {
   };
 
   // Calculate rent range
-  const rentRange = property.vacantUnits.length > 1
-    ? {
-        min: Math.min(...property.vacantUnits.map(u => u.monthly_rent)),
-        max: Math.max(...property.vacantUnits.map(u => u.monthly_rent))
-      }
-    : null;
+  const rentRange =
+    property.vacantUnits.length > 1
+      ? {
+          min: Math.min(...property.vacantUnits.map((u) => u.monthly_rent)),
+          max: Math.max(...property.vacantUnits.map((u) => u.monthly_rent)),
+        }
+      : null;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 group">
@@ -220,7 +223,7 @@ const VacancyCard = ({ property, onContactInquiry }) => {
               {property.type}
             </span>
           </div>
-          
+
           <div className="flex items-center text-gray-600 mb-3">
             <MapPinIcon className="w-4 h-4 mr-1.5 flex-shrink-0" />
             <span className="text-sm line-clamp-1">{property.address}</span>
@@ -268,7 +271,8 @@ const VacancyCard = ({ property, onContactInquiry }) => {
                 <div>
                   <div className="text-xs text-gray-600">Bedrooms</div>
                   <div className="font-semibold text-gray-900">
-                    {Math.min(...property.vacantUnits.map(u => u.bedrooms))} - {Math.max(...property.vacantUnits.map(u => u.bedrooms))}
+                    {Math.min(...property.vacantUnits.map((u) => u.bedrooms))} -{" "}
+                    {Math.max(...property.vacantUnits.map((u) => u.bedrooms))}
                   </div>
                 </div>
               </div>
@@ -277,7 +281,9 @@ const VacancyCard = ({ property, onContactInquiry }) => {
                 <div>
                   <div className="text-xs text-gray-600">Bathrooms</div>
                   <div className="font-semibold text-gray-900">
-                    {Math.min(...property.vacantUnits.map(u => u.bathrooms))} - {Math.max(...property.vacantUnits.map(u => u.bathrooms))}
+                    {Math.min(...property.vacantUnits.map((u) => u.bathrooms))}{" "}
+                    -{" "}
+                    {Math.max(...property.vacantUnits.map((u) => u.bathrooms))}
                   </div>
                 </div>
               </div>
@@ -320,7 +326,9 @@ const VacancyCard = ({ property, onContactInquiry }) => {
         {/* Amenities Preview */}
         {property.amenities && property.amenities.length > 0 && (
           <div className="mb-4">
-            <div className="text-xs font-medium text-gray-700 mb-2">Amenities</div>
+            <div className="text-xs font-medium text-gray-700 mb-2">
+              Amenities
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {property.amenities.slice(0, 3).map((amenity, idx) => (
                 <span
@@ -401,16 +409,20 @@ const VacancyCard = ({ property, onContactInquiry }) => {
             Contact Us
           </button>
           <button
-            onClick={() => {
-              // TODO: Implement view details
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={() => setShowDetailsModal(true)}
             className="px-4 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl font-semibold transition-all"
           >
             Details
           </button>
         </div>
       </div>
+
+      <PropertyDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        property={property}
+        onContactInquiry={onContactInquiry}
+      />
     </div>
   );
 };
