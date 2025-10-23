@@ -802,7 +802,7 @@ const NewRequestModal = ({
   );
 };
 
-const StatusUpdateModal = ({ request, isOpen, onClose, onUpdate }) => {
+export const StatusUpdateModal = ({ request, isOpen, onClose, onUpdate }) => {
   const [updateData, setUpdateData] = useState({
     status: request?.status || "",
     assignedTo: request?.assignedTo || "",

@@ -11,6 +11,8 @@ import {
   MapPin
 } from 'lucide-react';
 import { formatCurrency } from '../utils/helperFunctions';
+import { StatusUpdateModal } from '../pages/MaintenanceMgt';
+
 
 const RequestCard = ({
   request,
