@@ -15,6 +15,8 @@ import LoginPage from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminSettings from "./pages/AdminSettings";
 import ResetPassword from "./pages/ResetPassword";
+import VacancyView from "./pages/VacancyView";
+import InquiriesManagement from "./pages/InquiriesMgt";
 import { loader as LoginLoader, action as LoginAction } from "./pages/Login";
 import { loader as DashLoarder } from "./pages/Dashboard";
 import { loader as propertyLoader } from "./pages/PropertyMgt";
@@ -27,6 +29,8 @@ import { loader as commLoader } from "./pages/Communication";
 import { loader as maintenanceLoader } from "./pages/MaintenanceMgt";
 import { loader as adminLoader } from "./pages/AdminSettings";
 import { loader as documentLoader } from "./pages/DocumentMgt";
+import {loader as vacancyLoader} from "./pages/VacancyView"
+import {loader as inquiryLoader} from "./pages/InquiriesMgt"
 
 const router = createBrowserRouter([
   {
@@ -52,6 +56,18 @@ const router = createBrowserRouter([
     element: <PropertyManagement />,
     errorElement: <NotFound />,
     loader: propertyLoader,
+  },
+  {
+    path: "/vacancies",
+    element: <VacancyView />,
+    errorElement: <NotFound />,
+    loader: vacancyLoader,
+  },
+  {
+    path: "/inquiries",
+    element: <InquiriesManagement />,
+    errorElement: <NotFound />,
+    loader: inquiryLoader,
   },
   {
     path: "/tenant",

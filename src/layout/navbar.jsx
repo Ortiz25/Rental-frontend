@@ -20,7 +20,9 @@ import {
   LogOut,
   X,
   PanelLeftOpen,
-  PanelLeftClose
+  PanelLeftClose,
+  FileSearch,
+  MailQuestion
 } from 'lucide-react';
 import { useStore } from '../store/store';
 
@@ -139,6 +141,18 @@ const Navbar = ({module, children}) => {
       name: 'Lease Management', 
       icon: <FileTextIcon size={20} />,
       route: "/lease",
+      roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
+    },
+    { 
+      name: 'Property Vacancies', 
+      icon: <FileSearch size={20} />,
+      route: "/vacancies",
+      roles: ['Tenant'] // Only available for Tenant role
+    },
+    { 
+      name: 'Property Inquiries', 
+      icon: <MailQuestion size={20} />,
+      route: "/inquiries",
       roles: ['Admin', 'Manager', 'Owner', "Super Admin", "Staff"]
     },
     { 

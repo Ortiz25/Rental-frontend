@@ -155,12 +155,234 @@ const formatFinancialValue = (value) => {
 //     };
 //   };
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "KES",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value || 0);
+
+  /**
+ * Format a date to a readable string
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted date string
+ */
+export const formatDate = (date) => {
+  if (!date) return "N/A";
+  
+  const d = new Date(date);
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  return d.toLocaleDateString('en-US', options);
+};
+
+/**
+ * Format a date and time to a readable string
+ * @param {string|Date} datetime - DateTime to format
+ * @returns {string} Formatted datetime string
+ */
+export const formatDateTime = (datetime) => {
+  if (!datetime) return "N/A";
+  
+  const d = new Date(datetime);
+  const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+  const timeOptions = { hour: '2-digit', minute: '2-digit' };
+  
+  return `${d.toLocaleDateString('en-US', dateOptions)} at ${d.toLocaleTimeString('en-US', timeOptions)}`;
+};
+
+/**
+ * Format currency to Kenyan Shillings
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (amount) => {
+  if (amount === null || amount === undefined) return "0";
+  
+  return new Intl.NumberFormat('en-KE', {
+    style: 'currency',
+    currency: 'KES',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount || 0);
+};
+
+/**
+ * Get relative time string (e.g., "2 days ago")
+ * @param {string|Date} date - Date to compare
+ * @returns {string} Relative time string
+ */
+export const getRelativeTime = (date) => {
+  if (!date) return "N/A";
+  
+  const now = new Date();
+  const then = new Date(date);
+  const diffInSeconds = Math.floor((now - then) / 1000);
+  
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+    second: 1
   };
-  export { formatFinancialValue, formatDashboardValue,formatCurrency };
+  
+  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+    const interval = Math.floor(diffInSeconds / secondsInUnit);
+    if (interval >= 1) {
+      return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
+    }
+  }
+  
+  return "just now";
+};
+
+/**
+ * Truncate text to specified length
+ * @param {string} text - Text to truncate
+ * @param {number} maxLength - Maximum length
+ * @returns {string} Truncated text
+ */
+export const truncateText = (text, maxLength = 100) => {
+  if (!text || text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+};
+
+/**
+ * Get status badge color class
+ * @param {string} status - Status value
+ * @returns {string} Tailwind CSS classes for badge
+ */
+export const getStatusBadgeClass = (status) => {
+  const statusColors = {
+    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    contacted: "bg-blue-100 text-blue-800 border-blue-200",
+    scheduled: "bg-purple-100 text-purple-800 border-purple-200",
+    completed: "bg-green-100 text-green-800 border-green-200",
+    rejected: "bg-red-100 text-red-800 border-red-200",
+    cancelled: "bg-gray-100 text-gray-800 border-gray-200",
+    active: "bg-green-100 text-green-800 border-green-200",
+    inactive: "bg-gray-100 text-gray-800 border-gray-200",
+    vacant: "bg-blue-100 text-blue-800 border-blue-200",
+    occupied: "bg-green-100 text-green-800 border-green-200",
+  };
+  
+  return statusColors[status?.toLowerCase()] || "bg-gray-100 text-gray-800 border-gray-200";
+};
+
+/**
+ * Validate email format
+ * @param {string} email - Email to validate
+ * @returns {boolean} True if valid email
+ */
+export const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+/**
+ * Validate phone format (Kenya)
+ * @param {string} phone - Phone number to validate
+ * @returns {boolean} True if valid phone number
+ */
+export const isValidPhone = (phone) => {
+  // Accepts formats like: +254700000000, 0700000000, 254700000000
+  const phoneRegex = /^(\+?254|0)?[17]\d{8}$/;
+  return phoneRegex.test(phone?.replace(/\s/g, ''));
+};
+
+/**
+ * Format phone number to standard format
+ * @param {string} phone - Phone number to format
+ * @returns {string} Formatted phone number
+ */
+export const formatPhoneNumber = (phone) => {
+  if (!phone) return "";
+  
+  // Remove all non-digit characters except +
+  let cleaned = phone.replace(/[^\d+]/g, '');
+  
+  // Convert to international format
+  if (cleaned.startsWith('0')) {
+    cleaned = '+254' + cleaned.substring(1);
+  } else if (cleaned.startsWith('254')) {
+    cleaned = '+' + cleaned;
+  } else if (!cleaned.startsWith('+')) {
+    cleaned = '+254' + cleaned;
+  }
+  
+  return cleaned;
+};
+
+/**
+ * Calculate percentage
+ * @param {number} value - Current value
+ * @param {number} total - Total value
+ * @returns {number} Percentage (0-100)
+ */
+export const calculatePercentage = (value, total) => {
+  if (!total || total === 0) return 0;
+  return Math.round((value / total) * 100);
+};
+
+/**
+ * Debounce function
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Wait time in milliseconds
+ * @returns {Function} Debounced function
+ */
+export const debounce = (func, wait = 300) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+/**
+ * Download data as CSV file
+ * @param {Array} data - Array of objects to export
+ * @param {string} filename - Name of the file
+ */
+export const exportToCSV = (data, filename = 'export.csv') => {
+  if (!data || data.length === 0) {
+    alert('No data to export');
+    return;
+  }
+
+  // Get headers from first object
+  const headers = Object.keys(data[0]);
+  
+  // Convert data to CSV format
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => 
+      headers.map(header => {
+        const cell = row[header];
+        // Handle cells with commas, quotes, or newlines
+        if (cell === null || cell === undefined) return '';
+        const cellStr = String(cell);
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(',')
+    )
+  ].join('\n');
+
+  // Create blob and download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+  export { formatFinancialValue, formatDashboardValue };
+
+
+
