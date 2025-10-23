@@ -19,14 +19,34 @@ import {
 } from "../utils/helperFunctions.jsx";
 import { redirect } from "react-router";
 
-
 const Dashboard = () => {
   const [activeModule, setActiveModule] = useState("Dashboard");
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-   console.log(dashboardData)
+
+  // Complete color mapping with inline styles
+  const colorStyles = {
+    'bg-blue-100': { backgroundColor: '#dbeafe', borderColor: '#93c5fd' },
+    'bg-green-100': { backgroundColor: '#dcfce7', borderColor: '#86efac' },
+    'bg-red-100': { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
+    'bg-red-200': { backgroundColor: '#fecaca', borderColor: '#f87171' },
+    'bg-yellow-100': { backgroundColor: '#fef3c7', borderColor: '#fde047' },
+    'bg-purple-100': { backgroundColor: '#f3e8ff', borderColor: '#d8b4fe' },
+    'bg-indigo-100': { backgroundColor: '#e0e7ff', borderColor: '#a5b4fc' },
+    'bg-orange-100': { backgroundColor: '#ffedd5', borderColor: '#fdba74' },
+    'bg-pink-100': { backgroundColor: '#fce7f3', borderColor: '#f9a8d4' },
+    'bg-cyan-100': { backgroundColor: '#cffafe', borderColor: '#67e8f9' },
+    'bg-emerald-100': { backgroundColor: '#d1fae5', borderColor: '#6ee7b7' },
+    'bg-teal-100': { backgroundColor: '#ccfbf1', borderColor: '#5eead4' },
+    'bg-gray-100': { backgroundColor: '#f3f4f6', borderColor: '#d1d5db' },
+  };
+
+  const getColorStyle = (colorClass) => {
+    return colorStyles[colorClass] || colorStyles['bg-gray-100'];
+  };
+
   // Fetch dashboard data from API
   const fetchDashboardData = async () => {
     try {
@@ -62,11 +82,12 @@ const Dashboard = () => {
             stats: module.stats.map((stat) => ({
               ...stat,
               value: formatFinancialValue(stat.value),
-              originalValue: stat.value, // Keep original for tooltips
+              originalValue: stat.value,
             })),
           })),
         };
         setDashboardData(formattedData);
+        setLastUpdated(new Date());
       } else {
         throw new Error(result.message || "Failed to fetch dashboard data");
       }
@@ -82,15 +103,14 @@ const Dashboard = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchDashboardData();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Icon mapping with modern styling
+  // Icon mapping
   const getIcon = (iconName) => {
-   
-    const iconProps = "w-6 h-6 text-slate-600";
+    const iconProps = "w-5 h-5 sm:w-6 sm:h-6 text-slate-700";
     const icons = {
       BuildingIcon: <Building className={iconProps} />,
       UsersIcon: <Users className={iconProps} />,
@@ -102,61 +122,49 @@ const Dashboard = () => {
     return icons[iconName] || <LayoutDashboard className={iconProps} />;
   };
 
-  // Mock data for demonstration
+  // Initial data fetch
   useEffect(() => {
-    setTimeout(() => {
-      fetchDashboardData();
-      setLastUpdated(new Date());
-      setLoading(false);
-    }, 500);
+    fetchDashboardData();
   }, []);
-
-  console.log(dashboardData);
 
   if (loading && !dashboardData) {
     return (
       <Navbar module={activeModule}>
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader className="mx-auto h-12 w-12 animate-spin text-blue-600" />
-          <p className="mt-4 text-lg text-gray-600">Loading Dashboard Data...</p>
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="text-center">
+            <Loader className="mx-auto h-12 w-12 animate-spin text-indigo-600" />
+            <p className="mt-4 text-lg text-gray-600 font-medium">
+              Loading Dashboard Data...
+            </p>
+          </div>
         </div>
-      </div>
-    </Navbar>
+      </Navbar>
     );
   }
 
   return (
     <Navbar module={activeModule}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        {/* Animated background elements */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-emerald-400/5 to-blue-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
-        <div className="relative z-10 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1920px] mx-auto">
           {/* Modern Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12">
-            <div className="space-y-2 mb-4 sm:mb-0">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-500/25">
-                  <LayoutDashboard className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                    Dashboard
-                  </h1>
-                  <p className="text-slate-500 text-sm sm:text-base">
-                    Welcome back to your rental management center
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2.5 sm:p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
+                <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800">
+                  Dashboard
+                </h1>
+                <p className="text-slate-600 text-sm sm:text-base mt-0.5">
+                  Rental management overview
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               {lastUpdated && (
-                <div className="hidden sm:flex items-center space-x-2 text-sm text-slate-500 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/50">
+                <div className="hidden sm:flex items-center gap-2 text-sm text-slate-600 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
                   <Activity className="w-4 h-4" />
                   <span>Updated {lastUpdated.toLocaleTimeString()}</span>
                 </div>
@@ -164,142 +172,123 @@ const Dashboard = () => {
               <button
                 onClick={fetchDashboardData}
                 disabled={loading}
-                className="group flex items-center space-x-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl border border-slate-200/50 hover:border-slate-300/50 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 disabled:opacity-50 backdrop-blur-sm"
+                className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 font-medium"
               >
                 <RefreshCw
-                  className={`w-5 h-5 ${
-                    loading ? "animate-spin" : "group-hover:rotate-180"
-                  } transition-transform duration-500`}
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                    loading ? "animate-spin" : ""
+                  }`}
                 />
-                <span className="font-medium">Refresh</span>
+                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
           </div>
 
-          {/* Modern Error Alert */}
+          {/* Error Alert */}
           {error && (
-            <div className="mb-8 relative overflow-hidden bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/50 rounded-2xl p-6 shadow-lg shadow-red-100/50">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-pink-500/5"></div>
-              <div className="relative flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="p-2 bg-red-100 rounded-xl">
-                    <AlertCircle className="w-6 h-6 text-red-600" />
-                  </div>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <h3 className="text-lg font-semibold text-red-800">
-                    Connection Issue
-                  </h3>
-                  <p className="text-red-700 leading-relaxed">
-                    {error}. Don't worry, we're showing you the latest cached
-                    data to keep you informed.
-                  </p>
-                </div>
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 sm:p-5 flex items-start gap-3 shadow-sm">
+              <div className="flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-red-800 mb-1">
+                  Connection Issue
+                </h3>
+                <p className="text-red-700 text-sm leading-relaxed">
+                  {error}. Showing cached data to keep you informed.
+                </p>
               </div>
             </div>
           )}
 
-          {/* Modern Dashboard Grid - Updated Layout */}
-          <div className="space-y-6 lg:space-y-8">
+          {/* Dashboard Grid */}
+          <div className="space-y-5 sm:space-y-6">
             {dashboardData?.moduleSummaries?.map((module, index) => {
-              // Check if this is the Financial Summary module
-              const isFinancialSummary = module.name === 'Financial Summary';
-              
+              const isFinancialSummary = module.name === "Financial Summary";
+
               return (
                 <div
                   key={module.name}
-                  className={`group relative bg-white/70 backdrop-blur-sm rounded-3xl border border-slate-200/50 p-4 lg:p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/30 transition-all duration-500 hover:-translate-y-1 ${
-                    isFinancialSummary ? 'col-span-full' : ''
-                  }`}
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                  }}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                 >
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-slate-50/30 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  {/* Module Header */}
+                  <div className="p-4 sm:p-5 lg:p-6 border-b border-slate-100">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div
+                        className="p-2.5 rounded-xl border border-slate-200/50"
+                        style={
+                          isFinancialSummary
+                            ? { background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' }
+                            : { background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)' }
+                        }
+                      >
+                        {getIcon(module.icon)}
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-800">
+                          {module.name}
+                        </h2>
+                        {isFinancialSummary && (
+                          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                            Complete financial overview for the current period
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-                  <div className="relative">
-                    {/* Module Header */}
-                    <div className="flex items-center justify-between mb-6 lg:mb-8">
-                      <div className="flex items-center space-x-4">
-                        <div className={`p-3 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl border border-slate-200/50 group-hover:shadow-md transition-all duration-300 ${
-                          isFinancialSummary ? 'bg-gradient-to-br from-emerald-100 to-green-50' : ''
-                        }`}>
-                          {getIcon(module.icon)}
+                  {/* Stats Grid - Enhanced for Financial Summary */}
+                  <div
+                    className={`p-4 sm:p-5 lg:p-6 grid gap-3 sm:gap-4 ${
+                      isFinancialSummary
+                        ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5"
+                        : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+                    }`}
+                  >
+                    {module.stats.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className={`rounded-xl p-3.5 sm:p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer border border-slate-200/40 ${
+                          isFinancialSummary ? "min-h-[115px]" : "min-h-[105px]"
+                        } flex flex-col justify-between`}
+                        style={getColorStyle(stat.color)}
+                      >
+                        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2 leading-tight">
+                          {stat.label}
                         </div>
                         <div>
-                          <h2 className="text-xl lg:text-2xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors">
-                            {module.name}
-                          </h2>
-                          {isFinancialSummary && (
-                            <p className="text-sm text-slate-500 mt-1">
-                              Complete financial overview for the current month
-                            </p>
+                          <div
+                            className={`font-bold text-slate-900 mb-1 leading-tight ${
+                              isFinancialSummary
+                                ? "text-base sm:text-lg lg:text-xl"
+                                : "text-xl sm:text-2xl lg:text-3xl"
+                            }`}
+                          >
+                            {stat.value}
+                          </div>
+                          {stat.sublabel && (
+                            <div className="text-xs text-slate-600 font-medium leading-tight mt-1">
+                              {stat.sublabel}
+                            </div>
                           )}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Stats Grid - Responsive based on module */}
-                    <div className={`grid gap-3 sm:gap-4 lg:gap-4 ${
-                      isFinancialSummary 
-                        ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7' 
-                        : 'grid-cols-2 lg:grid-cols-3'
-                    }`}>
-                      {module.stats.map((stat, statIndex) => (
-                        <div
-                          key={stat.label}
-                          className={`relative p-3 sm:p-4 lg:p-5 rounded-2xl ${stat.color} hover:scale-105 transition-all duration-300 cursor-pointer group/stat ${
-                            isFinancialSummary ? 'min-h-[120px] sm:min-h-[140px]' : ''
-                          }`}
-                          style={{
-                            animationDelay: `${index * 100 + statIndex * 50}ms`,
-                          }}
-                        >
-                          {/* Hover effect overlay */}
-                          <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover/stat:opacity-100 transition-opacity duration-300"></div>
-
-                          <div className="relative h-full flex flex-col justify-between space-y-2 sm:space-y-3">
-                            <div className="text-xs sm:text-xs lg:text-sm font-medium text-slate-600 uppercase tracking-wider break-words hyphens-auto leading-tight">
-                              {stat.label}
-                            </div>
-                            <div className={`font-bold text-slate-800 break-words leading-tight ${
-                              isFinancialSummary 
-                                ? 'text-base sm:text-lg lg:text-xl xl:text-2xl' 
-                                : 'text-lg sm:text-xl lg:text-2xl xl:text-3xl'
-                            }`}>
-                              {stat.value}
-                            </div>
-                            {stat.sublabel && (
-                              <div className="text-xs text-slate-500 font-medium mt-1 leading-tight">
-                                {stat.sublabel}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Modern Loading Overlay */}
+          {/* Loading Overlay */}
           {loading && dashboardData && (
             <div className="fixed top-0 left-0 right-0 z-50">
-              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white shadow-2xl">
-                <div className="flex items-center justify-center py-4 px-6">
-                  <div className="flex items-center space-x-3">
-                    <Loader className="w-5 h-5 animate-spin" />
-                    <span className="font-medium">
-                      Refreshing dashboard data...
-                    </span>
-                  </div>
-                </div>
-                {/* Animated progress bar */}
-                <div className="h-1 bg-white/20">
-                  <div className="h-full bg-white/40 animate-pulse"></div>
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg">
+                <div className="flex items-center justify-center py-3 px-4 sm:py-3.5 sm:px-6">
+                  <Loader className="w-5 h-5 animate-spin mr-3" />
+                  <span className="font-medium text-sm sm:text-base">
+                    Refreshing dashboard data...
+                  </span>
                 </div>
               </div>
             </div>
@@ -315,7 +304,6 @@ export default Dashboard;
 export async function loader() {
   const token = localStorage.getItem("token");
 
-  // If no token, redirect to login
   if (!token) {
     console.log("No token found, redirecting to login");
     return redirect("/");
@@ -387,7 +375,7 @@ export async function loader() {
           localStorage.removeItem(key)
         );
         return redirect("/?message=verification_failed");
-    } 
+    }
   } catch (error) {
     console.error("Token verification error:", error);
     if (error.name === "TypeError" && error.message.includes("fetch")) {
