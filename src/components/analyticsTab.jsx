@@ -1,5 +1,5 @@
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -12,13 +12,36 @@ import {
 } from "recharts";
 import { formatCurrency } from "../utils/helperFunctions";
 
-const AnalyticsTab = ({ financialData }) => {
+const AnalyticsTab = ({ 
+  financialData,
+  dateRange = "month",
+  selectedMonth = null,
+  selectedYear = null,
+}) => {
   const { analytics, paymentTrends, propertyPerformance } = financialData;
-
-  
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(1)}%`;
+  };
+
+  // Get period display label
+  const getPeriodLabel = () => {
+    if (dateRange === "specific-month" && selectedMonth) {
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const monthName = monthNames[parseInt(selectedMonth) - 1];
+      const year = selectedYear || new Date().getFullYear();
+      return `${monthName} ${year}`;
+    }
+    
+    switch (dateRange) {
+      case "month": return "This Month";
+      case "quarter": return "This Quarter";
+      case "year": return "This Year";
+      default: return "This Month";
+    }
   };
 
   if (!analytics) {
@@ -32,6 +55,16 @@ const AnalyticsTab = ({ financialData }) => {
 
   return (
     <div className="space-y-6">
+      {/* Period Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-600" />
+          <span className="text-sm font-medium text-blue-900">
+            Analytics for {getPeriodLabel()}
+          </span>
+        </div>
+      </div>
+
       {/* Analytics Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
@@ -119,7 +152,10 @@ const AnalyticsTab = ({ financialData }) => {
 
       {/* Payment Trends Chart */}
       <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
-        <h3 className="text-lg font-bold mb-4">Payment Trends</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold">Payment Trends</h3>
+          <span className="text-sm text-gray-500">Last 6 Months</span>
+        </div>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={paymentTrends}>
@@ -161,7 +197,12 @@ const AnalyticsTab = ({ financialData }) => {
       {/* Property Performance Table */}
       <div className="bg-white rounded-lg shadow border border-gray-100">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-bold">Property Performance</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">Property Performance</h3>
+            <span className="text-sm text-gray-500">
+              For {getPeriodLabel()}
+            </span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -249,7 +290,7 @@ const AnalyticsTab = ({ financialData }) => {
 
         {propertyPerformance.length === 0 && (
           <div className="p-8 text-center text-gray-500">
-            <p>No property performance data available</p>
+            <p>No property performance data available for {getPeriodLabel()}</p>
           </div>
         )}
       </div>

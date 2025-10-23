@@ -8,6 +8,7 @@ import {
   AlertCircle,
   RefreshCw,
   X,
+  Calendar,
 } from "lucide-react";
 
 import OverviewTab from "../components/overviewTab.jsx";
@@ -17,7 +18,7 @@ import ExpenseManagementTab from "../components/expenseMgtTab.jsx";
 import GenerateReportModal from "../components/modals/GenerateReportModal.jsx";
 
 import Navbar from "../layout/navbar.jsx";
-import { apiService } from "../services/financialApiServices.jsx";
+import apiService from "../services/financialApiServices.jsx";
 import { redirect } from "react-router";
 
 const FinancialReports = () => {
@@ -40,7 +41,12 @@ const FinancialReports = () => {
     propertyPerformance: [],
   });
   
-  const [dateRange, setDateRange] = useState("month");
+  // Filter states
+  const [dateRange, setDateRange] = useState("month"); // month, quarter, year, specific-month
+  const [selectedMonth, setSelectedMonth] = useState(null); // 1-12 or null
+  const [selectedYear, setSelectedYear] = useState(null); // YYYY or null
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  
   const [showReportModal, setShowReportModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,34 +54,50 @@ const FinancialReports = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedProperty, setSelectedProperty] = useState("all");
 
-  // Load financial data on component mount and when dateRange or selectedProperty changes
+  // Load financial data when filters change
   useEffect(() => {
     loadFinancialData();
-  }, [dateRange, selectedProperty]);
+  }, [dateRange, selectedProperty, selectedMonth, selectedYear]);
 
   const loadFinancialData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Prepare property filter parameter
       const propertyFilter = selectedProperty !== "all" ? selectedProperty : null;
       
-      // Load core financial data
+      // Build filter options based on current selections
+      const filterOptions = {
+        propertyId: propertyFilter
+      };
+
+      // Add date filters based on selection
+      if (dateRange === "specific-month" && selectedMonth) {
+        filterOptions.month = selectedMonth;
+        filterOptions.year = selectedYear || new Date().getFullYear();
+      } else {
+        filterOptions.period = dateRange;
+      }
+
+      console.log('📅 Loading data with filters:', filterOptions);
+
+      // Load core financial data with dynamic filters
       const [summaryData, monthlyData, expenseData, transactionsData] =
         await Promise.all([
-          apiService.getFinancialSummary(dateRange, propertyFilter),
+          apiService.getFinancialSummary(filterOptions),
           apiService.getMonthlyData(12, propertyFilter),
-          apiService.getExpenseBreakdown(dateRange, propertyFilter),
+          apiService.getExpenseBreakdown(filterOptions),
           apiService.getRecentTransactions(15, propertyFilter),
         ]);
 
+      console.log('📊 Summary data received:', summaryData);
+
       setFinancialData((prev) => ({
         ...prev,
-        summary: summaryData.summary,
-        monthlyData: monthlyData.monthlyData,
-        expenseBreakdown: expenseData.expenseBreakdown,
-        recentTransactions: transactionsData.recentTransactions,
+        summary: summaryData.summary || summaryData,
+        monthlyData: monthlyData.monthlyData || monthlyData,
+        expenseBreakdown: expenseData.expenseBreakdown || expenseData,
+        recentTransactions: transactionsData.recentTransactions || transactionsData,
       }));
 
       // Load analytics data if analytics tab is active
@@ -94,17 +116,28 @@ const FinancialReports = () => {
     try {
       const propertyFilter = selectedProperty !== "all" ? selectedProperty : null;
       
+      const filterOptions = {
+        propertyId: propertyFilter
+      };
+
+      if (dateRange === "specific-month" && selectedMonth) {
+        filterOptions.month = selectedMonth;
+        filterOptions.year = selectedYear || new Date().getFullYear();
+      } else {
+        filterOptions.period = dateRange;
+      }
+      
       const [analyticsData, trendsData, performanceData] = await Promise.all([
-        apiService.getAnalytics(dateRange, propertyFilter),
+        apiService.getAnalytics(filterOptions),
         apiService.getPaymentTrends(6, propertyFilter),
-        apiService.getPropertyPerformance(dateRange, propertyFilter),
+        apiService.getPropertyPerformance(filterOptions),
       ]);
 
       setFinancialData((prev) => ({
         ...prev,
-        analytics: analyticsData.analytics,
-        paymentTrends: trendsData.paymentTrends,
-        propertyPerformance: performanceData.propertyPerformance,
+        analytics: analyticsData.analytics || analyticsData,
+        paymentTrends: trendsData.paymentTrends || trendsData,
+        propertyPerformance: performanceData.propertyPerformance || performanceData,
       }));
     } catch (err) {
       console.error("Error loading analytics data:", err);
@@ -125,6 +158,44 @@ const FinancialReports = () => {
     setActiveTab(tab);
     if (tab === "analytics" && !financialData.analytics) {
       await loadAnalyticsData();
+    }
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    console.log('🔄 Period changed to:', newDateRange);
+    setDateRange(newDateRange);
+    
+    // Reset month/year selection when switching away from specific-month
+    if (newDateRange !== "specific-month") {
+      setSelectedMonth(null);
+      setSelectedYear(null);
+      setShowMonthPicker(false);
+    } else {
+      setShowMonthPicker(true);
+    }
+  };
+
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  const getDisplayPeriodLabel = () => {
+    if (dateRange === "specific-month" && selectedMonth) {
+      const monthNames = apiService.getMonthOptions();
+      const monthName = monthNames.find(m => m.value === parseInt(selectedMonth))?.label;
+      const year = selectedYear || new Date().getFullYear();
+      return `${monthName} ${year}`;
+    }
+    
+    switch (dateRange) {
+      case "month": return "This Month";
+      case "quarter": return "This Quarter";
+      case "year": return "This Year";
+      default: return "This Month";
     }
   };
 
@@ -169,8 +240,9 @@ const FinancialReports = () => {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
                     Financial Reports
                   </h1>
-                  <p className="text-gray-600">
-                    Comprehensive financial overview and analytics
+                  <p className="text-gray-600 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {getDisplayPeriodLabel()}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -232,15 +304,46 @@ const FinancialReports = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
+                  {/* Period Selection */}
                   <select
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={dateRange}
-                    onChange={(e) => setDateRange(e.target.value)}
+                    onChange={(e) => handleDateRangeChange(e.target.value)}
                   >
                     <option value="month">This Month</option>
                     <option value="quarter">This Quarter</option>
                     <option value="year">This Year</option>
+                    <option value="specific-month">Specific Month</option>
                   </select>
+
+                  {/* Month/Year Selection (visible when specific-month is selected) */}
+                  {showMonthPicker && (
+                    <>
+                      <select
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={selectedMonth || ""}
+                        onChange={(e) => handleMonthChange(e.target.value)}
+                      >
+                        <option value="">Select Month</option>
+                        {apiService.getMonthOptions().map(month => (
+                          <option key={month.value} value={month.value}>
+                            {month.label}
+                          </option>
+                        ))}
+                      </select>
+
+                      <select
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={selectedYear || new Date().getFullYear()}
+                        onChange={(e) => handleYearChange(e.target.value)}
+                      >
+                        {[...Array(5)].map((_, i) => {
+                          const year = new Date().getFullYear() - i;
+                          return <option key={year} value={year}>{year}</option>;
+                        })}
+                      </select>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -252,17 +355,28 @@ const FinancialReports = () => {
               financialData={financialData} 
               onPropertyChange={handlePropertyChange}
               selectedPropertyProp={selectedProperty}
+              dateRange={dateRange}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
             />
           )}
 
           {activeTab === "analytics" && (
-            <AnalyticsTab financialData={financialData} />
+            <AnalyticsTab 
+              financialData={financialData}
+              dateRange={dateRange}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+            />
           )}
 
           {activeTab === "expenses" && (
             <ExpenseManagementTab
               financialData={financialData}
               onExpenseUpdate={loadFinancialData}
+              dateRange={dateRange}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
             />
           )}
 
@@ -271,6 +385,10 @@ const FinancialReports = () => {
             isOpen={showReportModal}
             onClose={() => setShowReportModal(false)}
             onError={setError}
+            dateRange={dateRange}
+            selectedProperty={selectedProperty}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
           />
         </div>
       </div>

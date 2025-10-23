@@ -8,6 +8,7 @@ import {
   FileText,
   Search,
   Building2,
+  Calendar,
 } from "lucide-react";
 import {
   LineChart,
@@ -23,7 +24,7 @@ import {
   Cell,
 } from "recharts";
 import { formatCurrency } from "../utils/helperFunctions";
-import { apiService } from "../services/financialApiServices";
+import apiService from "../services/financialApiServices";
 
 const COLORS = [
   "#0088FE",
@@ -35,7 +36,14 @@ const COLORS = [
   "#ffc658",
 ];
 
-const OverviewTab = ({ financialData, onPropertyChange, selectedPropertyProp = "all" }) => {
+const OverviewTab = ({ 
+  financialData, 
+  onPropertyChange, 
+  selectedPropertyProp = "all",
+  dateRange = "month",
+  selectedMonth = null,
+  selectedYear = null,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [transactionsPerPage, setTransactionsPerPage] = useState(10);
@@ -70,6 +78,26 @@ const OverviewTab = ({ financialData, onPropertyChange, selectedPropertyProp = "
 
   const formatPercentage = (value) => {
     return `${(value || 0).toFixed(1)}%`;
+  };
+
+  // Get period display label
+  const getPeriodLabel = () => {
+    if (dateRange === "specific-month" && selectedMonth) {
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const monthName = monthNames[parseInt(selectedMonth) - 1];
+      const year = selectedYear || new Date().getFullYear();
+      return `${monthName} ${year}`;
+    }
+    
+    switch (dateRange) {
+      case "month": return "This Month";
+      case "quarter": return "This Quarter";
+      case "year": return "This Year";
+      default: return "This Month";
+    }
   };
 
   // Filter transactions by property and search term
@@ -125,7 +153,7 @@ const OverviewTab = ({ financialData, onPropertyChange, selectedPropertyProp = "
     setSelectedProperty(propertyId);
     setCurrentPage(1);
     
-    // THIS IS THE KEY: Notify parent component to reload data with the selected property
+    // Notify parent component to reload data with the selected property
     console.log('Property changed to:', propertyId);
     if (onPropertyChange) {
       onPropertyChange(propertyId);
@@ -168,28 +196,41 @@ const OverviewTab = ({ financialData, onPropertyChange, selectedPropertyProp = "
 
   return (
     <div className="space-y-6">
-      {/* Property Filter */}
+      {/* Filter Bar - Property & Period Info */}
       <div className="bg-white p-4 rounded-lg shadow border border-gray-100">
-        <div className="flex items-center gap-3">
-          <Building2 className="w-5 h-5 text-gray-600" />
-          <label className="text-sm font-medium text-gray-700">Filter by Property:</label>
-          <select
-            value={selectedProperty}
-            onChange={handlePropertyChange}
-            disabled={loadingProperties}
-            className="flex-1 max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
-          >
-            <option value="all">All Properties</option>
-            {loadingProperties ? (
-              <option disabled>Loading properties...</option>
-            ) : (
-              properties.map(property => (
-                <option key={property.id} value={property.id}>
-                  {property.property_name || property.propertyName || property.name}
-                </option>
-              ))
-            )}
-          </select>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Property Filter */}
+          <div className="flex items-center gap-3 flex-1">
+            <Building2 className="w-5 h-5 text-gray-600 flex-shrink-0" />
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              Property:
+            </label>
+            <select
+              value={selectedProperty}
+              onChange={handlePropertyChange}
+              disabled={loadingProperties}
+              className="flex-1 max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+            >
+              <option value="all">All Properties</option>
+              {loadingProperties ? (
+                <option disabled>Loading properties...</option>
+              ) : (
+                properties.map(property => (
+                  <option key={property.id} value={property.id}>
+                    {property.property_name || property.propertyName || property.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
+          {/* Period Info Display */}
+          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <span className="text-sm font-medium text-blue-900">
+              {getPeriodLabel()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -211,89 +252,102 @@ const OverviewTab = ({ financialData, onPropertyChange, selectedPropertyProp = "
           "Net Income",
           financialData.summary.netIncome,
           financialData.summary.changes.netIncome,
-          <TrendingUp className="w-6 h-6 text-blue-600" />
+          <BarChart3 className="w-6 h-6 text-blue-600" />
         )}
         {renderFinancialMetric(
           "Occupancy Rate",
           financialData.summary.occupancyRate,
-          1.5,
+          null,
           <PieChart className="w-6 h-6 text-purple-600" />,
           true
         )}
       </div>
 
-      {/* Charts Grid */}
+      {/* Additional Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {renderFinancialMetric(
+          "Pending Payments",
+          financialData.summary.pendingPayments,
+          null,
+          <FileText className="w-6 h-6 text-orange-600" />
+        )}
+        {renderFinancialMetric(
+          "Maintenance Costs",
+          financialData.summary.maintenanceCosts,
+          null,
+          <TrendingDown className="w-6 h-6 text-red-600" />
+        )}
+      </div>
+
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue vs Expenses Chart */}
+        {/* Monthly Trend Chart */}
         <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
           <h3 className="text-lg font-bold mb-4 flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
-            Revenue vs Expenses
+            <BarChart3 className="w-5 h-5 mr-2 text-gray-600" />
+            Revenue & Expenses Trend
           </h3>
-          <div className="h-[350px]">
+          <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={financialData.monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="month"
                   tick={{ fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
                 />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  width={60}
-                  axisLine={false}
-                  tickLine={false}
-                />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
                     fontSize: 12,
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   }}
-                  formatter={(value) => [formatCurrency(value), ""]}
+                  formatter={(value) => formatCurrency(value)}
                 />
-                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 20 }} />
+                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 20 }} />
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#0088FE"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
                   name="Revenue"
-                  strokeWidth={3}
-                  dot={{ fill: "#0088FE", strokeWidth: 2, r: 4 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="expenses"
-                  stroke="#FF8042"
+                  stroke="#EF4444"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
                   name="Expenses"
-                  strokeWidth={3}
-                  dot={{ fill: "#FF8042", strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Expense Breakdown */}
+        {/* Expense Breakdown Chart */}
         <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
           <h3 className="text-lg font-bold mb-4 flex items-center">
-            <PieChart className="w-5 h-5 mr-2 text-green-600" />
+            <PieChart className="w-5 h-5 mr-2 text-gray-600" />
             Expense Breakdown
           </h3>
-          <div className="h-[350px]">
+          <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <RechartPieChart>
                 <Pie
                   data={financialData.expenseBreakdown}
-                  dataKey="value"
-                  nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius="70%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                  nameKey="category"
                   label={({ name, percent }) =>
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
@@ -333,6 +387,9 @@ const OverviewTab = ({ financialData, onPropertyChange, selectedPropertyProp = "
             <h3 className="text-lg font-bold flex items-center">
               <FileText className="w-5 h-5 mr-2 text-gray-600" />
               Recent Transactions
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                ({getPeriodLabel()})
+              </span>
             </h3>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative">

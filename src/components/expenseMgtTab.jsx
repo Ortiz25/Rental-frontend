@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
@@ -13,7 +12,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  Calendar
 } from 'lucide-react';
 import {
   PieChart as RechartPieChart,
@@ -28,12 +28,18 @@ import {
 import AddExpenseModal from '../components/modals/AddExpensesModal.jsx';
 
 // Import API service
-import { apiService } from '../services/financialApiServices.jsx';
-import { formatCurrency } from '../utils/helperFunctions.jsx';
+import apiService from '../services/financialApiServices.jsx';
+import { formatCurrency } from '../utils/helperFunctions';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658'];
 
-const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
+const ExpenseManagementTab = ({ 
+  financialData, 
+  onExpenseUpdate,
+  dateRange = "month",
+  selectedMonth = null,
+  selectedYear = null,
+}) => {
   const [expenses, setExpenses] = useState([]);
   const [properties, setProperties] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -56,6 +62,26 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterProperty, entriesPerPage]);
+
+  // Get period display label
+  const getPeriodLabel = () => {
+    if (dateRange === "specific-month" && selectedMonth) {
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const monthName = monthNames[parseInt(selectedMonth) - 1];
+      const year = selectedYear || new Date().getFullYear();
+      return `${monthName} ${year}`;
+    }
+    
+    switch (dateRange) {
+      case "month": return "This Month";
+      case "quarter": return "This Quarter";
+      case "year": return "This Year";
+      default: return "This Month";
+    }
+  };
 
   const loadInitialData = async () => {
     setLoading(true);
@@ -139,7 +165,6 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
- 
   const getFrequencyBadgeColor = (frequency) => {
     const colors = {
       monthly: 'bg-blue-100 text-blue-800',
@@ -177,6 +202,16 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
 
   return (
     <div className="space-y-6">
+      {/* Period Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-600" />
+          <span className="text-sm font-medium text-blue-900">
+            Expense data for {getPeriodLabel()}
+          </span>
+        </div>
+      </div>
+
       {/* Alerts */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
@@ -211,96 +246,53 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
           </button>
         </div>
 
-        {/* Expenses Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="text-sm font-medium text-blue-700 mb-2">Total Monthly Expenses</h4>
-            <p className="text-2xl font-bold text-blue-900">
-              {formatCurrency(
-                expenses.reduce((sum, exp) => sum + (exp.monthlyEquivalent || 0), 0)
-              )}
-            </p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h4 className="text-sm font-medium text-green-700 mb-2">Active Expenses</h4>
-            <p className="text-2xl font-bold text-green-900">
-              {expenses.filter(exp => exp.isActive).length}
-            </p>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <h4 className="text-sm font-medium text-purple-700 mb-2">Properties Covered</h4>
-            <p className="text-2xl font-bold text-purple-900">
-              {new Set(expenses.map(exp => exp.propertyId)).size}
-            </p>
-          </div>
-        </div>
-
-        {/* Search and Filter Controls */}
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search Bar */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Expenses
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by expense type or property name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+        {/* Filters */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search expenses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+              />
             </div>
 
             {/* Property Filter */}
-            <div className="lg:w-64">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filter by Property
-              </label>
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select
-                  value={filterProperty}
-                  onChange={(e) => setFilterProperty(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">All Properties</option>
-                  {properties.map((property) => (
-                    <option key={property.id} value={property.id}>
-                      {property.propertyName || property.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <select
+              value={filterProperty}
+              onChange={(e) => setFilterProperty(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+            >
+              <option value="">All Properties</option>
+              {properties.map(property => (
+                <option key={property.id} value={property.id}>
+                  {property.property_name || property.propertyName || property.name}
+                </option>
+              ))}
+            </select>
 
-            {/* Entries Per Page */}
-            <div className="lg:w-32">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Show
-              </label>
-              <select
-                value={entriesPerPage}
-                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
+            {/* Entries per page */}
+            <select
+              value={entriesPerPage}
+              onChange={(e) => setEntriesPerPage(parseInt(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+            >
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
           </div>
 
-          {/* Clear Filters & Results Info */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 pt-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-              Showing {currentExpenses.length} of {filteredExpenses.length} expenses
-              {filteredExpenses.length !== expenses.length && (
-                <span className="text-blue-600"> (filtered from {expenses.length} total)</span>
-              )}
+          {/* Active Filters Indicator */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {filteredExpenses.length} {filteredExpenses.length === 1 ? 'expense' : 'expenses'} found
+              {(searchTerm || filterProperty) && ' (filtered)'}
             </div>
             {(searchTerm || filterProperty) && (
               <button
@@ -456,51 +448,6 @@ const ExpenseManagementTab = ({ financialData, onExpenseUpdate }) => {
           )}
         </div>
       </div>
-
-      {/* Live Expense Breakdown Chart */}
-      {/* <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
-        <h3 className="text-lg font-bold mb-4 flex items-center">
-          <PieChart className="w-5 h-5 mr-2 text-green-600" />
-          Live Expense Breakdown
-        </h3>
-        <div className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <RechartPieChart>
-              <Pie
-                data={financialData.expenseBreakdown}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius="70%"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                labelLine={false}
-              >
-                {financialData.expenseBreakdown.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value) => [formatCurrency(value), '']}
-              />
-              <Legend />
-            </RechartPieChart>
-          </ResponsiveContainer>
-        </div>
-        
-        {financialData.expenseBreakdown.length === 0 && (
-          <div className="flex items-center justify-center h-[350px] text-gray-500">
-            <div className="text-center">
-              <PieChart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p>No expense data available</p>
-              <p className="text-sm">Add expenses to see breakdown</p>
-            </div>
-          </div>
-        )}
-      </div> */}
 
       {/* Add Expense Modal */}
       <AddExpenseModal
