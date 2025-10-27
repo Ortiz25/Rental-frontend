@@ -1279,7 +1279,7 @@ const handlePaymentSubmit = async (paymentData) => {
 const handleMaintenanceSubmit = async ({ requestData, photos }) => {
   try {
     setActionLoading(true);
-
+    console.log(requestData)
     const token = localStorage.getItem("token");
     
     // First, create the maintenance request
