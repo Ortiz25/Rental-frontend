@@ -59,7 +59,7 @@ const Dashboard = () => {
       }
 
       const response = await fetch(
-        "/backend/api/dashboard/summary",
+        "http://localhost:5020/api/dashboard/summary",
         {
           method: "GET",
           headers: {
@@ -310,7 +310,7 @@ export async function loader() {
   }
 
   try {
-    const url = "/backend/api/auth/verifyToken";
+    const url = "http://localhost:5020/api/auth/verifyToken";
     const data = { token: token };
 
     const response = await fetch(url, {

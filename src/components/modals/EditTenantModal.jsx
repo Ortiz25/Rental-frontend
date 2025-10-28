@@ -190,7 +190,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
       
       // Method 1: Search by tenant email
       try {
-        const leasesResponse = await fetch(`/backend/api/leases?search=${encodeURIComponent(tenant.email)}`, {
+        const leasesResponse = await fetch(`http://localhost:5020/api/leases?search=${encodeURIComponent(tenant.email)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -213,7 +213,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
       // Method 2: If search fails, get all active leases and filter
       if (!currentLease) {
         try {
-          const allLeasesResponse = await fetch(`/backend/api/leases?status=active`, {
+          const allLeasesResponse = await fetch(`http://localhost:5020/api/leases?status=active`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -237,7 +237,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
       // Method 3: Direct tenant lookup (if you have a tenant-specific endpoint)
       if (!currentLease) {
         try {
-          const tenantLeasesResponse = await fetch(`/backend/api/tenants/${tenant.id}`, {
+          const tenantLeasesResponse = await fetch(`http://localhost:5020/api/tenants/${tenant.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -248,7 +248,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
             // Check if tenant data includes lease information
             if (tenantResult.status === 200 && tenantResult.data?.lease_id) {
               // Fetch the specific lease
-              const leaseResponse = await fetch(`/backend/api/leases/${tenantResult.data.lease_id}`, {
+              const leaseResponse = await fetch(`http://localhost:5020/api/leases/${tenantResult.data.lease_id}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               
@@ -292,7 +292,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
       const token = localStorage.getItem("token");
 
       // Load available units
-      const unitsResponse = await fetch(`/backend/api/tenants/onboarding/available-units`, {
+      const unitsResponse = await fetch(`http://localhost:5020/api/tenants/onboarding/available-units`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -302,7 +302,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
       }
 
       // Load draft/unassigned leases
-      const leasesResponse = await fetch(`/backend/api/leases?status=draft`, {
+      const leasesResponse = await fetch(`http://localhost:5020/api/leases?status=draft`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -362,7 +362,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/backend/api/tenants/${tenant.id}`, {
+      const response = await fetch(`http://localhost:5020/api/tenants/${tenant.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -403,7 +403,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
 
       if (leaseAction === "edit" && leaseData) {
         // Update existing lease
-        const response = await fetch(`/backend/api/leases/${leaseData.id}`, {
+        const response = await fetch(`http://localhost:5020/api/leases/${leaseData.id}`, {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -419,7 +419,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
 
       } else if (leaseAction === "create") {
         // Create new lease and assign tenant
-        const response = await fetch(`/backend/api/leases`, {
+        const response = await fetch(`http://localhost:5020/api/leases`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -439,7 +439,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
 
       } else if (leaseAction === "assign") {
         // First, get the selected lease details
-        const leaseResponse = await fetch(`/backend/api/leases/${selectedLeaseId}`, {
+        const leaseResponse = await fetch(`http://localhost:5020/api/leases/${selectedLeaseId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -450,7 +450,7 @@ const EditTenantModal = ({ isOpen, onClose, tenant, onUpdate }) => {
         const leaseDetails = await leaseResponse.json();
 
         // Update the lease to assign the tenant
-        const response = await fetch(`/backend/api/leases/${selectedLeaseId}`, {
+        const response = await fetch(`http://localhost:5020/api/leases/${selectedLeaseId}`, {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,

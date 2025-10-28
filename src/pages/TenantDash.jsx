@@ -23,7 +23,7 @@ import {
 import Navbar from "../layout/navbar";
 import NotificationsModal from "../components/modals/NotificationModal.jsx"; 
 
-const API_BASE_URL = "/backend/api/tenant-dash";
+const API_BASE_URL = "http://localhost:5020/api/tenant-dash";
 
 // Contact Manager Modal Component
 const ContactManagerModal = ({ isOpen, onClose, onSubmit, loading }) => {
@@ -194,7 +194,7 @@ const UploadDocumentModal = ({
 
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "/backend/api/documents/upload",
+        "http://localhost:5020/api/documents/upload",
         {
           method: "POST",
           headers: {
@@ -1051,7 +1051,7 @@ const markNotificationAsRead = async (notificationId) => {
   try {
     const token = localStorage.getItem("token");
     const response = await fetch(
-      `/backend/api/communications/notifications/${notificationId}/read`,
+      `http://localhost:5020/api/communications/notifications/${notificationId}/read`,
       {
         method: "PATCH",
         headers: {
@@ -1091,7 +1091,7 @@ const downloadDocument = async (documentId) => {
 
   try {
     const response = await fetch(
-      `/backend/api/documents/${documentId}/download`,
+      `http://localhost:5020/api/documents/${documentId}/download`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1178,7 +1178,7 @@ const viewDocument = async (documentId) => {
 
   try {
     const response = await fetch(
-      `/backend/api/documents/${documentId}/view`,
+      `http://localhost:5020/api/documents/${documentId}/view`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1308,7 +1308,7 @@ const handleMaintenanceSubmit = async ({ requestData, photos }) => {
       photoFormData.append('is_before_photo', 'true');
 
       const photoResponse = await fetch(
-        `/backend/api/maintenance/${maintenanceRequestId}/photos`,
+        `http://localhost:5020/api/maintenance/${maintenanceRequestId}/photos`,
         {
           method: "POST",
           headers: {
@@ -1343,7 +1343,7 @@ const handleContactSubmit = async (messageData) => {
 
     const token = localStorage.getItem("token");
     const response = await fetch(
-      "/backend/api/communications/messages",
+      "http://localhost:5020/api/communications/messages",
       {
         method: "POST",
         headers: {
@@ -2180,7 +2180,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

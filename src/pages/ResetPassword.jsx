@@ -55,7 +55,7 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/backend/api/password/resetpassword", {
+      const response = await fetch("http://localhost:5020/api/password/resetpassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

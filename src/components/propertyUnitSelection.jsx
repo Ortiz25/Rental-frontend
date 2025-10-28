@@ -15,7 +15,7 @@ const PropertyUnitSelector = ({ onUnitSelect, selectedUnit, setSelectedUnit }) =
         setLoading(true);
         const token = localStorage.getItem('token');
         
-        const response = await fetch('/backend/api/tenants/onboarding/available-units', {
+        const response = await fetch('http://localhost:5020/api/tenants/onboarding/available-units', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',

@@ -21,7 +21,7 @@ const ContactModal = ({ isOpen, onClose, property, unit }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/backend/api/vacancies/inquire", {
+      const response = await fetch("http://localhost:5020/api/vacancies/inquire", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

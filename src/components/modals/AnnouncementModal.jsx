@@ -58,7 +58,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "/backend/api/communications/properties",
+        "http://localhost:5020/api/communications/properties",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -163,7 +163,7 @@ const AnnouncementModal = ({ isOpen, onClose, onAnnouncementSent }) => {
       }
 
       const response = await fetch(
-        "/backend/api/communications/announcements",
+        "http://localhost:5020/api/communications/announcements",
         {
           method: "POST",
           headers: {

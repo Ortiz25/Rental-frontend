@@ -25,7 +25,7 @@ import { formatFinancialValue } from "../utils/helperFunctions.jsx";
 
 // Updated API service for lease operations with authentication
 const leaseAPI = {
-  baseURL: "/backend/api",
+  baseURL: "http://localhost:5020/api",
 
   // Helper method to get auth headers
   getAuthHeaders() {
@@ -706,7 +706,7 @@ export async function loader() {
   }
  
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -51,6 +51,7 @@ const OverviewTab = ({
   const [properties, setProperties] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
 
+
   // Sync local state with prop when it changes
   useEffect(() => {
     setSelectedProperty(selectedPropertyProp);
@@ -133,6 +134,8 @@ const OverviewTab = ({
     startIndex,
     startIndex + transactionsPerPage
   );
+
+  console.log(filteredTransactions)
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
