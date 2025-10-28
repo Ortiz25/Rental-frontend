@@ -82,7 +82,7 @@ const fetchTenants = async () => {
     }
 
     console.log("Fetching tenants...");
-    const response = await fetch("http://localhost:5020/api/tenants", {
+    const response = await fetch("/backend/api/tenants", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -107,7 +107,6 @@ const fetchTenants = async () => {
       const allTenants = result.data.tenants;
       
       // Separate blacklisted and active tenants
-      console.log(allTenants)
       const activeTenants = allTenants.filter(tenant => !tenant.isBlacklisted);
       const blacklistedTenantsList = allTenants.filter(tenant => tenant.isBlacklisted);
       
@@ -233,7 +232,7 @@ const filteredTenants = useMemo(() => {
       }
 
       const response = await fetch(
-        `http://localhost:5020/api/tenants/${selectedTenant.id}/offboard`,
+        `/backend/api/tenants/${selectedTenant.id}/offboard`,
         {
           method: "POST",
           headers: {
@@ -277,7 +276,7 @@ const filteredTenants = useMemo(() => {
 
       // Use the enhanced onboarding endpoint with unit allocation
       const response = await fetch(
-        "http://localhost:5020/api/tenants/onboard-with-unit",
+        "/backend/api/tenants/onboard-with-unit",
         {
           method: "POST",
           headers: {
@@ -448,7 +447,7 @@ const filteredTenants = useMemo(() => {
       setSubmitting(true);
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5020/api/tenants/${tenant.id}/blacklist`, {
+        const response = await fetch(`/backend/api/tenants/${tenant.id}/blacklist`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -909,7 +908,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

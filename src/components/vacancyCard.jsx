@@ -39,7 +39,7 @@ const VacancyCard = ({ property, onContactInquiry }) => {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5020/api/properties/${property.id}/photos`,
+          `/backend/api/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -80,7 +80,7 @@ const VacancyCard = ({ property, onContactInquiry }) => {
 
   const currentPhoto =
     photos.length > 0
-      ? `http://localhost:5020/api/properties/photos/${photos[currentPhotoIndex].file_name}`
+      ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
       : defaultImage;
 
   const handleFavorite = () => {

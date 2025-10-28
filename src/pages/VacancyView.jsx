@@ -60,7 +60,7 @@ const VacancyView = () => {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch("http://localhost:5020/api/vacancies", {
+      const response = await fetch("/backend/api/vacancies", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -538,7 +538,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("http://localhost:5020/api/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

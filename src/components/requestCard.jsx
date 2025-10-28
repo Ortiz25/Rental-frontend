@@ -128,7 +128,7 @@ const RequestCard = ({
                       src={
                         imageError[photo.id]
                           ? '/placeholder-image.jpg'
-                          : `http://localhost:5020/api/maintenance/photos/${photo.id}/file`
+                          : `/backend/api/maintenance/photos/${photo.id}/file`
                       }
                       alt={`Preview ${index + 1}`}
                       className="w-24 h-24 object-cover cursor-pointer group-hover/photo:scale-110 transition-transform duration-300"
