@@ -3,6 +3,7 @@ import { UserPlus, Search, Filter, Eye, MoreVertical } from "lucide-react";
 import AddUserModal from "./modals/AddUserModal.jsx";
 import EditUserModal from "./modals/EditUser.jsx";
 import ViewUserModal from "./modals/viewUserModal.jsx";
+import ToggleUserStatusModal from "./modals/ToggleUserStatusModal.jsx";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -14,6 +15,7 @@ const UserManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showToggleStatusModal, setShowToggleStatusModal] = useState(false);
   
   // Filter and search states
   const [searchTerm, setSearchTerm] = useState("");
@@ -151,8 +153,8 @@ const UserManagement = () => {
     }
   };
 
-  // Handler for deactivating/activating user
-  const handleToggleUserStatus = async (userId, currentStatus) => {
+  // Handler for deactivating/activating user (updated to work with modal)
+  const handleToggleUserStatus = async (userId, currentStatus, reason = '') => {
     try {
       const newStatus = !currentStatus;
       const response = await fetch(`${url}users/${userId}/status`, {
@@ -161,7 +163,10 @@ const UserManagement = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ is_active: newStatus })
+        body: JSON.stringify({ 
+          is_active: newStatus,
+          reason: reason || undefined
+        })
       });
       
       if (!response.ok) {
@@ -174,13 +179,20 @@ const UserManagement = () => {
       // Refresh the user list
       await fetchUsers();
       
-      // Show success message
-      alert(result.message || `User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      // Return success (modal will handle the UI feedback)
+      return result;
       
     } catch (err) {
       console.error('Error updating user status:', err);
       alert('Error updating user status: ' + err.message);
+      throw err;
     }
+  };
+
+  // Handler to open toggle status modal
+  const handleOpenToggleStatusModal = (user) => {
+    setSelectedUser(user);
+    setShowToggleStatusModal(true);
   };
 
   // Handler for viewing user details
@@ -226,80 +238,88 @@ const UserManagement = () => {
     return "Active";
   };
 
-  if (loading && users.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error && users.length === 0) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Error loading users: {error}</p>
-        <button 
-          onClick={() => fetchUsers()}
-          className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">User Management</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+          <p className="text-gray-600 mt-1">Manage system users and their roles</p>
+        </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded flex items-center hover:bg-blue-600 transition-colors"
+          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
-          <UserPlus className="w-5 h-5 mr-2" /> Add User
+          <UserPlus className="w-5 h-5" />
+          <span>Add New User</span>
         </button>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-grow max-w-md">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search users..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+      {/* Filters and Search */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Role Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+            >
+              <option value="">All Roles</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.role_name}>
+                  {role.role_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="unverified">Unverified</option>
+            </select>
+          </div>
         </div>
-        
-        <select 
-          className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="">All Roles</option>
-          {roles.map(role => (
-            <option key={role.id} value={role.role_name}>
-              {role.role_name}
-            </option>
-          ))}
-        </select>
-        
-        <select 
-          className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
       </div>
 
-      {/* Users Table - Desktop and Tablet View */}
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          Error: {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Loading users...</p>
+        </div>
+      )}
+
+      {/* Desktop Table View */}
       <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -383,7 +403,7 @@ const UserManagement = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleToggleUserStatus(user.id, user.is_active)}
+                      onClick={() => handleOpenToggleStatusModal(user)}
                       className={`px-2 py-1 text-xs ${
                         user.is_active 
                           ? 'text-red-600 hover:text-red-900' 
@@ -467,7 +487,7 @@ const UserManagement = () => {
                 Edit
               </button>
               <button
-                onClick={() => handleToggleUserStatus(user.id, user.is_active)}
+                onClick={() => handleOpenToggleStatusModal(user)}
                 className={`text-sm font-medium ${
                   user.is_active 
                     ? 'text-red-600 hover:text-red-900' 
@@ -525,6 +545,16 @@ const UserManagement = () => {
               setSelectedUser(null);
             }}
             user={selectedUser}
+          />
+
+          <ToggleUserStatusModal
+            isOpen={showToggleStatusModal}
+            onClose={() => {
+              setShowToggleStatusModal(false);
+              setSelectedUser(null);
+            }}
+            user={selectedUser}
+            onConfirm={handleToggleUserStatus}
           />
         </>
       )}
