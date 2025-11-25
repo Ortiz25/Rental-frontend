@@ -84,7 +84,7 @@ const LoginPage = () => {
           <HousePlus className="mr-2 size-12 text-blue-600" />
           <h1 className="text-4xl font-bold text-gray-800">Rental Manager</h1>
         </div>
-
+  
         <div className="w-full max-w-sm md:max-w-lg">
           <Form
             method="post"
@@ -114,7 +114,7 @@ const LoginPage = () => {
                 disabled={isSubmitting || isLoading}
               />
             </div>
-
+  
             {/* Password Field */}
             <div className="relative mb-6">
               <label
@@ -142,7 +142,7 @@ const LoginPage = () => {
                   {getErrorDisplay()}
                 </div>
               )}
-
+  
               {/* Password Toggle */}
               <button
                 type="button"
@@ -159,7 +159,7 @@ const LoginPage = () => {
                 )}
               </button>
             </div>
-
+  
             {/* Submit and Forgot Password */}
             <div className="flex items-center justify-between">
               <button
@@ -188,6 +188,29 @@ const LoginPage = () => {
           <p className="text-center text-gray-500 text-md">
             &copy;2025 LiveCrib. All rights reserved.
           </p>
+        </div>
+  
+        <div className="fixed bottom-6 right-6 w-72 max-w-[calc(100vw-3rem)] z-50">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 shadow-xl border border-blue-100">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              <p className="font-semibold text-gray-800 text-sm">Demo Credentials</p>
+            </div>
+            <div className="space-y-2.5">
+              <div className="bg-white rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <p className="text-xs font-medium text-gray-500 mb-1">Admin Account</p>
+                <p className="text-xs font-mono text-gray-700">
+                  <span className="font-semibold">testadmin@email.com</span> / pass1234
+                </p>
+              </div>
+              <div className="bg-white rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <p className="text-xs font-medium text-gray-500 mb-1">Tenant Account</p>
+                <p className="text-xs font-mono text-gray-700">
+                  <span className="font-semibold">njeri@email.com</span> / pass1234
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>

@@ -115,7 +115,7 @@ const OverviewTab = ({
       if (selectedProperty !== "all") {
         const selectedProp = properties.find(p => p.id === parseInt(selectedProperty));
         const selectedPropertyName = selectedProp?.property_name || selectedProp?.propertyName || "";
-        
+        console.log(selectedProp, selectedPropertyName)
         if (selectedPropertyName) {
           const matchesProperty = transaction.description.toLowerCase().includes(selectedPropertyName.toLowerCase());
           return matchesSearch && matchesProperty;
