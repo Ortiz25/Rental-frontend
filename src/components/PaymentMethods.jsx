@@ -21,7 +21,7 @@ const PaymentMethodsManagement = () => {
     sort_order: 0,
   });
 
-  const API_BASE_URL = "/backend/payment-methods";
+  const API_BASE_URL = "/backend/api/payment-methods";
 
   // helper: get auth headers with token
   const getAuthHeaders = () => {

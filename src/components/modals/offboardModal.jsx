@@ -95,7 +95,7 @@ const OffboardTenantModal = ({ tenant, isOpen, onClose, onOffboard }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `/backend/tenants/${tenant.id}/unpaid-rent`,
+        `/backend/api/tenants/${tenant.id}/unpaid-rent`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

@@ -119,7 +119,7 @@ const UpdatePropertyModal = ({
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `/backend/properties/${property.id}/photos`,
+          `/backend/api/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -222,7 +222,7 @@ const UpdatePropertyModal = ({
         if (!token) return;
 
         const response = await fetch(
-          "/backend/properties/amenities",
+          "/backend/api/properties/amenities",
           {
             method: "GET",
             headers: {
@@ -262,7 +262,7 @@ const UpdatePropertyModal = ({
         if (!token) return;
 
         const response = await fetch(
-          "/backend/properties/users?roles=Caretaker,Building Manager",
+          "/backend/api/properties/users?roles=Caretaker,Building Manager",
           {
             method: "GET",
             headers: {
@@ -362,7 +362,7 @@ const UpdatePropertyModal = ({
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `/backend/properties/${property.id}/photos/${photoId}/set-primary`,
+        `/backend/api/properties/${property.id}/photos/${photoId}/set-primary`,
         {
           method: "PUT",
           headers: {
@@ -405,7 +405,7 @@ const UpdatePropertyModal = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/properties/${property.id}/caretakers`,
+        `/backend/api/properties/${property.id}/caretakers`,
         {
           method: "POST",
           headers: {
@@ -450,7 +450,7 @@ const UpdatePropertyModal = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/properties/${property.id}/caretakers/${caretakerId}`,
+        `/backend/api/properties/${property.id}/caretakers/${caretakerId}`,
         {
           method: "DELETE",
           headers: {
@@ -472,7 +472,7 @@ const UpdatePropertyModal = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/properties/${property.id}/caretakers/${caretakerId}/toggle-primary`,
+        `/backend/api/properties/${property.id}/caretakers/${caretakerId}/toggle-primary`,
         {
           method: "PUT",
           headers: {
@@ -501,7 +501,7 @@ const UpdatePropertyModal = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/properties/${property.id}/managers`,
+        `/backend/api/properties/${property.id}/managers`,
         {
           method: "POST",
           headers: {
@@ -546,7 +546,7 @@ const UpdatePropertyModal = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/properties/${property.id}/managers/${managerId}`,
+        `/backend/api/properties/${property.id}/managers/${managerId}`,
         {
           method: "DELETE",
           headers: {
@@ -568,7 +568,7 @@ const UpdatePropertyModal = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/properties/${property.id}/managers/${managerId}/toggle-primary`,
+        `/backend/api/properties/${property.id}/managers/${managerId}/toggle-primary`,
         {
           method: "PUT",
           headers: {
@@ -663,7 +663,7 @@ const UpdatePropertyModal = ({
       };
 
       const response = await fetch(
-        `/backend/properties/${property.id}`,
+        `/backend/api/properties/${property.id}`,
         {
           method: "PUT",
           headers: {
@@ -701,7 +701,7 @@ const UpdatePropertyModal = ({
         };
 
         const unitResponse = await fetch(
-          `/backend/properties/${property.id}/units/${unitData.id}`,
+          `/backend/api/properties/${property.id}/units/${unitData.id}`,
           {
             method: "PUT",
             headers: {
@@ -724,7 +724,7 @@ const UpdatePropertyModal = ({
       if (photosToDelete.length > 0) {
         for (const photoId of photosToDelete) {
           await fetch(
-            `/backend/properties/${property.id}/photos/${photoId}`,
+            `/backend/api/properties/${property.id}/photos/${photoId}`,
             {
               method: "DELETE",
               headers: {
@@ -743,7 +743,7 @@ const UpdatePropertyModal = ({
         });
 
         await fetch(
-          `/backend/properties/${property.id}/photos`,
+          `/backend/api/properties/${property.id}/photos`,
           {
             method: "POST",
             headers: {
@@ -815,7 +815,7 @@ const UpdatePropertyModal = ({
       };
 
       const response = await fetch(
-        `/backend/properties/${property.id}/units/${unitData.id}`,
+        `/backend/api/properties/${property.id}/units/${unitData.id}`,
         {
           method: "PUT",
           headers: {
@@ -993,7 +993,7 @@ const UpdatePropertyModal = ({
                               src={
                                 photo.isNew
                                   ? photo.preview
-                                  : `/backend/properties/photos/${photo.file_name}`
+                                  : `/backend/api/properties/photos/${photo.file_name}`
                               }
                               alt={`Property ${index + 1}`}
                               className={`w-full h-32 object-cover rounded-lg ${

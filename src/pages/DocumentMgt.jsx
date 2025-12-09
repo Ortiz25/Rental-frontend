@@ -22,7 +22,7 @@ import {
 import Navbar from '../layout/navbar.jsx';
 
 // API Configuration
-const API_BASE_URL = '/backend';
+const API_BASE_URL = '/backend/api';
 
 // API helper function
 const apiCall = async (url, options = {}) => {
@@ -1246,7 +1246,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

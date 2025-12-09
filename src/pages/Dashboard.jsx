@@ -61,7 +61,7 @@ const Dashboard = () => {
       }
 
       const response = await fetch(
-        `/backend/dashboard/summary?month=${selectedMonth}&year=${selectedYear}`,
+        `/backend/api/dashboard/summary?month=${selectedMonth}&year=${selectedYear}`,
         {
           method: "GET",
           headers: {
@@ -367,7 +367,7 @@ export async function loader() {
   }
 
   try {
-    const url = "/backend/auth/verifyToken";
+    const url = "/backend/api/auth/verifyToken";
     const data = { token: token };
 
     const response = await fetch(url, {

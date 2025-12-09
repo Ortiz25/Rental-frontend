@@ -34,7 +34,7 @@ const ForgotPassword = () => {
     setError("");
 
     try {
-      const response = await fetch("/backend/password/forgotpassword", {
+      const response = await fetch("/backend/api/password/forgotpassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

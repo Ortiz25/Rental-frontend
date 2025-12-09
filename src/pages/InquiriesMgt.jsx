@@ -72,7 +72,7 @@ const InquiriesManagement = () => {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch("/backend/inquiries", {
+      const response = await fetch("/backend/api/inquiries", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -180,7 +180,7 @@ const InquiriesManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/inquiries/${inquiryId}/status`,
+        `/backend/api/inquiries/${inquiryId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -786,7 +786,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/auth/verifyToken", {
+    const response = await fetch("/backend/api/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

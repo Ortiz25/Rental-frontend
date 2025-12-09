@@ -36,7 +36,7 @@ const TenantCard = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/tenants/${tenantId}/blacklist`,
+        `/backend/api/tenants/${tenantId}/blacklist`,
         {
           method: "POST",
           headers: {
@@ -65,7 +65,7 @@ const TenantCard = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/tenants/${tenantId}/remove-blacklist`,
+        `/backend/api/tenants/${tenantId}/remove-blacklist`,
         {
           method: "POST",
           headers: {
@@ -94,7 +94,7 @@ const TenantCard = ({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `/backend/tenants/${tenant.id}/offboarding-info`,
+        `/backend/api/tenants/${tenant.id}/offboarding-info`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -9,7 +9,7 @@ const ApplicationScreening = ({ applicantEmail, onScreeningComplete }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/backend/tenants/screen-applicant`, {
+      const response = await fetch(`/backend/api/tenants/screen-applicant`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

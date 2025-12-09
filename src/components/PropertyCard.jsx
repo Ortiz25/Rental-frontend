@@ -59,7 +59,7 @@ const PropertyCard = ({ property, onUpdate }) => {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `/backend/properties/${property.id}/photos`,
+          `/backend/api/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -131,7 +131,7 @@ const PropertyCard = ({ property, onUpdate }) => {
 
   const currentPhoto =
     photos.length > 0
-      ? `/backend/properties/photos/${photos[currentPhotoIndex].file_name}`
+      ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
       : defaultImage;
 
   console.log(property);
