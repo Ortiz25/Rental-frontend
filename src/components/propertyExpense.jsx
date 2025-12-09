@@ -17,7 +17,7 @@ import {
 // API Service for Expense Management
 class ExpenseApiService {
   constructor() {
-    this.baseURL = '/backend/api/financial';
+    this.baseURL = '/backend/financial';
   }
 
   getAuthToken() {

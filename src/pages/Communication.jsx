@@ -107,7 +107,7 @@ const CommunicationTools = () => {
         ...filters,
       });
       const response = await fetch(
-        `/backend/api/communications/messages?${queryParams}`,
+        `/backend/communications/messages?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -150,7 +150,7 @@ const CommunicationTools = () => {
       });
 
       const response = await fetch(
-        `/backend/api/communications/announcements?${queryParams}`,
+        `/backend/communications/announcements?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -184,7 +184,7 @@ const CommunicationTools = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "/backend/api/communications/stats",
+        "/backend/communications/stats",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -228,7 +228,7 @@ const CommunicationTools = () => {
     try {
       const token = localStorage.getItem("token");
       await fetch(
-        `/backend/api/communications/notifications/${notificationId}/read`,
+        `/backend/communications/notifications/${notificationId}/read`,
         {
           method: "PATCH",
           headers: {
@@ -927,7 +927,7 @@ export async function loader() {
     return redirect("/");
   }
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

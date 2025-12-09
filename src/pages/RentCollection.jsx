@@ -632,6 +632,7 @@ const RentCollection = () => {
         year: utilityFilters.year,
       });
       if (result.status === 200) {
+        console.log(result.data)
         setUtilitySummary(result.data);
       }
     } catch (error) {
@@ -1622,7 +1623,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1638,7 +1639,7 @@ export async function loader() {
       return redirect("/");
     }
 
-    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff", "Building Manager"];
     const userRole = userData.user?.role || localStorage.getItem("userRole");
 
     if (!userRole || !allowedRoles.includes(userRole)) {

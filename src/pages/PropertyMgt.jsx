@@ -61,7 +61,7 @@ const PropertyManagement = () => {
       }
 
       //console.log("Fetching properties...");
-      const response = await fetch("/backend/api/properties", {
+      const response = await fetch("/backend/properties", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -571,7 +571,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -588,7 +588,7 @@ export async function loader() {
     }
 
     // Check role permissions
-    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff", "Building Manager" ];
     const userRole = userData.user?.role || localStorage.getItem("userRole");
 
     if (!userRole || !allowedRoles.includes(userRole)) {

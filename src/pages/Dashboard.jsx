@@ -25,26 +25,28 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // Complete color mapping with inline styles
   const colorStyles = {
-    'bg-blue-100': { backgroundColor: '#dbeafe', borderColor: '#93c5fd' },
-    'bg-green-100': { backgroundColor: '#dcfce7', borderColor: '#86efac' },
-    'bg-red-100': { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
-    'bg-red-200': { backgroundColor: '#fecaca', borderColor: '#f87171' },
-    'bg-yellow-100': { backgroundColor: '#fef3c7', borderColor: '#fde047' },
-    'bg-purple-100': { backgroundColor: '#f3e8ff', borderColor: '#d8b4fe' },
-    'bg-indigo-100': { backgroundColor: '#e0e7ff', borderColor: '#a5b4fc' },
-    'bg-orange-100': { backgroundColor: '#ffedd5', borderColor: '#fdba74' },
-    'bg-pink-100': { backgroundColor: '#fce7f3', borderColor: '#f9a8d4' },
-    'bg-cyan-100': { backgroundColor: '#cffafe', borderColor: '#67e8f9' },
-    'bg-emerald-100': { backgroundColor: '#d1fae5', borderColor: '#6ee7b7' },
-    'bg-teal-100': { backgroundColor: '#ccfbf1', borderColor: '#5eead4' },
-    'bg-gray-100': { backgroundColor: '#f3f4f6', borderColor: '#d1d5db' },
+    "bg-blue-100": { backgroundColor: "#dbeafe", borderColor: "#93c5fd" },
+    "bg-green-100": { backgroundColor: "#dcfce7", borderColor: "#86efac" },
+    "bg-red-100": { backgroundColor: "#fee2e2", borderColor: "#fca5a5" },
+    "bg-red-200": { backgroundColor: "#fecaca", borderColor: "#f87171" },
+    "bg-yellow-100": { backgroundColor: "#fef3c7", borderColor: "#fde047" },
+    "bg-purple-100": { backgroundColor: "#f3e8ff", borderColor: "#d8b4fe" },
+    "bg-indigo-100": { backgroundColor: "#e0e7ff", borderColor: "#a5b4fc" },
+    "bg-orange-100": { backgroundColor: "#ffedd5", borderColor: "#fdba74" },
+    "bg-pink-100": { backgroundColor: "#fce7f3", borderColor: "#f9a8d4" },
+    "bg-cyan-100": { backgroundColor: "#cffafe", borderColor: "#67e8f9" },
+    "bg-emerald-100": { backgroundColor: "#d1fae5", borderColor: "#6ee7b7" },
+    "bg-teal-100": { backgroundColor: "#ccfbf1", borderColor: "#5eead4" },
+    "bg-gray-100": { backgroundColor: "#f3f4f6", borderColor: "#d1d5db" },
   };
 
   const getColorStyle = (colorClass) => {
-    return colorStyles[colorClass] || colorStyles['bg-gray-100'];
+    return colorStyles[colorClass] || colorStyles["bg-gray-100"];
   };
 
   // Fetch dashboard data from API
@@ -59,7 +61,7 @@ const Dashboard = () => {
       }
 
       const response = await fetch(
-        "/backend/api/dashboard/summary",
+        `/backend/dashboard/summary?month=${selectedMonth}&year=${selectedYear}`,
         {
           method: "GET",
           headers: {
@@ -125,7 +127,7 @@ const Dashboard = () => {
   // Initial data fetch
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   if (loading && !dashboardData) {
     return (
@@ -163,6 +165,55 @@ const Dashboard = () => {
             </div>
 
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+                  {/* MONTH */}
+                  <div className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-200">
+                    <label className="text-sm font-semibold text-indigo-700">
+                      Month:
+                    </label>
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) =>
+                        setSelectedMonth(parseInt(e.target.value))
+                      }
+                      className="text-sm border-indigo-300 bg-white rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {new Date(2000, i, 1).toLocaleString("default", {
+                            month: "long",
+                          })}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* YEAR */}
+                  <div className="flex items-center gap-2 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
+                    <label className="text-sm font-semibold text-emerald-700">
+                      Year:
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      className="text-sm border-emerald-300 bg-white rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {lastUpdated && (
                 <div className="hidden sm:flex items-center gap-2 text-sm text-slate-600 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
                   <Activity className="w-4 h-4" />
@@ -218,8 +269,14 @@ const Dashboard = () => {
                         className="p-2.5 rounded-xl border border-slate-200/50"
                         style={
                           isFinancialSummary
-                            ? { background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' }
-                            : { background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)' }
+                            ? {
+                                background:
+                                  "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+                              }
+                            : {
+                                background:
+                                  "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
+                              }
                         }
                       >
                         {getIcon(module.icon)}
@@ -310,7 +367,7 @@ export async function loader() {
   }
 
   try {
-    const url = "/backend/api/auth/verifyToken";
+    const url = "/backend/auth/verifyToken";
     const data = { token: token };
 
     const response = await fetch(url, {
@@ -327,7 +384,7 @@ export async function loader() {
       case 200:
         const userRole =
           userData.user?.role || localStorage.getItem("userRole");
-        const allowedRoles = ["Super Admin", "Admin", "Manager"];
+        const allowedRoles = ["Super Admin", "Admin", "Manager", "Building Manager", "Caretaker"];
 
         if (!userRole || !allowedRoles.includes(userRole)) {
           console.log("User role not authorized for dashboard:", userRole);

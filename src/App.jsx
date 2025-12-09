@@ -29,7 +29,7 @@ import { loader as commLoader } from "./pages/Communication";
 import { loader as maintenanceLoader } from "./pages/MaintenanceMgt";
 import { loader as adminLoader } from "./pages/AdminSettings";
 import { loader as documentLoader } from "./pages/DocumentMgt";
-import {loader as vacancyLoader} from "./pages/VacancyView"
+//import {loader as vacancyLoader} from "./pages/VacancyView"
 import {loader as inquiryLoader} from "./pages/InquiriesMgt"
 
 const router = createBrowserRouter([
@@ -61,7 +61,7 @@ const router = createBrowserRouter([
     path: "/vacancies",
     element: <VacancyView />,
     errorElement: <NotFound />,
-    loader: vacancyLoader,
+
   },
   {
     path: "/inquiries",

@@ -1,6 +1,6 @@
 // Updated FinancialApiService.js with month filtering support
 
-const API_BASE_URL = '/backend/api';
+const API_BASE_URL = '/backend';
 
 class FinancialApiService {
   constructor() {

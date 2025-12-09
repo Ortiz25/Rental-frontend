@@ -9,7 +9,7 @@ import {
 import { formatCurrency } from '../utils/helperFunctions';
 
 const PaymentCard = ({ payment, onViewInvoice, onProcessPayment }) => {
-
+   console.log(payment)
   const getStatusColor = (status) => {
     const colors = {
       'paid': 'bg-green-100 text-green-800',

@@ -22,10 +22,11 @@ import LeaseRenewalModal from "../components/modals/LeaseRenewalModal.jsx";
 import LeaseActivationModal from "../components/modals/LeaveActivationModal.jsx"; // New import
 import { redirect } from "react-router";
 import { formatFinancialValue } from "../utils/helperFunctions.jsx";
+import { formatCurrency } from "../utils/helperFunctions.jsx";
 
 // Updated API service for lease operations with authentication
 const leaseAPI = {
-  baseURL: "/backend/api",
+  baseURL: "/backend",
 
   // Helper method to get auth headers
   getAuthHeaders() {
@@ -477,8 +478,8 @@ const LeaseManagement = () => {
                   {loading ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    `KES${(
-                      formatFinancialValue(leaseStats.total_monthly_revenue) || 0
+                    `${(
+                      formatCurrency(leaseStats.total_monthly_revenue) || 0
                     ).toLocaleString()}`
                   )}
                 </p>
@@ -706,7 +707,7 @@ export async function loader() {
   }
  
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -43,7 +43,7 @@ const UpdateInquiryModal = ({ isOpen, onClose, inquiry, onSuccess }) => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/backend/api/inquiries/users/staff", {
+      const response = await fetch("/backend/inquiries/users/staff", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -69,7 +69,7 @@ const UpdateInquiryModal = ({ isOpen, onClose, inquiry, onSuccess }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/api/inquiries/${inquiry.id}`,
+        `/backend/inquiries/${inquiry.id}`,
         {
           method: "PATCH",
           headers: {

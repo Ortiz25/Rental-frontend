@@ -15,7 +15,7 @@ const BlacklistHistory = ({ tenantId, isOpen, onClose }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/backend/api/tenants/${tenantId}/blacklist-history`, {
+      const response = await fetch(`/backend/tenants/${tenantId}/blacklist-history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const result = await response.json();

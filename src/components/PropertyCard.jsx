@@ -59,7 +59,7 @@ const PropertyCard = ({ property, onUpdate }) => {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `/backend/api/properties/${property.id}/photos`,
+          `/backend/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -131,10 +131,10 @@ const PropertyCard = ({ property, onUpdate }) => {
 
   const currentPhoto =
     photos.length > 0
-      ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
+      ? `/backend/properties/photos/${photos[currentPhotoIndex].file_name}`
       : defaultImage;
 
-      console.log(property)
+  console.log(property);
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-visible">
@@ -642,6 +642,148 @@ const PropertyCard = ({ property, onUpdate }) => {
             </div>
           </div>
         )}
+
+        {/* Property Management Section */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Caretaker Section */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-700 flex items-center gap-1">
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                Caretaker:
+              </p>
+              {property.caretakers && property.caretakers.length > 0 ? (
+                <div className="space-y-1">
+                  {property.caretakers.slice(0, 1).map((caretaker) => (
+                    <div
+                      key={caretaker.id}
+                      className="flex items-start gap-1.5"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-900 truncate flex items-center gap-1">
+                          {caretaker.name}
+                          {caretaker.is_primary && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                              Primary
+                            </span>
+                          )}
+                        </p>
+                        {caretaker.phone && (
+                          <p className="text-[11px] text-gray-500 truncate">
+                            {caretaker.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {property.caretakers.length > 1 && (
+                    <p className="text-[11px] text-gray-500">
+                      +{property.caretakers.length - 1} more
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded border border-dashed border-gray-300">
+                  <svg
+                    className="w-3.5 h-3.5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                    />
+                  </svg>
+                  <span className="text-[11px] text-gray-500 italic">
+                    No caretaker assigned
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Manager Section */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-700 flex items-center gap-1">
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                Manager:
+              </p>
+              {property.managers && property.managers.length > 0 ? (
+                <div className="space-y-1">
+                  {property.managers.slice(0, 1).map((manager) => (
+                    <div key={manager.id} className="flex items-start gap-1.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-900 truncate flex items-center gap-1">
+                          {manager.name}
+                          {manager.is_primary && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                              Primary
+                            </span>
+                          )}
+                        </p>
+                        {manager.phone && (
+                          <p className="text-[11px] text-gray-500 truncate">
+                            {manager.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {property.managers.length > 1 && (
+                    <p className="text-[11px] text-gray-500">
+                      +{property.managers.length - 1} more
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded border border-dashed border-gray-300">
+                  <svg
+                    className="w-3.5 h-3.5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                    />
+                  </svg>
+                  <span className="text-[11px] text-gray-500 italic">
+                    No manager assigned
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Modals */}

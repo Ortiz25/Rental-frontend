@@ -27,7 +27,7 @@ import { formatCurrency } from "../utils/helperFunctions.jsx";
 // API service functions
 const maintenanceAPI = {
   // Fixed Base API URL - removed trailing slash and changed to HTTP
-  baseURL: "/backend/api",
+  baseURL: "/backend",
 
   // Helper method to get auth headers
   getAuthHeaders: () => {
@@ -268,7 +268,7 @@ const NewRequestModal = ({
 
     try {
       const response = await fetch(
-        `/backend/api/maintenance/units/${unitId}/tenants`,
+        `/backend/maintenance/units/${unitId}/tenants`,
         {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -458,7 +458,7 @@ const NewRequestModal = ({
             localStorage.getItem("token") || sessionStorage.getItem("token");
 
           const photoResponse = await fetch(
-            `/backend/api/maintenance/${newRequestId}/photos`,
+            `/backend/maintenance/${newRequestId}/photos`,
             {
               method: "POST",
               headers: {
@@ -1016,7 +1016,7 @@ const RequestDetailsModal = ({
         localStorage.getItem("token") || sessionStorage.getItem("token");
 
       const response = await fetch(
-        `/backend/api/maintenance/${request.id}/photos`,
+        `/backend/maintenance/${request.id}/photos`,
         {
           method: "POST",
           headers: {
@@ -1464,7 +1464,7 @@ const RequestDetailsModal = ({
                         className="relative group aspect-square"
                       >
                         <img
-                          src={`/backend/api/maintenance/photos/${photo.id}/file`}
+                          src={`/backend/maintenance/photos/${photo.id}/file`}
                           alt={photo.fileName}
                           className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity border border-gray-200"
                           onClick={() => setSelectedPhotoIndex(index)}
@@ -1699,7 +1699,7 @@ const RequestDetailsModal = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={`/backend/api/maintenance/photos/${request.photos[selectedPhotoIndex].id}/file`}
+              src={`/backend/maintenance/photos/${request.photos[selectedPhotoIndex].id}/file`}
               alt={request.photos[selectedPhotoIndex].fileName}
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />
@@ -2208,7 +2208,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2225,7 +2225,7 @@ export async function loader() {
     }
 
     // Check role permissions
-    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff", "Building Manager", "Caretaker"];
     const userRole = userData.user?.role || localStorage.getItem("userRole");
 
     if (!userRole || !allowedRoles.includes(userRole)) {

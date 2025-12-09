@@ -23,7 +23,7 @@ import {
 import Navbar from "../layout/navbar";
 import NotificationsModal from "../components/modals/NotificationModal.jsx"; 
 
-const API_BASE_URL = "/backend/api/tenant-dash";
+const API_BASE_URL = "/backend/tenant-dash";
 
 // Contact Manager Modal Component
 const ContactManagerModal = ({ isOpen, onClose, onSubmit, loading }) => {
@@ -194,7 +194,7 @@ const UploadDocumentModal = ({
 
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "/backend/api/documents/upload",
+        "/backend/documents/upload",
         {
           method: "POST",
           headers: {
@@ -383,12 +383,14 @@ const PaymentModal = ({
   const [step, setStep] = useState(1); // 1: Payment Details, 2: Submit Payment Proof
   const [selectedMethod, setSelectedMethod] = useState("");
   const [paymentData, setPaymentData] = useState({
-    amount: tenantData?.tenant?.rentAmount || 0,
+    amount: tenantData?.tenant?.balance || 0,
     paymentMethod: "",
     reference: "",
     transactionDate: new Date().toISOString().split("T")[0],
     notes: "",
   });
+
+  console.log(tenantData)
 
   // Payment methods with their details
   const paymentMethods = {
@@ -1051,7 +1053,7 @@ const markNotificationAsRead = async (notificationId) => {
   try {
     const token = localStorage.getItem("token");
     const response = await fetch(
-      `/backend/api/communications/notifications/${notificationId}/read`,
+      `/backend/communications/notifications/${notificationId}/read`,
       {
         method: "PATCH",
         headers: {
@@ -1091,7 +1093,7 @@ const downloadDocument = async (documentId) => {
 
   try {
     const response = await fetch(
-      `/backend/api/documents/${documentId}/download`,
+      `/backend/documents/${documentId}/download`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1178,7 +1180,7 @@ const viewDocument = async (documentId) => {
 
   try {
     const response = await fetch(
-      `/backend/api/documents/${documentId}/view`,
+      `/backend/documents/${documentId}/view`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1308,7 +1310,7 @@ const handleMaintenanceSubmit = async ({ requestData, photos }) => {
       photoFormData.append('is_before_photo', 'true');
 
       const photoResponse = await fetch(
-        `/backend/api/maintenance/${maintenanceRequestId}/photos`,
+        `/backend/maintenance/${maintenanceRequestId}/photos`,
         {
           method: "POST",
           headers: {
@@ -1343,7 +1345,7 @@ const handleContactSubmit = async (messageData) => {
 
     const token = localStorage.getItem("token");
     const response = await fetch(
-      "/backend/api/communications/messages",
+      "/backend/communications/messages",
       {
         method: "POST",
         headers: {
@@ -2180,7 +2182,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

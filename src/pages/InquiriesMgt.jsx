@@ -72,7 +72,7 @@ const InquiriesManagement = () => {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch("/backend/api/inquiries", {
+      const response = await fetch("/backend/inquiries", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -180,7 +180,7 @@ const InquiriesManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `/backend/api/inquiries/${inquiryId}/status`,
+        `/backend/inquiries/${inquiryId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -786,7 +786,7 @@ export async function loader() {
   }
 
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -803,7 +803,7 @@ export async function loader() {
     }
 
     // Check role permissions - only admin and staff
-    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff"];
+    const allowedRoles = ["Super Admin", "Admin", "Manager", "Staff", "Building Manager", "Caretaker"];
     const userRole = userData.user?.role || localStorage.getItem("userRole");
 
     if (!userRole || !allowedRoles.includes(userRole)) {

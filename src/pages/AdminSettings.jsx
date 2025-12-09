@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Users, Shield, Lock, Bell, Settings, ArrowLeft, WalletCards, LogOut, PanelLeftOpen, PanelLeftClose, X, Menu } from "lucide-react";
 import { redirect, useNavigate } from "react-router";
-import Navbar from "../layout/navbar.jsx";
 import UserManagement from "../components/UserManagement.jsx";
 import PaymentMethodsManagement from "../components/PaymentMethods.jsx";
 import SecuritySettings from "../components/SecuritySettings.jsx";
@@ -115,7 +114,7 @@ const AdminSettings = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
       {/* Settings Sidebar */}
       <div
         className={`fixed left-0 top-0 z-40 h-screen transition-transform ${
@@ -125,32 +124,32 @@ const AdminSettings = () => {
         <div
           className={`h-full ${
             isSidebarCollapsed && screenSize.isMediumOrLarger ? "w-16" : "w-64"
-          } bg-white border-r border-gray-200 shadow-sm transition-all duration-300 overflow-hidden flex flex-col`}
+          } bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl transition-all duration-300 overflow-hidden flex flex-col`}
         >
           {/* Header with Back Button */}
-          <div className="p-6 border-b border-gray-100 flex-shrink-0">
+          <div className="p-6 border-b border-slate-700/50 flex-shrink-0">
             <div className={`flex items-center ${isSidebarCollapsed && screenSize.isMediumOrLarger ? 'justify-center' : 'space-x-3'} mb-4`}>
               {!(isSidebarCollapsed && screenSize.isMediumOrLarger) && (
                 <button
                   onClick={handleBackNavigation}
-                  className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors"
                   title="Go back"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
               {!(isSidebarCollapsed && screenSize.isMediumOrLarger) && (
-                <h1 className="text-xl font-bold text-gray-900">Admin Settings</h1>
+                <h1 className="text-xl font-bold text-white">Admin Settings</h1>
               )}
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="lg:hidden ml-auto text-gray-500 hover:text-gray-700 transition-colors"
+                className="lg:hidden ml-auto text-slate-400 hover:text-white transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
             {!(isSidebarCollapsed && screenSize.isMediumOrLarger) && (
-              <p className="text-sm text-gray-500">Manage system configuration and user access</p>
+              <p className="text-sm text-slate-400">Manage system configuration and user access</p>
             )}
           </div>
 
@@ -170,8 +169,8 @@ const AdminSettings = () => {
                     isSidebarCollapsed && screenSize.isMediumOrLarger ? 'justify-center' : 'space-x-3'
                   } px-4 py-3 rounded-lg transition-all duration-200 ${
                     activeTab === tab.id
-                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }`}
                   title={isSidebarCollapsed && screenSize.isMediumOrLarger ? tab.name : ''}
                 >
@@ -185,11 +184,11 @@ const AdminSettings = () => {
           </nav>
 
           {/* User Profile & Logout Section */}
-          <div className="p-4 border-t border-gray-100 bg-white flex-shrink-0">
+          <div className="p-4 border-t border-slate-700/50 bg-slate-900/95 flex-shrink-0">
             {isSidebarCollapsed && screenSize.isMediumOrLarger ? (
               <div className="flex flex-col items-center space-y-2">
                 <div 
-                  className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors"
+                  className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg"
                   title={user ? `${user.username} (${user.role || user.userRole})` : 'User Profile'}
                 >
                   <span className="text-white text-sm font-medium">
@@ -198,7 +197,7 @@ const AdminSettings = () => {
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800/50 rounded transition-colors"
                   title="Logout"
                 >
                   <LogOut size={16} />
@@ -207,23 +206,23 @@ const AdminSettings = () => {
             ) : (
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
                     <span className="text-white text-sm font-medium">
                       {getUserInitials()}
                     </span>
                   </div>
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-white truncate">
                     {user?.username || 'User'}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-slate-400 truncate">
                     {user?.role || user?.userRole || 'Role'}
                   </p>
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="ml-2 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  className="ml-2 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800/50 rounded transition-colors"
                   title="Logout"
                 >
                   <LogOut size={16} />
@@ -243,14 +242,14 @@ const AdminSettings = () => {
         } transition-all duration-300`}
       >
         {/* Content Header */}
-        <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
           <div className="px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 {/* Mobile menu button */}
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 mr-4"
+                  className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 mr-4"
                 >
                   <Menu size={20} />
                 </button>
@@ -259,41 +258,41 @@ const AdminSettings = () => {
                 {isSidebarCollapsed ? (
                   <button
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="hidden lg:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200 mr-4"
+                    className="hidden lg:flex p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 mr-4"
                   >
                     <PanelLeftOpen className="h-5 w-5" />
                   </button>
                 ) : (
                   <button
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="hidden lg:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-200 mr-4"
+                    className="hidden lg:flex p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 mr-4"
                   >
                     <PanelLeftClose className="h-5 w-5" />
                   </button>
                 )}
                 
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">
+                  <h2 className="text-2xl font-semibold text-slate-900">
                     {settingsTabs.find(tab => tab.id === activeTab)?.name}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-slate-600 mt-1">
                     Configure and manage your system settings
                   </p>
                 </div>
               </div>
               
               {/* Breadcrumb */}
-              <nav className="hidden md:flex items-center space-x-2 text-sm text-gray-500">
+              <nav className="hidden md:flex items-center space-x-2 text-sm text-slate-600">
                 <button 
                   onClick={handleBackNavigation}
-                  className="hover:text-gray-700 transition-colors"
+                  className="hover:text-slate-900 transition-colors"
                 >
                   Dashboard
                 </button>
                 <span>/</span>
-                <span className="text-gray-900">Admin Settings</span>
+                <span className="text-slate-900">Admin Settings</span>
                 <span>/</span>
-                <span className="text-gray-900">
+                <span className="text-slate-900">
                   {settingsTabs.find(tab => tab.id === activeTab)?.name}
                 </span>
               </nav>
@@ -302,7 +301,7 @@ const AdminSettings = () => {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-gray-50">
+        <main className="flex-1 overflow-auto">
           <div className="p-8">
             {activeTab === "users" && <UserManagement />}
             {/* {activeTab === "security" && <SecuritySettings />}
@@ -315,7 +314,7 @@ const AdminSettings = () => {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black opacity-50 lg:hidden transition-opacity"
+          className="fixed inset-0 z-30 bg-black/60 lg:hidden transition-opacity backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -324,6 +323,7 @@ const AdminSettings = () => {
 };
 
 export default AdminSettings;
+
 export async function loader() {
   const token = localStorage.getItem("token");
 
@@ -332,7 +332,7 @@ export async function loader() {
   }
   
   try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
+    const response = await fetch("/backend/auth/verifyToken", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -35,7 +35,7 @@ const PropertyDetailsModal = ({ isOpen, onClose, property, onContactInquiry }) =
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `/backend/api/properties/${property.id}/photos`,
+          `/backend/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -77,7 +77,7 @@ const PropertyDetailsModal = ({ isOpen, onClose, property, onContactInquiry }) =
 
   const currentPhoto =
     photos.length > 0
-      ? `/backend/api/properties/photos/${photos[currentPhotoIndex].file_name}`
+      ? `/backend/properties/photos/${photos[currentPhotoIndex].file_name}`
       : defaultImage;
 
   if (!isOpen || !property) return null;

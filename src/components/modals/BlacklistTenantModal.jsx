@@ -29,7 +29,7 @@ const BlacklistTenantModal = ({
   const fetchBlacklistCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/backend/api/tenants/blacklist-categories', {
+      const response = await fetch('/backend/tenants/blacklist-categories', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const result = await response.json();

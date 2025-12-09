@@ -9,23 +9,24 @@ const UtilityChargeModal = ({
   onSubmit,
   processing,
 }) => {
-  console.log(activeLeases)
+  //console.log(activeLeases);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
-    lease_id: '',
-    billing_month: new Date().toISOString().split('T')[0].substring(0, 7),
+    lease_id: "",
+    billing_month: new Date().toISOString().split("T")[0].substring(0, 7),
     water_charges: 0,
-    water_usage: '',
+    water_usage: "",
     electricity_charges: 0,
-    electricity_usage: '',
+    electricity_usage: "",
     gas_charges: 0,
     service_charges: 0,
     garbage_charges: 0,
     common_area_charges: 0,
     other_charges: 0,
-    other_charges_description: '',
-    due_date: '',
-    charge_status: 'pending',  // ADD THIS LINE
-    notes: ''
+    other_charges_description: "",
+    due_date: "",
+    charge_status: "pending", // ADD THIS LINE
+    notes: "",
   });
   useEffect(() => {
     if (charge) {
@@ -33,18 +34,18 @@ const UtilityChargeModal = ({
         lease_id: charge.lease_id,
         billing_month: charge.billing_month.substring(0, 7),
         water_charges: charge.water_charges || 0,
-        water_usage: charge.water_usage || '',
+        water_usage: charge.water_usage || "",
         electricity_charges: charge.electricity_charges || 0,
-        electricity_usage: charge.electricity_usage || '',
+        electricity_usage: charge.electricity_usage || "",
         gas_charges: charge.gas_charges || 0,
         service_charges: charge.service_charges || 0,
         garbage_charges: charge.garbage_charges || 0,
         common_area_charges: charge.common_area_charges || 0,
         other_charges: charge.other_charges || 0,
-        other_charges_description: charge.other_charges_description || '',
-        due_date: charge.due_date || '',
-        charge_status: charge.charge_status || 'pending',  // ADD THIS LINE
-        notes: charge.notes || ''
+        other_charges_description: charge.other_charges_description || "",
+        due_date: charge.due_date || "",
+        charge_status: charge.charge_status || "pending", // ADD THIS LINE
+        notes: charge.notes || "",
       });
     }
   }, [charge]);
@@ -76,6 +77,15 @@ const UtilityChargeModal = ({
       onSubmit(submitData);
     }
   };
+  const filteredLeases = activeLeases.filter((lease) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      lease.property_name?.toLowerCase().includes(searchLower) ||
+      lease.tenant_name?.toLowerCase().includes(searchLower) ||
+      lease.lease_number?.toLowerCase().includes(searchLower) ||
+      lease.primary_tenant_name?.toLowerCase().includes(searchLower)
+    );
+  });
 
   const calculateTotal = () => {
     return (
@@ -111,25 +121,84 @@ const UtilityChargeModal = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!charge && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
                   Lease *
                 </label>
-                <select
-                  required
-                  value={formData.lease_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lease_id: e.target.value })
-                  }
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="">Select a lease</option>
-                  {activeLeases.map((lease) => (
-                    <option key={lease.id} value={lease.id}>
-                      {lease.lease_number} - {lease.tenant_name} (
-                      {lease.primary_tenant_name}-{lease.property_name})
+
+                {/* Search Input */}
+                <div className="relative mb-3">
+                  <input
+                    type="text"
+                    placeholder="Search by property, tenant, or lease number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+
+                {/* Lease Selection */}
+                <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
+                  <select
+                    required
+                    value={formData.lease_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, lease_id: e.target.value })
+                    }
+                    className="w-full px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none max-h-64 cursor-pointer"
+                    size="6"
+                  >
+                    <option value="" className="text-gray-500 py-2">
+                      -- Select a lease --
                     </option>
-                  ))}
-                </select>
+                    {filteredLeases.map((lease) => (
+                      <option
+                        key={lease.id}
+                        value={lease.id}
+                        className="py-2 hover:bg-blue-50"
+                      >
+                        🏢 {lease.property_name} • {lease.primary_tenant_name} (
+                        {lease.lease_number})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Results Counter */}
+                <div className="flex items-center justify-between mt-2 text-xs">
+                  <span className="text-gray-600">
+                    Showing{" "}
+                    <span className="font-semibold text-gray-900">
+                      {filteredLeases.length}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-gray-900">
+                      {activeLeases.length}
+                    </span>{" "}
+                    leases
+                  </span>
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm("")}
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Clear filter
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 

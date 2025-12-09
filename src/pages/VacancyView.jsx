@@ -28,6 +28,7 @@ import VacancyCard from "../components/vacancyCard.jsx";
 import ContactModal from "../components/modals/ContactModal.jsx";
 
 const VacancyView = () => {
+  const [activeModule] = useState("Property Vacancies");
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,12 +56,12 @@ const VacancyView = () => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      const token = localStorage.getItem("token") || "";
+      // if (!token) {
+      //   throw new Error("No authentication token found");
+      // }
 
-      const response = await fetch("/backend/api/vacancies", {
+      const response = await fetch("/backend/vacancies", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -221,7 +222,7 @@ const VacancyView = () => {
 
   if (loading && properties.length === 0) {
     return (
-      <Navbar activeModule="Available Properties">
+      <Navbar module="Available Properties">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Loader className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
@@ -234,7 +235,7 @@ const VacancyView = () => {
 
   if (error) {
     return (
-      <Navbar activeModule="Available Properties">
+      <Navbar module="Available Properties">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -530,39 +531,39 @@ const VacancyView = () => {
 export default VacancyView;
 
 // Loader function for authentication
-export async function loader() {
-  const token = localStorage.getItem("token");
+// export async function loader() {
+//   const token = localStorage.getItem("token");
 
-  if (!token) {
-    return redirect("/");
-  }
+//   if (!token) {
+//     return redirect("/");
+//   }
 
-  try {
-    const response = await fetch("/backend/api/auth/verifyToken", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token }),
-    });
+//   try {
+//     const response = await fetch("/backend/auth/verifyToken", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ token }),
+//     });
 
-    const userData = await response.json();
+//     const userData = await response.json();
 
-    if (userData.status !== 200) {
-      const keysToRemove = ["token", "user", "name", "userRole", "userId"];
-      keysToRemove.forEach((key) => localStorage.removeItem(key));
-      return redirect("/");
-    }
+//     if (userData.status !== 200) {
+//       const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+//       keysToRemove.forEach((key) => localStorage.removeItem(key));
+//       return redirect("/");
+//     }
 
-    // Allow all authenticated users (including tenants)
-    return {
-      user: userData.user,
-      isAuthenticated: true,
-    };
-  } catch (error) {
-    console.error("Auth check error:", error);
-    const keysToRemove = ["token", "user", "name", "userRole", "userId"];
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
-    return redirect("/");
-  }
-}
+//     // Allow all authenticated users (including tenants)
+//     return {
+//       user: userData.user,
+//       isAuthenticated: true,
+//     };
+//   } catch (error) {
+//     console.error("Auth check error:", error);
+//     const keysToRemove = ["token", "user", "name", "userRole", "userId"];
+//     keysToRemove.forEach((key) => localStorage.removeItem(key));
+//     return redirect("/");
+//   }
+// }

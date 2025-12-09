@@ -4,7 +4,7 @@
 
 
 // API service functions
-const API_BASE_URL = "/backend/api";
+const API_BASE_URL = "/backend";
 
 
 

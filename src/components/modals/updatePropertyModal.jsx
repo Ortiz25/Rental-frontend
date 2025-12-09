@@ -61,6 +61,17 @@ const UpdatePropertyModal = ({
   const [availableAmenities, setAvailableAmenities] = useState([]);
   const [propertyUnits, setPropertyUnits] = useState([]);
 
+  // Management states
+  const [caretakers, setCaretakers] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [showAddCaretaker, setShowAddCaretaker] = useState(false);
+  const [showAddManager, setShowAddManager] = useState(false);
+  const [selectedCaretakerUser, setSelectedCaretakerUser] = useState("");
+  const [selectedManagerUser, setSelectedManagerUser] = useState("");
+  const [caretakerIsPrimary, setCaretakerIsPrimary] = useState(false);
+  const [managerIsPrimary, setManagerIsPrimary] = useState(false);
+
   const propertyTypes = [
     "Apartment",
     "House",
@@ -108,7 +119,7 @@ const UpdatePropertyModal = ({
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `/backend/api/properties/${property.id}/photos`,
+          `/backend/properties/${property.id}/photos`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -211,7 +222,7 @@ const UpdatePropertyModal = ({
         if (!token) return;
 
         const response = await fetch(
-          "/backend/api/properties/amenities",
+          "/backend/properties/amenities",
           {
             method: "GET",
             headers: {
@@ -240,6 +251,52 @@ const UpdatePropertyModal = ({
       fetchAmenities();
     }
   }, [isOpen]);
+
+  // Fetch available caretakers and managers
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!isOpen) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch(
+          "/backend/properties/users?roles=Caretaker,Building Manager",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(response);
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(result);
+          if (result.status === 200) {
+            setAvailableUsers(result.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen]);
+
+  // Load caretakers and managers from property
+  useEffect(() => {
+    if (isOpen && property) {
+      setCaretakers(property.caretakers || []);
+      setManagers(property.managers || []);
+    }
+  }, [isOpen, property]);
 
   const isMultiUnitProperty = () => {
     return propertyData && propertyUnits.length > 1;
@@ -305,7 +362,7 @@ const UpdatePropertyModal = ({
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `/backend/api/properties/${property.id}/photos/${photoId}/set-primary`,
+        `/backend/properties/${property.id}/photos/${photoId}/set-primary`,
         {
           method: "PUT",
           headers: {
@@ -338,6 +395,198 @@ const UpdatePropertyModal = ({
         ...propertyData,
         amenities: propertyData.amenities.filter((a) => a !== amenity),
       });
+    }
+  };
+
+  // Caretaker Management Functions
+  const addCaretaker = async () => {
+    if (!selectedCaretakerUser) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/backend/properties/${property.id}/caretakers`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: parseInt(selectedCaretakerUser),
+            isPrimary: caretakerIsPrimary,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        const user = availableUsers.find(
+          (u) => u.id === parseInt(selectedCaretakerUser)
+        );
+
+        setCaretakers([
+          ...caretakers,
+          {
+            id: user.id,
+            name: `${user.first_name} ${user.last_name}`,
+            phone: user.phone,
+            email: user.email,
+            is_primary: caretakerIsPrimary,
+          },
+        ]);
+
+        setSelectedCaretakerUser("");
+        setCaretakerIsPrimary(false);
+        setShowAddCaretaker(false);
+      }
+    } catch (error) {
+      console.error("Error adding caretaker:", error);
+      setError("Failed to add caretaker");
+    }
+  };
+
+  const removeCaretaker = async (caretakerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/backend/properties/${property.id}/caretakers/${caretakerId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setCaretakers(caretakers.filter((c) => c.id !== caretakerId));
+      }
+    } catch (error) {
+      console.error("Error removing caretaker:", error);
+      setError("Failed to remove caretaker");
+    }
+  };
+
+  const toggleCaretakerPrimary = async (caretakerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/backend/properties/${property.id}/caretakers/${caretakerId}/toggle-primary`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setCaretakers(
+          caretakers.map((c) => ({
+            ...c,
+            is_primary: c.id === caretakerId ? !c.is_primary : c.is_primary,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling primary caretaker:", error);
+    }
+  };
+
+  // Manager Management Functions
+  const addManager = async () => {
+    if (!selectedManagerUser) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/backend/properties/${property.id}/managers`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: parseInt(selectedManagerUser),
+            isPrimary: managerIsPrimary,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        const user = availableUsers.find(
+          (u) => u.id === parseInt(selectedManagerUser)
+        );
+
+        setManagers([
+          ...managers,
+          {
+            id: user.id,
+            name: `${user.first_name} ${user.last_name}`,
+            phone: user.phone,
+            email: user.email,
+            is_primary: managerIsPrimary,
+          },
+        ]);
+
+        setSelectedManagerUser("");
+        setManagerIsPrimary(false);
+        setShowAddManager(false);
+      }
+    } catch (error) {
+      console.error("Error adding manager:", error);
+      setError("Failed to add manager");
+    }
+  };
+
+  const removeManager = async (managerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/backend/properties/${property.id}/managers/${managerId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setManagers(managers.filter((m) => m.id !== managerId));
+      }
+    } catch (error) {
+      console.error("Error removing manager:", error);
+      setError("Failed to remove manager");
+    }
+  };
+
+  const toggleManagerPrimary = async (managerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/backend/properties/${property.id}/managers/${managerId}/toggle-primary`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setManagers(
+          managers.map((m) => ({
+            ...m,
+            is_primary: m.id === managerId ? !m.is_primary : m.is_primary,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling primary manager:", error);
     }
   };
 
@@ -380,7 +629,7 @@ const UpdatePropertyModal = ({
   const handlePropertySubmit = async () => {
     setError(null);
     setLoading(true);
-  
+
     try {
       const validationErrors = validatePropertyForm();
       if (validationErrors.length > 0) {
@@ -388,12 +637,12 @@ const UpdatePropertyModal = ({
         setLoading(false);
         return;
       }
-  
+
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("No authentication token found");
       }
-  
+
       // First, update property details
       const formattedProperty = {
         propertyName: propertyData.propertyName.trim(),
@@ -412,9 +661,9 @@ const UpdatePropertyModal = ({
         description: propertyData.description.trim(),
         amenities: propertyData.amenities,
       };
-  
+
       const response = await fetch(
-        `/backend/api/properties/${property.id}`,
+        `/backend/properties/${property.id}`,
         {
           method: "PUT",
           headers: {
@@ -424,15 +673,15 @@ const UpdatePropertyModal = ({
           body: JSON.stringify(formattedProperty),
         }
       );
-  
+
       const result = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(
           result.message || `HTTP error! status: ${response.status}`
         );
       }
-  
+
       // For single-unit properties, also update the unit if unitData has been modified
       if (property.units && property.units.length === 1 && unitData.id) {
         const formattedUnit = {
@@ -450,9 +699,9 @@ const UpdatePropertyModal = ({
             : null,
           occupancyStatus: unitData.occupancyStatus || "vacant",
         };
-  
+
         const unitResponse = await fetch(
-          `/backend/api/properties/${property.id}/units/${unitData.id}`,
+          `/backend/properties/${property.id}/units/${unitData.id}`,
           {
             method: "PUT",
             headers: {
@@ -462,7 +711,7 @@ const UpdatePropertyModal = ({
             body: JSON.stringify(formattedUnit),
           }
         );
-  
+
         if (!unitResponse.ok) {
           const unitResult = await unitResponse.json();
           throw new Error(
@@ -470,12 +719,12 @@ const UpdatePropertyModal = ({
           );
         }
       }
-  
+
       // Handle photo deletions
       if (photosToDelete.length > 0) {
         for (const photoId of photosToDelete) {
           await fetch(
-            `/backend/api/properties/${property.id}/photos/${photoId}`,
+            `/backend/properties/${property.id}/photos/${photoId}`,
             {
               method: "DELETE",
               headers: {
@@ -485,16 +734,16 @@ const UpdatePropertyModal = ({
           );
         }
       }
-  
+
       // Handle new photo uploads
       if (newPhotoFiles.length > 0) {
         const formData = new FormData();
         newPhotoFiles.forEach((file) => {
-          formData.append('photos', file);
+          formData.append("photos", file);
         });
-  
+
         await fetch(
-          `/backend/api/properties/${property.id}/photos`,
+          `/backend/properties/${property.id}/photos`,
           {
             method: "POST",
             headers: {
@@ -504,17 +753,19 @@ const UpdatePropertyModal = ({
           }
         );
       }
-  
+
       if (result.status === 200) {
         setSuccess(true);
-  
+
         if (onUpdate) {
           await onUpdate(result.data);
         }
-  
+
         // Clean up photo previews
-        newPhotoPreviews.forEach(preview => URL.revokeObjectURL(preview.preview));
-  
+        newPhotoPreviews.forEach((preview) =>
+          URL.revokeObjectURL(preview.preview)
+        );
+
         setTimeout(() => {
           onClose();
           setSuccess(false);
@@ -564,7 +815,7 @@ const UpdatePropertyModal = ({
       };
 
       const response = await fetch(
-        `/backend/api/properties/${property.id}/units/${unitData.id}`,
+        `/backend/properties/${property.id}/units/${unitData.id}`,
         {
           method: "PUT",
           headers: {
@@ -742,7 +993,7 @@ const UpdatePropertyModal = ({
                               src={
                                 photo.isNew
                                   ? photo.preview
-                                  : `/backend/api/properties/photos/${photo.file_name}`
+                                  : `/backend/properties/photos/${photo.file_name}`
                               }
                               alt={`Property ${index + 1}`}
                               className={`w-full h-32 object-cover rounded-lg ${
@@ -867,7 +1118,6 @@ const UpdatePropertyModal = ({
                   </>
                 )}
               </div>
-
               {/* Property Information - Rest of the existing form */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-4">
@@ -1018,7 +1268,6 @@ const UpdatePropertyModal = ({
                   </div>
                 </div>
               </div>
-
               {/* Current Property Stats */}
               <div className="mb-8 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">
@@ -1268,7 +1517,6 @@ const UpdatePropertyModal = ({
                   </div>
                 )}
               </div>
-
               {/* Amenities */}
               <div className="mb-8">
                 <label className="block text-sm font-medium mb-2">
@@ -1294,7 +1542,310 @@ const UpdatePropertyModal = ({
                   ))}
                 </div>
               </div>
+              {/* Property Management Section */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4">
+                  Property Management
+                </h3>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Caretakers Section */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        Caretakers
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCaretaker(!showAddCaretaker)}
+                        disabled={loading}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 inline mr-1" />
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Add Caretaker Form */}
+                    {showAddCaretaker && (
+                      <div className="mb-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                        <select
+                          value={selectedCaretakerUser}
+                          onChange={(e) =>
+                            setSelectedCaretakerUser(e.target.value)
+                          }
+                          className="w-full p-2 border rounded text-sm"
+                          disabled={loading}
+                        >
+                          <option value="">Select Caretaker</option>
+                          {availableUsers
+                            .filter(
+                              (user) =>
+                                user.role === "Caretaker" &&
+                                !caretakers.find((c) => c.id === user.id)
+                            )
+                            .map((user) => (
+                              <option key={user.id} value={user.id}>
+                                {user.first_name} {user.last_name} -{" "}
+                                {user.phone}
+                              </option>
+                            ))}
+                        </select>
+
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={caretakerIsPrimary}
+                            onChange={(e) =>
+                              setCaretakerIsPrimary(e.target.checked)
+                            }
+                            disabled={loading}
+                            className="mr-2"
+                          />
+                          Set as primary caretaker
+                        </label>
+
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={addCaretaker}
+                            disabled={!selectedCaretakerUser || loading}
+                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            Add Caretaker
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddCaretaker(false);
+                              setSelectedCaretakerUser("");
+                              setCaretakerIsPrimary(false);
+                            }}
+                            disabled={loading}
+                            className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Caretakers List */}
+                    <div className="space-y-2">
+                      {caretakers.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                          <p>No caretakers assigned</p>
+                        </div>
+                      ) : (
+                        caretakers.map((caretaker) => (
+                          <div
+                            key={caretaker.id}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium">
+                                  {caretaker.name}
+                                </p>
+                                {caretaker.is_primary && (
+                                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                                    Primary
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-600">
+                                {caretaker.phone}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  toggleCaretakerPrimary(caretaker.id)
+                                }
+                                disabled={loading}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                title="Toggle primary"
+                              >
+                                <span className="text-lg">★</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeCaretaker(caretaker.id)}
+                                disabled={loading}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                title="Remove"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Managers Section */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Managers
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddManager(!showAddManager)}
+                        disabled={loading}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 inline mr-1" />
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Add Manager Form */}
+                    {showAddManager && (
+                      <div className="mb-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                        <select
+                          value={selectedManagerUser}
+                          onChange={(e) =>
+                            setSelectedManagerUser(e.target.value)
+                          }
+                          className="w-full p-2 border rounded text-sm"
+                          disabled={loading}
+                        >
+                          <option value="">Select Manager</option>
+                          {availableUsers
+                            .filter(
+                              (user) =>
+                                (user.role === "Building Manager" || user.role === "Manager") &&
+                                !managers.find((m) => m.id === user.id)
+                            )
+                            .map((user) => (
+                              <option key={user.id} value={user.id}>
+                                {user.first_name} {user.last_name} -{" "}
+                                {user.phone}
+                              </option>
+                            ))}
+                        </select>
+
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={managerIsPrimary}
+                            onChange={(e) =>
+                              setManagerIsPrimary(e.target.checked)
+                            }
+                            disabled={loading}
+                            className="mr-2"
+                          />
+                          Set as primary manager
+                        </label>
+
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={addManager}
+                            disabled={!selectedManagerUser || loading}
+                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            Add Manager
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddManager(false);
+                              setSelectedManagerUser("");
+                              setManagerIsPrimary(false);
+                            }}
+                            disabled={loading}
+                            className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Managers List */}
+                    <div className="space-y-2">
+                      {managers.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                          <p>No managers assigned</p>
+                        </div>
+                      ) : (
+                        managers.map((manager) => (
+                          <div
+                            key={manager.id}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium">
+                                  {manager.name}
+                                </p>
+                                {manager.is_primary && (
+                                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                                    Primary
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-600">
+                                {manager.phone}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                onClick={() => toggleManagerPrimary(manager.id)}
+                                disabled={loading}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                title="Toggle primary"
+                              >
+                                <span className="text-lg">★</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeManager(manager.id)}
+                                disabled={loading}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                title="Remove"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* Description */}
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">
@@ -1314,7 +1865,6 @@ const UpdatePropertyModal = ({
                   placeholder="Describe the property..."
                 />
               </div>
-
               {/* Photo Changes Summary */}
               {(newPhotoFiles.length > 0 || photosToDelete.length > 0) && (
                 <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1333,7 +1883,6 @@ const UpdatePropertyModal = ({
                   </div>
                 </div>
               )}
-
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3">
                 <button
