@@ -1,0 +1,35 @@
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
+
+# Install pnpm
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shims" SHELL="$(which sh)" sh -
+ENV PATH="/root/.local/share/pnpm:${PATH}"
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build the app
+RUN pnpm run build
+
+# Stage 2: Serve the application with Nginx
+FROM nginx:alpine
+
+# Copy built assets from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
