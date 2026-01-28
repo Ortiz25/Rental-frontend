@@ -19,7 +19,7 @@ COPY . .
 # Build the app
 RUN pnpm run build
 
-# Production stage
+# Final stage
 FROM nginx:alpine
 
 # Copy built assets from builder stage
