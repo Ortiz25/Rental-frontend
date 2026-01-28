@@ -1,4 +1,4 @@
-# Stage 1: Build the application
+# Build stage
 FROM node:18-alpine AS builder
 
 # Install pnpm
@@ -19,8 +19,8 @@ COPY . .
 # Build the app
 RUN pnpm run build
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:alpine AS production
+# Production stage
+FROM nginx:alpine
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
