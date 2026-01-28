@@ -23,9 +23,9 @@ RUN pnpm run build
 FROM nginx:alpine
 
 # Copy built assets from builder stage
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy default nginx config
+# Copy nginx config
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
